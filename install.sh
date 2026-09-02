@@ -48,7 +48,7 @@ set -euo pipefail
 # ==============================================================================
 
 # WHAT: The repository root, resolved from this script's own location.
-# WHY : Makes the script runnable from anywhere (`~/work/dotfiles/install.sh`
+# WHY : Makes the script runnable from anywhere (`~/personal/dotfiles/install.sh`
 #       works as well as `./install.sh`) without depending on the caller's
 #       working directory.
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -69,11 +69,38 @@ PACKAGES_FOLD="neovide nvim tlrc"
 #       selector symlinks created in step 7 (bat, ghostty).
 PACKAGES_NOFOLD="bat fish ghostty git zed"
 
-# WHAT: Fonts the configs reference, for the message printed on Linux.
-# WHY : Homebrew cannot install fonts on Linux (they are casks) and distro
-#       packaging is inconsistent, so this is the one part of the setup left
-#       deliberately manual.
-FONTS_NEEDED="JetBrainsMono Nerd Font, FiraCode Nerd Font, Fira Code, Source Code Pro, IBM Plex Mono"
+# WHAT: Fonts the configs reference, for the message printed when they cannot
+#       be installed automatically.
+FONTS_NEEDED="JetBrainsMono Nerd Font, FiraCode Nerd Font, JetBrains Mono, Fira Code, Source Code Pro, IBM Plex Mono"
+
+# WHAT: A private repository mirroring the fonts this setup uses, stored with
+#       Git LFS.
+# WHY : Homebrew installs fonts through casks, which are macOS-only, and Linux
+#       distribution font packaging is too inconsistent to script reliably. On
+#       Linux this repository is the answer; macOS gets the casks instead.
+# HOW : Access needs an SSH key belonging to the account that owns it. If the
+#       probe fails for any reason — no key, no access, offline — the fonts
+#       step is skipped with a message and the install continues.
+FONTS_REPO="git@github.com:cristiancristea00/fonts.git"
+FONTS_CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/dotfiles-fonts"
+
+# WHAT: Which directories to install, and which files from each.
+# WHY : The repository is ~317 MB because the Nerd families ship every width
+#       build, but the configs reference only the single-width "Mono" ones.
+#       Fetching per FILE rather than per directory is the difference between
+#       ~70 MB and the whole repository — the four small families are taken
+#       whole because filtering them would save nothing.
+# HOW : One "directory|glob" pair per line. The glob is matched by Git LFS,
+#       which is what decides which binaries are downloaded at all.
+FONT_SELECTION=$(cat <<'SELECTION'
+JetBrains Mono Nerd|JetBrainsMonoNerdFontMono-*
+Fira Code Nerd|FiraCodeNerdFontMono-*
+JetBrains Mono|*
+Fira Code|*
+Source Code Pro|*
+IBM Plex Mono|*
+SELECTION
+)
 
 # ==============================================================================
 # Options, populated by parse_args
@@ -453,6 +480,102 @@ install_gui_apps_linux() {
 }
 
 # ==============================================================================
+# 6b. Fonts from the private repository (Linux only)
+# ==============================================================================
+# WHAT: Install the font families the configs reference, from the private LFS
+#       repository, into the user font directory.
+# WHY : macOS gets fonts from Homebrew casks, which do not exist on Linux. This
+#       is the Linux equivalent, and the reason the repository exists.
+# NOTE: Every failure here is a warning. A machine without the fonts renders
+#       icons as boxes, which is cosmetic; it is not a reason to fail an
+#       install that otherwise succeeded.
+install_fonts_linux() {
+    [ "$OS" = "linux" ] || return 0
+
+    step "Fonts"
+
+    if ! command -v git-lfs >/dev/null 2>&1; then
+        warn "git-lfs is not installed, so the font repository cannot be used."
+        warn "Install these by hand instead: $FONTS_NEEDED"
+        return 0
+    fi
+
+    # WHY BatchMode: without it ssh prompts for a passphrase or host key and the
+    #      install hangs. ConnectTimeout keeps an unreachable host from stalling
+    #      the run. macOS has no `timeout` binary, so ssh must do this itself.
+    info "Checking access to the font repository…"
+    if ! GIT_SSH_COMMAND='ssh -o BatchMode=yes -o ConnectTimeout=5' \
+        git ls-remote "$FONTS_REPO" >/dev/null 2>&1; then
+        warn "Cannot reach $FONTS_REPO"
+        warn "It is private, so this usually means the SSH key on this machine"
+        warn "does not belong to the account that owns it. Note that GitHub"
+        warn "reports a missing repository rather than a permission error."
+        warn "Install these by hand instead: $FONTS_NEEDED"
+        return 0
+    fi
+
+    # WHY GIT_LFS_SKIP_SMUDGE: without it the clone downloads every binary in
+    #      the repository — 317 MB — before anything gets to choose. Skipping
+    #      the smudge filter fetches only pointers, and `git lfs pull --include`
+    #      below then downloads just the files that will be installed.
+    if [ -d "$FONTS_CACHE/.git" ]; then
+        info "Updating the font cache…"
+        run git -C "$FONTS_CACHE" fetch --depth 1 origin main || warn "Font fetch failed"
+        run git -C "$FONTS_CACHE" reset --hard origin/main || warn "Font reset failed"
+    else
+        info "Fetching the font repository (pointers only)…"
+        run mkdir -p "$(dirname "$FONTS_CACHE")"
+        if ! GIT_LFS_SKIP_SMUDGE=1 run git clone --depth 1 "$FONTS_REPO" "$FONTS_CACHE"; then
+            warn "Could not clone the font repository."
+            warn "Install these by hand instead: $FONTS_NEEDED"
+            return 0
+        fi
+    fi
+
+    [ "$DRY_RUN" -eq 1 ] && { info "Would install: $FONTS_NEEDED"; return 0; }
+
+    # Build the --include list, then pull all matching binaries in one request.
+    local dir glob includes=""
+    while IFS='|' read -r dir glob; do
+        [ -n "$dir" ] || continue
+        includes="$includes,$dir/$glob"
+    done <<SELECTION
+$FONT_SELECTION
+SELECTION
+    includes="${includes#,}"
+
+    info "Downloading the needed font files…"
+    if ! git -C "$FONTS_CACHE" lfs pull --include "$includes"; then
+        warn "Font download failed; skipping installation."
+        return 0
+    fi
+
+    local font_dir="$HOME/.local/share/fonts"
+    mkdir -p "$font_dir"
+    local installed=0
+    while IFS='|' read -r dir glob; do
+        [ -n "$dir" ] || continue
+        # WHY the find: directory names contain spaces and the globs are matched
+        #      by the shell, so a plain `cp dir/glob` would word-split.
+        local n
+        n=$(find "$FONTS_CACHE/$dir" -maxdepth 1 -name "$glob" \
+            \( -name '*.ttf' -o -name '*.otf' \) -exec cp {} "$font_dir/" \; -print 2>/dev/null | wc -l)
+        installed=$((installed + n))
+        info "  $dir: $n files"
+    done <<SELECTION
+$FONT_SELECTION
+SELECTION
+
+    if [ "$installed" -eq 0 ]; then
+        warn "No font files were installed — the repository layout may have changed."
+        return 0
+    fi
+
+    command -v fc-cache >/dev/null 2>&1 && run fc-cache -f "$font_dir"
+    ok "Installed $installed font files to $font_dir"
+}
+
+# ==============================================================================
 # 7. Backing up and stowing
 # ==============================================================================
 # WHAT: Find real files that stow would collide with, and move them aside.
@@ -743,6 +866,10 @@ uninstall() {
     fi
 
     info ""
+    info "Fonts installed from the font repository are left in place —"
+    info "they are files, not symlinks. Remove them with:"
+    info "    rm ~/.local/share/fonts/{JetBrainsMono,FiraCode,IBMPlexMono,SourceCodePro}* && fc-cache -f"
+    info ""
     info "Installed software was left alone. To remove it too:"
     info "    brew bundle cleanup --file \"$DOTFILES_DIR/Brewfile\" --force"
     info "Backups from previous runs are in ~/.dotfiles-backup-*"
@@ -767,8 +894,8 @@ print_summary() {
 
     if [ "$OS" = "linux" ]; then
         info ""
-        warn "Fonts are not installed automatically on Linux."
-        info "Install these, then run: fc-cache -fv"
+        info "Fonts come from $FONTS_REPO"
+        info "If that step was skipped, install these by hand and run fc-cache -fv:"
         info "  $FONTS_NEEDED"
         info "Nerd Font builds: https://github.com/ryanoasis/nerd-fonts/releases"
     fi
@@ -801,6 +928,7 @@ main() {
     install_homebrew
     install_brewfile
     install_gui_apps_linux
+    install_fonts_linux
     stow_packages
     link_os_selectors
 

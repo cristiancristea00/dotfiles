@@ -52,3 +52,27 @@ set -e __brew_prefix
 if test -f "$HOME/.cargo/env.fish"
     source "$HOME/.cargo/env.fish"
 end
+
+# --- Extra user bin directories -------------------------------------------------
+# WHAT: Directories that hold user-installed executables, prepended to PATH.
+# WHY : None of these are created by a package manager this file already knows
+#       about, so nothing else would put them on PATH:
+#         ~/.local/bin       the XDG standard — pipx, `uv tool`, `pip --user`
+#         ~/bin              the traditional home for personal scripts
+#         ~/go/bin           `go install` target
+#         ~/.bun/bin         Bun
+#         ~/.npm-global/bin  npm, when a user prefix is set to avoid sudo
+#         ~/.deno/bin        Deno
+# HOW : THIS IS THE LIST TO EDIT. Add a directory and it is picked up on the
+#       next shell; nothing else needs changing. Order matters only in that
+#       earlier entries win, and a directory that does not exist is skipped
+#       silently, so listing one you have not created yet costs nothing.
+# NOTE: `--global` is deliberate and load-bearing. fish_add_path defaults to
+#       UNIVERSAL, which persists to fish_variables and rewrites that file on
+#       every shell start — the same anti-pattern this config already removed
+#       from fish_prompt_pwd_dir_length. `--path` operates on PATH itself
+#       rather than on $fish_user_paths.
+for __extra_bin in ~/.local/bin ~/bin ~/go/bin ~/.bun/bin ~/.npm-global/bin ~/.deno/bin
+    fish_add_path --global --path $__extra_bin
+end
+set -e __extra_bin

@@ -66,7 +66,7 @@ instruction.
 
 Packages: `bat` `fish` `ghostty` `git` `neovide` `nvim` `tlrc` `zed`. Root
 files (`README.md`, `AGENTS.md` and its symlinks, `install.sh`, `Brewfile`,
-`.gitignore`) are not packages and are never stowed. Each package has its own
+`LICENSE`, `.gitignore`) are not packages and are never stowed. Each package has its own
 `README.md`, which stow's default ignore list keeps out of `$HOME`.
 
 Two linking strategies, and the distinction is load-bearing:

@@ -72,7 +72,7 @@ Run `./install.sh --dry-run` first if you want to see exactly what it will do.
 
 Root files — `install.sh`, `Brewfile` (every dependency), `AGENTS.md`
 (conventions for AI coding agents, symlinked as `CLAUDE.md` and `GEMINI.md`),
-`.gitignore` — are not packages and are never stowed.
+`LICENSE`, `.gitignore` — are not packages and are never stowed.
 
 ---
 

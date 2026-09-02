@@ -286,6 +286,29 @@
     // WHY : Off for the same reason. This was previously TRUE in both editors.
     "redhat.telemetry.enabled": false,
 
+    // WHAT: Copilot session sync. Visual Studio Code's own description: "Enable
+    //       session sync to GitHub.com. When enabled, Copilot session data is
+    //       synced to your GitHub account for cross-device access and richer
+    //       insights."
+    // WHY : Off. It sends chat session data off this machine, which is the
+    //       thing the two settings above exist to prevent, and "richer
+    //       insights" describes analysis of that data once it arrives.
+    //       It is written here EXPLICITLY rather than left unset, because its
+    //       schema carries `experiment: { mode: "auto" }` — Visual Studio Code
+    //       can switch it on remotely for a share of users, and it did exactly
+    //       that: the editor wrote `true` into this file on its own, appended
+    //       to the bottom, despite the shipped default being false. An
+    //       explicit value pins the choice against the next rollout.
+    // NOTE: The same experiment mechanism drives
+    //       `workbench.experimental.modernUI` below, which is pinned ON for the
+    //       same reason. Being an experiment says nothing about whether a
+    //       setting is wanted — only that leaving it unset is not a decision.
+    // HOW : Set true if you want Copilot history shared across your devices.
+    //       It also needs `github.copilot.chat.localIndex.enabled` to do
+    //       anything.
+    // default: false
+    "chat.sessionSync.enabled": false,
+
     // --- Updates ------------------------------------------------------------
     // WHAT: How the editor updates itself.
     // NOTE: Both editors are also Homebrew casks (see the root Brewfile), so
@@ -394,30 +417,4 @@
     //       comment there.
 
     "security.workspace.trust.untrustedFiles": "open"
-
-    // ========================================================================
-    // DOCUMENTED EXTENSION POINTS (inactive)
-    // ------------------------------------------------------------------------
-    // Settings deliberately absent, kept here with their reasoning so the
-    // decision stays visible and does not get quietly re-made.
-    //
-    //     "python.defaultInterpreterPath": "/usr/bin/python3"
-    //
-    // WHY NOT: It pins ONE absolute interpreter path in a file shared by two
-    //          editors on two operating systems, so no value can be right
-    //          everywhere. It was dropped once already holding a dead
-    //          /home/cristian/... path from another machine.
-    // NOTE:    Visual Studio Code writes this key TRANSIENTLY. It appeared
-    //          here again pointing at /usr/bin/python3 — Apple's system
-    //          Python, which Python tooling generally warns against developing
-    //          against — and the editor had removed it again within the hour,
-    //          with no action taken. So a `git diff` showing it is not
-    //          necessarily something to fix; check whether it is still there
-    //          before editing.
-    // INSTEAD: `ms-python.vscode-python-envs` (declared in extensions.txt) is
-    //          the supported way to choose an interpreter, and the Python
-    //          extension discovers virtualenvs and Homebrew interpreters on
-    //          its own. Per-project pinning belongs in that project's
-    //          .vscode/settings.json, never here.
-    // ========================================================================
 }

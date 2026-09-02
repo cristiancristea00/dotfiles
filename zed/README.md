@@ -6,7 +6,7 @@ configured as a **normal, non-modal editor** — deliberately not vim-like.
 ## Install
 
 ```sh
-stow --no-folding --target="$HOME" --dir="$HOME/work/dotfiles" zed
+stow --no-folding --target="$HOME" --dir="$HOME/personal/dotfiles" zed
 ```
 
 **`--no-folding` is required** so `~/.config/zed/` stays a real directory —
@@ -20,7 +20,7 @@ settings UI rewrites the file, which may replace the symlink with a real file
 and strip the comments. If that happens:
 
 ```sh
-stow -R --no-folding --target="$HOME" --dir="$HOME/work/dotfiles" zed
+stow -R --no-folding --target="$HOME" --dir="$HOME/personal/dotfiles" zed
 ```
 
 The file is **JSONC** — JSON with `//` comments — which is what makes it

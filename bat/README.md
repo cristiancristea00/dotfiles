@@ -9,7 +9,7 @@ dark appearance like the rest of the stack.
 `./install.sh` handles this. By hand:
 
 ```sh
-stow --no-folding --target="$HOME" --dir="$HOME/work/dotfiles" bat
+stow --no-folding --target="$HOME" --dir="$HOME/personal/dotfiles" bat
 ln -sfn config.darwin ~/.config/bat/config     # or config.linux
 ```
 

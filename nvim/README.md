@@ -18,10 +18,10 @@ config, and the common "how do I…" recipes.
 ```sh
 # The repo installer does all of this — dependencies, backups, symlinks, and a
 # headless first run that installs plugins and compiles every parser.
-cd ~/work/dotfiles && ./install.sh
+cd ~/personal/dotfiles && ./install.sh
 
 # Or just this package, by hand:
-stow --target="$HOME" --dir="$HOME/work/dotfiles" nvim neovide
+stow --target="$HOME" --dir="$HOME/personal/dotfiles" nvim neovide
 nvim   # first launch: vim.pack asks to install the plugins — answer y
 
 # Sanity check.

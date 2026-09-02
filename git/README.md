@@ -7,7 +7,7 @@ directory.
 ## Install
 
 ```sh
-stow --no-folding --target="$HOME" --dir="$HOME/work/dotfiles" git
+stow --no-folding --target="$HOME" --dir="$HOME/personal/dotfiles" git
 ```
 
 **`~/.gitconfig` must be removed (or renamed) first.** Git reads both files and
@@ -76,19 +76,23 @@ block** with no blank line between them, or Git parses only the last paragraph
 as trailers; and `git commit -s` should generate the sign-off, so it always
 matches the configured identity instead of being typed by hand.
 
-> **This repository commits under the personal identity**, even though it lives
-> at `~/work/dotfiles` where the `includeIf` rule above would otherwise apply
-> the work one. These dotfiles are a personal project that merely happens to
-> sit under `~/work/`. The switch is a repo-local override in `.git/config`:
+> **This repository commits under the personal identity**, which since it moved
+> to `~/personal/dotfiles` requires nothing at all: the `includeIf` matches only
+> `~/work/`, so the personal `[user]` block applies by default.
+>
+> While it lived under `~/work/` it needed a repo-local override to escape that
+> rule. The override is still present in `.git/config` and is now redundant —
+> harmless, since it sets exactly the identity that would apply anyway. It can
+> be cleared with:
 >
 > ```sh
-> git config --local user.email      cristiancristea00@gmail.com
-> git config --local user.signingKey D76E05349B9D14CE0888E5247B7B2BF9EF9E63F9
+> git config --local --unset user.email
+> git config --local --unset user.signingKey
 > ```
 >
-> Repo-local settings beat conditional includes. Because `.git/config` is not
-> version-controlled, **a fresh clone will not have it** — re-run those two
-> commands after cloning, or the work identity applies.
+> Worth remembering if you ever move a personal project **into** `~/work/`:
+> repo-local settings beat conditional includes, and because `.git/config` is
+> not version-controlled, a fresh clone will not carry the override with it.
 
 ## The one gotcha
 

@@ -7,7 +7,7 @@ removing a piece of behaviour is a single-file operation.
 ## Install
 
 ```sh
-stow --no-folding --target="$HOME" --dir="$HOME/work/dotfiles" fish
+stow --no-folding --target="$HOME" --dir="$HOME/personal/dotfiles" fish
 ```
 
 **`--no-folding` is required.** It links each file individually and leaves

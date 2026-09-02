@@ -6,7 +6,7 @@ configuration has **two halves** and this package is only one of them.
 ## Install
 
 ```sh
-stow --target="$HOME" --dir="$HOME/work/dotfiles" neovide
+stow --target="$HOME" --dir="$HOME/personal/dotfiles" neovide
 ```
 
 Installs `.config/neovide/config.toml` → `~/.config/neovide/config.toml`.

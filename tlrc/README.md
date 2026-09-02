@@ -9,7 +9,7 @@ commands. It installs the binary as **`tldr`**.
 `./install.sh` handles this. By hand:
 
 ```sh
-stow --target="$HOME" --dir="$HOME/work/dotfiles" tlrc
+stow --target="$HOME" --dir="$HOME/personal/dotfiles" tlrc
 # macOS only — bridge the path tlrc actually reads there:
 mkdir -p "$HOME/Library/Application Support/tlrc"
 ln -sfn "$HOME/.config/tlrc/config.toml" \

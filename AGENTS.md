@@ -196,6 +196,15 @@ Rules:
 * **Nothing in `install.sh` may block on a password without a terminal.**
   `chsh` and `sudo` prompt on their own and cannot be fed an answer, so they
   are gated on `[ -t 0 ]`. `--yes` deliberately does not override that.
+* **`confirm` never assumes consent.** It takes a per-call default (`yes` for
+  backing files up, which destroys nothing; `no` for anything that changes the
+  system) and, without a terminal, **refuses** rather than proceeding. Saying
+  yes without a keyboard is what `--yes` is for. An earlier version returned
+  yes on a non-tty, which meant piping the script silently displaced the
+  user's configs.
+* **An abort message must say what already happened.** By the time the backup
+  prompt appears, the package manager has run. Claiming "nothing was changed"
+  is worse than saying nothing.
 * Verify before claiming success. Every format here fails *silently* on a bad
   key — see the checks below.
 
@@ -208,6 +217,7 @@ Rules:
 ./install.sh --cli-only         # skip GUI apps (servers, containers)
 ./install.sh --packages nvim    # one package
 ./install.sh --uninstall        # remove the symlinks
+./install.sh --yes              # required for non-interactive runs
 
 # The two stow invocations install.sh runs, if you need them by hand
 stow --target="$HOME" --dir="$PWD" neovide nvim tlrc

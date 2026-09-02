@@ -9,7 +9,7 @@ appearance. Runs on macOS and Linux.
 `./install.sh` handles this. By hand:
 
 ```sh
-stow --no-folding --target="$HOME" --dir="$HOME/work/dotfiles" ghostty
+stow --no-folding --target="$HOME" --dir="$HOME/personal/dotfiles" ghostty
 ln -sfn os-darwin.conf ~/.config/ghostty/os.conf   # or os-linux.conf
 ```
 

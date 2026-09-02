@@ -19,8 +19,8 @@ Two things make this repo what it is:
 ## Install
 
 ```sh
-git clone <this-repo> ~/work/dotfiles
-cd ~/work/dotfiles
+git clone <this-repo> ~/personal/dotfiles
+cd ~/personal/dotfiles
 ./install.sh
 ```
 
@@ -41,17 +41,21 @@ Run `./install.sh --dry-run` first if you want to see exactly what it will do.
 
 ### What still needs you
 
-* **Fonts on Linux.** Homebrew installs fonts through casks, which are
-  macOS-only, and distro font packaging is too inconsistent to automate
-  safely. The script prints the list; install them and run `fc-cache -fv`.
+* **Fonts on Linux — usually nothing.** Homebrew installs fonts through casks,
+  which are macOS-only, so on Linux the installer pulls them from a private
+  Git LFS repository instead, fetching only the ~70 MB it will actually
+  install rather than the whole 317 MB. If that repository is unreachable —
+  no key, no access, offline — it prints the list for you to install by hand
+  and carries on.
 * **Ghostty and Zed on some distros.** Both are cask-only, so on Linux the
   script uses your package manager. Ghostty is packaged for Arch and Ubuntu
   26.04+ and needs a COPR on Fedora; Zed is packaged only for Arch. Where
   there is no package, the script points you at the upstream download rather
   than piping a remote script into your shell.
-* **This repo's own git identity.** It lives at `~/work/`, where the committed
-  `includeIf` would apply the work identity, so it is overridden per-repo.
-  That override is not version-controlled — see [git/README](git/README.md).
+* **Nothing, for the git identity.** This repo used to live under `~/work/`,
+  where the committed `includeIf` applies the work identity, and needed a
+  per-repo override to escape it. It now lives outside that path, so the
+  personal identity applies by default — see [git/README](git/README.md).
 
 ---
 
@@ -151,9 +155,11 @@ so icons survive one more step down the chain), then **JetBrains Mono**
 **Source Code Pro**, **IBM Plex Mono**. Size is **14** everywhere; Zed's
 `ui_font_size` stays 16 because it sizes UI chrome, not code.
 
-On **Linux the fonts are not installed for you** — they are Homebrew casks,
-which do not exist there. Install them by hand and run `fc-cache -fv`; until
-then Neovim's icons render as boxes.
+On **Linux the fonts come from a private repository** rather than Homebrew,
+since casks do not exist there. `install.sh` fetches only the builds the
+configs reference — the Mono ones — into `~/.local/share/fonts`. If it cannot
+reach the repository it says so and moves on, and Neovim's icons render as
+boxes until the fonts are installed some other way.
 
 Why the **Mono** build: its icon glyphs occupy exactly one cell, so Neovim's
 statusline, file tree and diagnostic gutter never break column alignment. The
@@ -175,26 +181,37 @@ Changing the font means changing it in four places: `ghostty/`,
 
 ## Light and dark
 
-On **macOS** every tool follows the system appearance, so the whole stack flips
-together:
+Everything visual uses **Catppuccin**, in the Latte (light) and Macchiato
+(dark) flavours. On **macOS** the tools that can follow the system appearance
+all do, so the stack flips together:
 
-| Tool    | Mechanism                                                       |
-| ------- | --------------------------------------------------------------- |
-| Ghostty | `theme = light:TokyoNight Day,dark:TokyoNight Night`            |
-| Zed     | `"theme": { "mode": "system", … }` — Ayu Light / Ayu Dark       |
-| bat     | `--theme=auto:system` — Catppuccin Latte / Mocha                |
-| Neovide | `theme = "auto"`                                                |
-| tlrc    | Palette **names**, which resolve through the terminal's colours |
-| Neovim  | Its built-in default colorscheme, which follows `background`    |
+| Tool     | Mechanism                                                       |
+| -------- | --------------------------------------------------------------- |
+| Ghostty  | `theme = light:Catppuccin Latte,dark:Catppuccin Macchiato`      |
+| Zed      | `"theme": { "mode": "system", … }` — Latte / Macchiato          |
+| bat      | `--theme=auto:system` — Latte / Macchiato                       |
+| Neovim   | `flavour = "auto"`, reading `background`                        |
+| Neovide  | `theme = "auto"` (window chrome only)                           |
+| tlrc     | Palette **names**, which resolve through the terminal's colours |
 
-On **Linux it is one step less direct, and worth knowing about.** Ghostty, Zed
-and Neovide read the desktop's colour-scheme preference through the XDG portal,
-so they still switch with the system. bat cannot: `auto:system` is documented as
-macOS-only, so the Linux variant uses `--theme=auto`, which infers light or dark
-from the **terminal's background colour** instead. In practice that still tracks
-your theme — Ghostty repaints its background when the desktop flips, and bat
-picks that up — but it is inference rather than a direct signal, and a terminal
-that does not report its background will get it wrong.
+Two tools **cannot** follow the appearance, and are pinned to Macchiato:
+
+| Tool       | Why it is fixed                                                    |
+| ---------- | ------------------------------------------------------------------ |
+| oh-my-posh | Takes a single config path; there is no light/dark form            |
+| delta      | `syntax-theme` takes one value; no pair syntax, no system detection |
+
+`tlrc` is worth understanding: it sets no theme at all. Its styles are palette
+*names* rather than hex, so it renders in whatever colours the terminal is
+using — which, Ghostty being Catppuccin, means it is Catppuccin in both modes
+for free. Hardcoding hex there would have *lost* that.
+
+On **Linux it is one step less direct.** Ghostty, Zed and Neovide read the
+desktop's colour-scheme preference through the XDG portal, so they still
+switch. bat cannot: `auto:system` is documented as macOS-only, so the Linux
+variant uses `--theme=auto`, which infers light or dark from the terminal's
+background colour instead. In practice that still tracks — Ghostty repaints its
+background when the desktop flips — but it is inference rather than a signal.
 
 ---
 

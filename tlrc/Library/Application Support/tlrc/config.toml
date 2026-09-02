@@ -1,0 +1,139 @@
+# ==============================================================================
+# tlrc/config.toml — tlrc (the official Rust tldr client)
+# ==============================================================================
+#
+# WHAT THIS FILE IS
+#   Configuration for `tldr`, which shows community-written, example-first
+#   summaries of commands — the short answer when `man` is too much.
+#
+# WHY IT IS NOT UNDER ~/.config
+#   tlrc does NOT honour $XDG_CONFIG_HOME on macOS. It reads
+#   ~/Library/Application Support/tlrc/config.toml, which is why this package's
+#   path is `Library/Application Support/...` instead of `.config/...`.
+#   Confirm the location on any machine with:
+#       tldr --config-path
+#
+# REGENERATING
+#   `tldr --gen-config` prints the complete default configuration. This file
+#   was written against that output — diff against it after upgrading tlrc to
+#   pick up new keys:
+#       tldr --gen-config | diff - "$(tldr --config-path)"
+#
+#   Manual: https://tldr.sh/tlrc/
+# ==============================================================================
+
+[cache]
+# WHAT: Where the downloaded pages live, and where they come from.
+# WHY : Both left at the defaults; stated explicitly so the file documents them.
+dir = "~/Library/Caches/tlrc"
+mirror = "https://github.com/tldr-pages/tldr/releases/latest/download"
+
+# WHAT: Refresh the cache automatically once it is older than max_age hours.
+# WHY : 336 hours is two weeks — often enough to pick up new pages, rare enough
+#       that you almost never wait for a download.
+auto_update = true
+max_age = 336
+
+# WHAT: Run that update AFTER printing the page rather than before.
+# WHY : This is the setting that keeps `tldr tar` instant. Without it, the one
+#       lookup that happens to cross the two-week boundary blocks on a network
+#       round-trip before showing you anything.
+defer_auto_update = true
+
+# WHAT: Which page languages to download. English is always included.
+# WHY : Explicitly English-only. Left empty, tlrc infers languages from $LANG
+#       and $LANGUAGE and downloads those too — translated pages are far less
+#       complete, so they mostly add cache size and stale content.
+# HOW : Add more as ISO codes, e.g. languages = ["en", "de"].
+languages = ["en"]
+
+[output]
+# WHAT: Print the command name as a heading above the page.
+show_title = true
+
+# WHAT: Append the platform (osx, linux, common) to that heading.
+# WHY : Off — on a Mac the answer is almost always "osx" or "common", so the
+#       suffix is noise. Turn on if you regularly compare platform variants.
+platform_title = false
+
+# WHAT: Prefix each example description with a hyphen.
+# WHY : Off, because the descriptions already read as a list and the style
+#       block below colours them distinctly.
+show_hyphens = false
+example_prefix = "- "
+
+# WHAT: Print a link to edit the page on GitHub.
+# WHY : Off — useful only when you intend to contribute a fix.
+edit_link = false
+
+# WHAT: Strip blank lines between examples.
+# WHY : ON. This is the difference between a page that fits on screen and one
+#       you have to scroll. The whole point of tldr is the answer at a glance.
+compact = true
+
+# WHAT: Maximum line width; 0 means "use the terminal width".
+line_length = 0
+
+# WHAT: Which form of a flag to show when a page documents both.
+# WHY : "long" — `--recursive` is self-explanatory where `-r` is not, and these
+#       pages are for commands you do not use often enough to remember.
+# HOW : "short", "long", or "both".
+option_style = "long"
+
+# WHAT: Dump the raw markdown instead of rendering it.
+# WHY : Off. Useful for piping into another tool.
+raw_markdown = false
+
+[indent]
+# WHAT: Leading spaces for each element of a rendered page.
+# WHY : Defaults. The 4-space example indent visually nests commands under
+#       their descriptions.
+title = 2
+description = 2
+bullet = 2
+example = 4
+
+# ------------------------------------------------------------------------------
+# Styling
+#
+# Each [style.*] block takes: color, background, and the boolean attributes
+# bold, underline, italic, dim, strikethrough. Colours may be a name
+# (as below), a 256-colour number, an [r, g, b] array, or a hex string.
+#
+# WHY these values: they are the tlrc defaults, kept because they are palette
+# NAMES rather than fixed RGB — so they resolve through the terminal's own
+# colours and follow Ghostty's light/dark theme switch automatically, exactly
+# like bat's `ansi` theme would. Hardcoding hex here would break that.
+# ------------------------------------------------------------------------------
+
+[style.title]
+color = "magenta"
+background = "default"
+bold = true
+
+[style.description]
+color = "magenta"
+background = "default"
+
+[style.bullet]
+color = "green"
+background = "default"
+
+[style.example]
+color = "cyan"
+background = "default"
+
+[style.url]
+color = "red"
+background = "default"
+italic = true
+
+[style.inline_code]
+color = "yellow"
+background = "default"
+italic = true
+
+[style.placeholder]
+color = "red"
+background = "default"
+italic = true

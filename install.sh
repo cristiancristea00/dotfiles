@@ -818,10 +818,13 @@ link_os_selectors() {
 #       The step is best-effort by design: a missing CLI, an unpublished id or
 #       an offline machine must not fail an install whose real job — linking
 #       configuration — has already succeeded.
-# NOTE: The two editors resolve ids against DIFFERENT registries. VS Code uses
-#       Microsoft's Marketplace, Cursor uses Open VSX, and an id only installs
+# NOTE: The two editors resolve ids against DIFFERENT galleries. Visual Studio
+#       Code uses Microsoft's Marketplace; Cursor uses its own gallery at
+#       marketplace.cursorapi.com, which mirrors much of the Marketplace but
+#       not Microsoft's licence-restricted extensions. An id only installs
 #       where it is published. That is why there are three lists rather than
-#       one; see vscode/extensions.txt for the full explanation.
+#       one; see vscode/extensions.txt for the full explanation and for the
+#       query that decides which list an id belongs in.
 # HOW : The `code` CLI appears on $PATH via the editor's "Shell Command:
 #       Install 'code' command in PATH" palette action, which is why its
 #       absence is a warning rather than an error.

@@ -60,12 +60,40 @@ ignore list keeps out of `$HOME`.
 
 Two linking strategies, and the distinction is load-bearing:
 
-* **Folded** (`bat ghostty neovide nvim tlrc`) — the whole directory is one
-  symlink. New files go live with no restow.
-* **`--no-folding`** (`fish git zed`) — per-file symlinks, so the directory
-  stays real and the app can write runtime state into it. **Adding a file to
-  one of these requires `stow -R --no-folding … <pkg>`**, or it simply will not
-  appear.
+* **Folded** (`neovide nvim tlrc`) — the whole directory is one symlink. New
+  files go live with no restow.
+* **`--no-folding`** (`bat fish ghostty git zed`) — per-file symlinks, so the
+  directory stays real. **Adding a file to one of these requires
+  `stow -R --no-folding … <pkg>`**, or it simply will not appear.
+
+The rule for which group a package belongs to: **a directory must stay real if
+anything machine-local has to live in it** — either runtime state the app
+writes (fish, git, zed) or one of the per-OS selector symlinks below (bat,
+ghostty).
+
+## Cross-platform
+
+This repo targets macOS **and** Linux. Before changing anything platform-shaped,
+know which of the three mechanisms applies:
+
+1. **Runtime branching** — preferred wherever the format allows it. Neovim uses
+   `vim.uv.os_uname().sysname == "Darwin"`; fish probes all three Homebrew
+   prefixes (`/opt/homebrew`, `/usr/local`, `/home/linuxbrew/.linuxbrew`); the
+   Brewfile uses `OS.mac?` / `OS.linux?`.
+2. **Per-OS files plus a selector symlink** — for formats with no conditionals.
+   `bat` ships `config.darwin`/`config.linux`, `ghostty` ships
+   `os-darwin.conf`/`os-linux.conf`, and `install.sh` links the right one.
+   **Both variants must be kept in sync except for the setting that justifies
+   the split** — if you add an option, add it to both.
+3. **A bridge symlink** — only `tlrc`, whose config path is XDG on Linux but
+   `~/Library/Application Support` on macOS. The repo ships the XDG path and
+   `install.sh` bridges macOS to it.
+
+Things that are macOS-only and must stay guarded: the ⌘ (`<D-…>`) keymaps,
+`macos-option-as-alt`, `font-thicken`, `system-native-tabs`, `codesign`, and
+`--theme=auto:system`. Things Linux needs that macOS does not: a clipboard
+provider (`wl-clipboard`/`xclip`) for `clipboard=unnamedplus`, and fonts
+installed by hand because casks do not exist there.
 
 Structural things worth knowing before editing:
 
@@ -130,16 +158,45 @@ Rules:
   packages are `--no-folding`.
 * **`nvim-pack-lock.json` is committed on purpose.** It pins exact plugin
   revisions. Do not add it to `.gitignore`.
-* **Do not commit** unless asked. The user handles Git.
+* **Commit your work.** Claude handles Git in this repository — finishing a
+  change means committing it, following the Commit convention above. Do not
+  leave the tree dirty and hand it back.
+  - One package per commit, in the order the packages are listed in the repo
+    map, so history reads consistently.
+  - **Never `push`.** Committing is yours; publishing is the user's.
+  - Never `--amend`, rebase or reset a commit the user already has — rewriting
+    their history is a separate, explicit request. The one exception is
+    correcting your own mistake in commits you created this session and have
+    not handed over: a commit whose message does not match its contents is
+    worse than the rewrite that fixes it. Say that you did it.
+  - **Stage per package, and check what is staged before committing.** A
+    `git mv` stages immediately, so a later `git add <other-package>` will
+    sweep that rename into the wrong commit. `git diff --cached --name-only`
+    is the check.
+  - Signing is automatic (`commit.gpgSign = true`). If GPG cannot sign, stop
+    and say so rather than committing unsigned with `--no-gpg-sign`.
+* **`install.sh` must stay bash 3.2-compatible** — that is what macOS ships. No
+  associative arrays, no `mapfile`, no `${var,,}`. Verify with
+  `/bin/bash -n install.sh` on macOS, not just your Linux bash.
+* **Nothing in `install.sh` may block on a password without a terminal.**
+  `chsh` and `sudo` prompt on their own and cannot be fed an answer, so they
+  are gated on `[ -t 0 ]`. `--yes` deliberately does not override that.
 * Verify before claiming success. Every format here fails *silently* on a bad
   key — see the checks below.
 
 ## Common commands
 
 ```sh
-# Deploy (from the repo root)
-stow --target="$HOME" --dir="$PWD" bat ghostty neovide nvim tlrc
-stow --no-folding --target="$HOME" --dir="$PWD" fish git zed
+# Deploy everything (installs packages, links configs, bootstraps Neovim)
+./install.sh
+./install.sh --dry-run          # preview without changing anything
+./install.sh --cli-only         # skip GUI apps (servers, containers)
+./install.sh --packages nvim    # one package
+./install.sh --uninstall        # remove the symlinks
+
+# The two stow invocations install.sh runs, if you need them by hand
+stow --target="$HOME" --dir="$PWD" neovide nvim tlrc
+stow --no-folding --target="$HOME" --dir="$PWD" bat fish ghostty git zed
 
 # Preview, re-link after adding files, remove
 stow -n -v --target="$HOME" --dir="$PWD" <pkg>     # dry run
@@ -153,7 +210,11 @@ brew bundle --file Brewfile
 Validation — run the one matching what you touched:
 
 ```sh
+shellcheck install.sh                                      # the installer
 ghostty +validate-config                                   # silent = valid
+ghostty +show-config | grep macos-option-as-alt            # RESOLVED value,
+                                                           # proves the include loaded
+ruby -c Brewfile                                           # a Brewfile is Ruby
 git config --file git/.config/git/config --list
 fish --no-execute <file.fish>
 python3 -c "import tomllib,sys;tomllib.load(open(sys.argv[1],'rb'))" <file.toml>

@@ -18,8 +18,8 @@
 #
 #   QUOTING TRAP: a value containing spaces MUST be quoted, because each line
 #   is split into arguments the way a shell would.
-#   `--theme-dark=Catppuccin Mocha` becomes two arguments and bat then treats
-#   "Mocha" as a filename to display. Write `--theme-dark="Catppuccin Mocha"`.
+#   `--theme-dark=Catppuccin Macchiato` becomes two arguments and bat then treats
+#   "Macchiato" as a filename to display. Write `--theme-dark="Catppuccin Macchiato"`.
 #
 # WHERE ELSE bat IS USED
 #   fish/conf.d/10-environment.fish routes $MANPAGER through bat, so these
@@ -35,13 +35,14 @@
 #       (Ghostty, Zed, Neovim). The previous setting was `ansi`, which renders
 #       using only the terminal's 16 palette colours — that guarantees an exact
 #       match with Ghostty's theme and flips automatically, but it is visually
-#       flat because it cannot use more than 16 colours. Catppuccin is a
-#       matched light/dark pair designed for exactly this kind of switching.
+#       flat because it cannot use more than 16 colours. Catppuccin Latte and
+#       Macchiato are a matched pair designed for exactly this kind of
+#       switching, and the same flavours every other tool here uses.
 # HOW : Revert to the terminal palette with a single line: --theme="ansi"
 #       Other bundled options: "auto" (detect from terminal background),
 #       "dark"/"light" (force one), or any name from --list-themes.
 --theme=auto:system
---theme-dark="Catppuccin Mocha"
+--theme-dark="Catppuccin Macchiato"
 --theme-light="Catppuccin Latte"
 
 # --- Decorations ----------------------------------------------------------------

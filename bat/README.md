@@ -1,16 +1,21 @@
 # bat
 
 [bat](https://github.com/sharkdp/bat) is `cat` with syntax highlighting, Git
-integration and paging. This package configures it to follow the macOS light/
+integration and paging. This package configures it to follow the system light/
 dark appearance like the rest of the stack.
 
 ## Install
 
+`./install.sh` handles this. By hand:
+
 ```sh
-stow --target="$HOME" --dir="$HOME/work/dotfiles" bat
+stow --no-folding --target="$HOME" --dir="$HOME/work/dotfiles" bat
+ln -sfn config.darwin ~/.config/bat/config     # or config.linux
 ```
 
-Installs `.config/bat/config` → `~/.config/bat/config`.
+**`--no-folding` is required**, because `~/.config/bat/` has to stay a real
+directory to hold that selector symlink — a folded directory is a symlink into
+the repo, so the selector would land in version control.
 
 ## What's configured
 
@@ -22,6 +27,22 @@ Installs `.config/bat/config` → `~/.config/bat/config`.
 | `--italic-text`                  | `always`                 | Ghostty renders real italics; comments read better                                            |
 | `--tabs`                         | `4`                      | Matches Neovim's `shiftwidth` and Zed's `tab_size`                                            |
 | `--map-syntax`                   | 3 rules                  | Forces INI highlighting for the extension-less `ghostty/config` and `git/config` in this repo |
+
+## Two files, one difference
+
+bat's config format has no conditionals, and `--theme=auto:system` — which
+reads the OS-wide light/dark preference — is documented as **macOS-only**. So
+the package ships two variants and `install.sh` links `~/.config/bat/config` at
+the right one:
+
+| File            | Theme setting         | Detects light/dark from          |
+| --------------- | --------------------- | -------------------------------- |
+| `config.darwin` | `--theme=auto:system` | the macOS appearance setting     |
+| `config.linux`  | `--theme=auto`        | the terminal's background colour |
+
+Both work; the Linux one is one step removed, inferring from the terminal
+rather than being told by the desktop. **Everything except the theme block is
+identical — keep it that way.** Adding an option means adding it to both.
 
 ## Where else bat is used
 

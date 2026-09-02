@@ -1,6 +1,14 @@
 # ==============================================================================
-# bat/config — bat (a cat clone with syntax highlighting)
+# bat/config.darwin — bat on macOS (a cat clone with syntax highlighting)
 # ==============================================================================
+#
+# WHICH FILE IS THIS
+#   This is the **macOS** variant. bat's config format has no conditionals
+#   and one setting genuinely differs per platform (see the Theme block), so the
+#   package ships `config.darwin` and `config.linux` and install.sh symlinks
+#   ~/.config/bat/config at the right one. Edit this file for macOS; the
+#   Linux variant is its sibling. Everything except the theme block is
+#   identical — keep it that way.
 #
 # WHAT THIS FILE IS
 #   bat's configuration, read from ~/.config/bat/config. The format is unusual:

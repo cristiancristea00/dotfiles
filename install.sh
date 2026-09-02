@@ -8,7 +8,8 @@
 #     ./install.sh [OPTIONS]
 #
 #     --dry-run            Show every action without changing anything.
-#     --cli-only           Skip GUI applications (Ghostty, Zed, Neovide).
+#     --cli-only           Skip GUI applications (Ghostty, Zed, Neovide,
+#                          Visual Studio Code, Cursor).
 #     --packages a,b,c     Only handle the named stow packages.
 #     --uninstall          Remove the symlinks this script created.
 #     --yes, -y            Answer yes to every prompt. Required for
@@ -24,7 +25,8 @@
 #     5. Install GUI apps that Homebrew cannot provide (Linux only).
 #     6. Back up anything in the way, then stow every package.
 #     7. Create the per-OS selector symlinks that stow cannot express.
-#     8. Bootstrap Neovim, prime the tldr cache, set fish as the login shell.
+#     8. Bootstrap Neovim, install the editors' extensions, prime the tldr
+#        cache, and set fish as the login shell.
 #     9. Print what happened and what needs restarting.
 #
 # WHY BASH 3.2
@@ -1028,7 +1030,7 @@ print_summary() {
 
     info "Restart these for the new configuration to take effect:"
     info "  • your terminal (or reload Ghostty with the reload-config binding)"
-    info "  • any running Neovim, Neovide or Zed"
+    info "  • any running Neovim, Neovide, Zed, Visual Studio Code or Cursor"
     [ -n "$BACKUP_DIR" ] && info "Displaced files were saved to: $BACKUP_DIR"
 
     if [ "$OS" = "linux" ]; then

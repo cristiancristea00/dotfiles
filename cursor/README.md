@@ -40,11 +40,19 @@ the shared file work in both directions.
 
 [`extensions-cursor.txt`](extensions-cursor.txt) holds Cursor-only ids;
 [`../vscode/extensions.txt`](../vscode/extensions.txt) holds the shared ones.
-The split exists because **Cursor resolves ids against
-[Open VSX](https://open-vsx.org), not Microsoft's Marketplace**. Microsoft's
-language extensions are licence-restricted off the Marketplace, so Anysphere
-publishes forks (`anysphere.cpptools`, `anysphere.cursorpyright`) under its own
-namespace. An id only installs where it is published.
+
+The split exists because **Cursor resolves ids against its own gallery at
+`marketplace.cursorapi.com`**, declared in
+`Cursor.app/Contents/Resources/app/product.json`. It is *not* Open VSX — a
+common assumption, and wrong. The gallery mirrors a large slice of Microsoft's
+Marketplace, so most ids resolve unchanged; what it lacks is Microsoft's
+licence-restricted extensions, and Anysphere publishes forks of those under its
+own namespace.
+
+Every id in `extensions-cursor.txt` is one of those substitutes, and
+[`../vscode/extensions-vscode.txt`](../vscode/extensions-vscode.txt) records
+which Visual Studio Code extension each one stands in for. Read the two
+together.
 
 ## Known gaps
 

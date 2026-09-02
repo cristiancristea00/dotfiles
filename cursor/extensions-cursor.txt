@@ -2,16 +2,36 @@
 # extensions-cursor.txt — Cursor only
 # ==============================================================================
 #
-# WHAT: Extensions installed into Cursor but not VS Code.
-# WHY : Cursor resolves extensions through Open VSX rather than Microsoft's
-#       Marketplace, so the Microsoft-published language extensions VS Code
-#       uses are unavailable there. Anysphere ships forks under its own
-#       namespace to fill the gap. See the registry note in
-#       vscode/extensions.txt.
+# WHAT: Extensions installed into Cursor but not Visual Studio Code.
+# WHY : Each one SUBSTITUTES for a Microsoft extension that Cursor's gallery
+#       cannot serve. Cursor resolves ids against its own gallery at
+#       marketplace.cursorapi.com, which mirrors much of Microsoft's
+#       Marketplace but not the licence-restricted extensions — Pylance, the
+#       C++ tools, and the ms-vscode-remote.* family. Anysphere publishes forks
+#       of exactly those under its own namespace, and they are what this file
+#       declares.
 # HOW : Same format — one id per line, # for comments.
+#
+#       This file is the other half of ../vscode/extensions-vscode.txt, which
+#       lists what each of these stands in for. Change one, check the other.
+#       The registry note in ../vscode/extensions.txt has the gallery query
+#       that settles whether an id needs substituting at all.
 # ==============================================================================
 
-# Nothing yet. The Anysphere language extensions (anysphere.cpptools,
-# anysphere.cursorpyright) are installed on this machine but are Cursor's own
-# defaults rather than deliberate choices, so they are not declared here.
-# Add an id above when you install something you would want on a new machine.
+# Python type checking.        Substitutes for: ms-python.vscode-pylance
+anysphere.cursorpyright
+
+# C and C++ IntelliSense.      Substitutes for: ms-vscode.cpptools,
+#                                               ms-vscode.cpp-devtools
+# NOTE: Cursor ships this one bundled and refuses to uninstall it. Listing it
+#       is still correct — a fresh machine needs it declared, and --force makes
+#       reinstalling it a no-op.
+anysphere.cpptools
+
+# Remote development.          Substitutes for: ms-vscode-remote.remote-ssh,
+#                                               ms-vscode-remote.remote-ssh-edit,
+#                                               ms-vscode.remote-explorer
+anysphere.remote-ssh
+
+# Dev containers.              Substitutes for: ms-vscode-remote.remote-containers
+anysphere.remote-containers

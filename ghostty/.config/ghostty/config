@@ -1,0 +1,196 @@
+# ==============================================================================
+# ghostty/config — Ghostty terminal emulator
+# ==============================================================================
+#
+# WHAT THIS FILE IS
+#   Ghostty's configuration, read from ~/.config/ghostty/config at startup.
+#   Syntax is one `key = value` per line; `#` starts a comment. Some keys are
+#   REPEATABLE — listing them more than once appends rather than overwrites,
+#   which is how font fallbacks and keybinds work.
+#
+#   FORMAT TRAP: there are no trailing comments. Everything after `=` to the
+#   end of the line is the value, so `font-thicken = true  # default: false`
+#   makes the value the literal string "true  # default: false" and the key is
+#   rejected. Every annotation below therefore sits on its own line.
+#
+# RELOADING
+#   ⌘⇧, reloads this file in place. A few keys (notably `command`) only apply
+#   to newly created windows.
+#
+# VALIDATING
+#   Ghostty ignores keys it does not recognise, so a typo fails silently.
+#   Check your work with:
+#       ghostty +validate-config
+#   List every available key and its default with:
+#       ghostty +show-config --default
+#
+# THE FONT SPLIT (see the repo README for the whole matrix)
+#   This is a TERMINAL, so it gets the Nerd Font build (Neovim draws icons in
+#   here) with ligatures OFF — in command output and diffs you want to see the
+#   exact characters, not `!=` fused into a single glyph. Editors get the
+#   opposite treatment.
+# ==============================================================================
+
+# --- Font ---------------------------------------------------------------------
+# WHAT: The font stack. `font-family` is repeatable: the first entry is the
+#       primary font and each subsequent one is a fallback consulted when a
+#       codepoint is missing from the previous.
+# WHY : "JetBrainsMono Nerd Font Mono" — the MONO build, whose icon glyphs are
+#       squeezed into exactly one cell so the terminal grid never breaks. The
+#       plain "JetBrainsMono Nerd Font" draws icons at double width, which
+#       looks better in isolation but can misalign columns in TUIs.
+#       Without any font-family set (as this config previously had), Ghostty
+#       used its bundled default and every Nerd Font icon in Neovim's
+#       statusline, file tree and diagnostic gutter rendered as a blank box.
+#       The plain "JetBrains Mono" sits first in the fallback chain: it is the
+#       same typeface without the patched-in icons, so anything the Nerd build
+#       cannot draw is still rendered in the identical design rather than
+#       jumping to a different family. It is also the safety net if the Nerd
+#       Font build is ever missing.
+# HOW : Verify a family name resolves before trusting it:
+#           ghostty +list-fonts | grep -i "jetbrains"
+font-family = JetBrainsMono Nerd Font Mono
+font-family = JetBrains Mono
+font-family = Fira Code
+font-family = Source Code Pro
+font-family = IBM Plex Mono
+
+# WHAT: Point size. Fractional values are allowed (e.g. 14.5).
+# WHY : 14 matches Neovim/Neovide and Zed, so text is the same physical size
+#       wherever you read code. Changing it here means changing it in
+#       neovide/config.toml, nvim's guifont and zed/settings.json too.
+font-size = 14
+
+# WHAT: OpenType features. Repeatable; `-tag` disables, `+tag` enables.
+# WHY : Ligatures off in the terminal — `calt` (contextual alternates) is what
+#       fuses `!=`, `->` and `===` in JetBrains Mono and Fira Code, and `liga`
+#       covers the standard ligature set. Reading exact bytes in logs, diffs
+#       and hex output matters more here than typographic polish.
+# HOW : Delete these two lines to get ligatures back.
+font-feature = -calt
+font-feature = -liga
+
+# WHAT: Render glyphs with a slightly thicker stroke (macOS only).
+# WHY : Compensates for macOS's thin subpixel rendering on non-Retina and
+#       scaled displays.
+# default: false
+font-thicken = true
+
+# --- Theme --------------------------------------------------------------------
+# WHAT: Colour scheme. The `light:NAME,dark:NAME` form selects per system
+#       appearance and switches live when macOS does.
+# WHY : Previously pinned to TokyoNight Night, which stayed dark even in light
+#       mode while Zed and Neovim followed the system — the stack now flips
+#       together.
+# HOW : Browse all 400+ bundled themes with `ghostty +list-themes`.
+theme = light:TokyoNight Day,dark:TokyoNight Night
+
+# --- Window -------------------------------------------------------------------
+# WHAT: Initial size, in cells (not pixels).
+window-width = 100
+window-height = 30
+
+# WHAT: Padding between the text grid and the window edge, in points.
+# WHY : The 2pt default leaves text almost touching the frame; 8/6 gives it
+#       room to breathe without wasting space.
+# default: 2
+window-padding-x = 8
+# default: 2
+window-padding-y = 6
+
+# WHAT: Window translucency (0 = invisible, 1 = opaque) and a macOS blur
+#       behind it, so what shows through stays unreadable enough not to
+#       distract.
+# WHY : A deliberate difference from neovide/config.toml, which stays fully
+#       opaque for maximum text crispness. Set to 1 and remove the blur if you
+#       prefer that here too.
+# default: 1
+background-opacity = 0.95
+# default: false
+background-blur = true
+
+# NOTE: The macos-titlebar-style key is left at its default of "transparent",
+#       which already matches the `frame = "transparent"` chosen in
+#       neovide/config.toml — the two applications look consistent for free.
+
+# --- Cursor and mouse -----------------------------------------------------------
+# WHAT: Cursor shape.
+# WHY : Static block. This pairs with `no-cursor` in shell-integration-features
+#       below: shell integration would otherwise report cursor-shape changes
+#       per mode and override this.
+cursor-style = block
+
+# WHAT: Hide the mouse pointer while typing; it reappears on movement.
+# WHY : Matches vim.g.neovide_hide_mouse_when_typing in the Neovide config.
+# default: false
+mouse-hide-while-typing = true
+
+# --- Keyboard -------------------------------------------------------------------
+# WHAT: Treat the LEFT Option key as Alt/Meta; the right one keeps composing
+#       macOS special characters (é, ß, …).
+# WHY : REQUIRED for Neovim's <M-j> / <M-k> line-moving keymaps to work in the
+#       terminal — without it macOS swallows Option as a compose modifier and
+#       those mappings are simply dead. Mirrors
+#       vim.g.neovide_input_macos_option_key_is_meta = "only_left".
+# HOW : Values: true, false, left, right.
+# default: false
+macos-option-as-alt = left
+
+# --- Shell --------------------------------------------------------------------
+# WHAT: The program Ghostty launches, and how it integrates with it.
+# WHY : Setting `command` explicitly normally DEFEATS Ghostty's automatic
+#       shell-integration injection (it can no longer be sure what it started),
+#       which is why `shell-integration = fish` is stated manually right after
+#       — that pairing is intentional, not redundant.
+#       `--login --interactive` makes fish read login-shell config, matching
+#       what Terminal.app would do.
+# NOTE: The Homebrew path is hardcoded because Ghostty's config format has no
+#       conditionals. On an Intel Mac this becomes /usr/local/bin/fish.
+command = /opt/homebrew/bin/fish --login --interactive
+# default: detect
+shell-integration = fish
+
+# WHAT: Which integration features to enable.
+# WHY : `no-cursor` opts OUT of shell-driven cursor shape changes (see
+#       cursor-style above). `sudo` preserves the terminal environment across
+#       sudo. `title` lets the shell set the window title to the running
+#       command.
+shell-integration-features = no-cursor,sudo,title
+
+# --- Keybinds -------------------------------------------------------------------
+# The bindings below MIRROR Ghostty's current macOS defaults. They are stated
+# explicitly so this config documents its own interface and keeps working if
+# upstream defaults ever change. Format is `trigger=action`; `super` is ⌘.
+# See every default with: ghostty +list-keybinds --default
+#
+# Splits
+keybind = super+d=new_split:right
+keybind = super+shift+d=new_split:down
+keybind = super+shift+enter=toggle_split_zoom
+#
+# Split navigation (⌘⌥ + arrows moves directionally)
+keybind = super+alt+arrow_left=goto_split:left
+keybind = super+alt+arrow_right=goto_split:right
+keybind = super+alt+arrow_up=goto_split:up
+keybind = super+alt+arrow_down=goto_split:down
+#
+# Tabs and surfaces
+keybind = super+t=new_tab
+keybind = super+w=close_surface
+#
+# Config
+keybind = super+shift+comma=reload_config
+
+# --- Documented extension points (inactive) ----------------------------------------
+# WHAT: The copy-on-select option is already ON by default — selecting copies.
+# copy-on-select = true            # default: true
+#
+# WHAT: Lines of scrollback kept per surface, in bytes.
+# scrollback-limit = 10000000      # default: 10000000
+#
+# WHAT: Prompt before closing a surface that is still running something.
+# confirm-close-surface = true     # default: true
+#
+# WHAT: Quit Ghostty entirely when the last window closes (macOS apps
+#       normally stay running with no windows).
+# quit-after-last-window-closed = true   # default: false

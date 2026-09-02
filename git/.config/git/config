@@ -80,6 +80,18 @@
     side-by-side = true
     line-numbers = true
 
+    # WHAT: The syntax highlighting theme for code inside diffs.
+    # WHY : delta uses bat's theme names but does NOT read bat's config, so
+    #       leaving this unset meant diffs rendered in Monokai Extended while
+    #       `bat` rendered Catppuccin — the same file looked different
+    #       depending on which tool showed it. Naming the flavour explicitly
+    #       makes them agree.
+    # HOW : Unlike bat, this takes a SINGLE value: delta has no
+    #       `light:…,dark:…` form and no system detection, so the diff colours
+    #       do not follow the appearance. List alternatives with
+    #       `delta --list-syntax-themes`.
+    syntax-theme = Catppuccin Macchiato
+
 [interactive]
     # WHAT: Also route `git add -p` hunks through delta.
     diffFilter = delta --color-only
@@ -258,3 +270,22 @@
 #       this file is a symlink into the dotfiles repo.
 [includeIf "gitdir:~/work/"]
     path = ~/.config/git/config.work
+# --- Git LFS ---------------------------------------------------------------------
+# WHAT: The clean/smudge filters that route large files through Git LFS.
+# WHY : Written here by `git lfs install`, which edits the GLOBAL config — and
+#       this file is the global config. Kept rather than reverted, because LFS
+#       has to be armed before any repository commits a tracked file: without
+#       these filters a .gitattributes rule is silently ignored and the raw
+#       binaries go into git history with no error. The fonts repository
+#       (git@github.com:cristiancristea00/fonts.git) depends on it, and
+#       git-lfs is in the Brewfile.
+# HOW : `required = true` makes a missing git-lfs binary a hard error rather
+#       than a silent pass-through of pointer files. Verify on a new machine:
+#           git config --get filter.lfs.process   # must be non-empty
+# NOTE: Reformatted from the tabs git-lfs wrote to this file's 4-space style.
+#       Re-running `git lfs install` will rewrite it with tabs again.
+[filter "lfs"]
+    clean = git-lfs clean -- %f
+    smudge = git-lfs smudge -- %f
+    process = git-lfs filter-process
+    required = true

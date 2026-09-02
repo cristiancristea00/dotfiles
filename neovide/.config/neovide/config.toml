@@ -1,0 +1,159 @@
+# ==============================================================================
+# config.toml — Neovide's own configuration file
+# ==============================================================================
+#
+# WHAT THIS FILE IS
+#   Neovide reads this file at STARTUP, before it even launches Neovim
+#   (location: ~/.config/neovide/config.toml, overridable with the
+#   $NEOVIDE_CONFIG environment variable). It controls process- and
+#   window-level behavior that Lua inside Neovim cannot: window frame style,
+#   the font used from the very first frame, GPU/vsync/color behavior, and
+#   how the process launches.
+#
+#   Division of responsibilities with the Neovim config:
+#     neovide/config.toml         -> process + window creation (this file)
+#     nvim/lua/core/neovide.lua   -> runtime behavior: animations, macOS
+#                                    cmd-key bindings, live zoom, etc.
+#                                    (vim.g.neovide_* variables)
+#
+#   Settings precedence (highest first):
+#     command-line flags > this file > environment variables > defaults
+#
+# TWO TRAPS THIS FILE HAS ALREADY FALLEN INTO
+#   1. TOML TABLE ORDER. Every bare `key = value` belongs to the most recent
+#      `[table]` header above it. A previous version of this file had `idle`,
+#      `system-native-tabs` and `mode` sitting BELOW `[font]`, so TOML parsed
+#      them as `font.idle`, `font.system-native-tabs` and `font.mode` — all
+#      three silently did nothing. Top-level keys must come FIRST, before any
+#      table header. Keep it that way when adding settings.
+#   2. UNKNOWN KEYS ARE IGNORED. Neovide does not error on a typo'd or
+#      misplaced key; the setting just has no effect. Copy names exactly.
+#
+#   Reference for every available key: https://neovide.dev/config-file.html
+# ==============================================================================
+
+# ==============================================================================
+# TOP-LEVEL KEYS — all bare keys must appear here, above every [table] header.
+# ==============================================================================
+
+# --- Process ------------------------------------------------------------------
+# WHAT: Whether `neovide` detaches from the terminal that launched it.
+# WHY : Set to `true`, so launching from a shell returns your prompt instead
+#       of tying up the terminal for the life of the editor. The trade-off is
+#       that the exit code no longer propagates back to that shell, which only
+#       matters if you script around Neovide.
+# default: false
+fork = true
+
+# --- Window -------------------------------------------------------------------
+# WHAT: Titlebar style. "transparent" keeps the macOS traffic-light buttons but
+#       paints the titlebar in the editor's background color, so the window
+#       reads as one seamless surface.
+# WHY : Chosen look. It also happens to match Ghostty, whose
+#       macos-titlebar-style defaults to transparent.
+# HOW : "full" (standard gray macOS titlebar), "buttonless" (transparent with
+#       no traffic lights), "none" (no titlebar, no drag area).
+# default: "full"
+frame = "transparent"
+
+# WHAT: Whether to HIDE the window-title text (the filename Neovim sets).
+# WHY : Set to `false` — the title is shown. With `system-native-tabs` below,
+#       the title is what labels each tab, so hiding it would leave unlabeled
+#       tabs. Set true if you run single-window and want the chrome empty.
+# default: false
+title-hidden = false
+
+# WHAT: Start maximized. Independent of remembering the last window size,
+#       which vim.g.neovide_remember_window_size handles at runtime.
+# default: false
+maximized = false
+
+# WHAT: Use real macOS window tabs (⌘T, the native tab bar) instead of
+#       Neovide's own separate windows.
+# WHY : Set to `true` — native tabs get macOS's tab switcher, Exposé integration
+#       window merging for free. Note these are OS tabs, entirely separate from
+#       Neovim's own `:tabnew` tabpages.
+# default: false
+system-native-tabs = true
+
+# --- Rendering ------------------------------------------------------------------
+# WHAT: Request an sRGB color surface from the OS.
+# WHY : Set to `false`, the macOS default. Enabling it made colors render
+#       differently from every other app on this machine; the default matches
+#       what Ghostty and Zed show.
+# HOW : Flip to true and compare if colors ever look washed out.
+# default on macOS: false
+srgb = false
+
+# WHAT: Sync frame rendering to the display's refresh rate.
+# WHY : Prevents tearing, and the animations tuned in core/neovide.lua assume
+#       smooth vsynced output. Only worth disabling to chase minimum input
+#       latency.
+# default: true
+vsync = true
+
+# WHAT: Throttle rendering when nothing on screen is changing.
+# WHY : Saves battery on a laptop. Disable if animations ever look choppy on a
+#       high-refresh external display.
+# default: true
+idle = true
+
+# WHAT: Light/dark appearance of Neovide's window chrome.
+# WHY : "auto" follows the macOS system appearance, matching Ghostty, Zed and
+#       bat — the whole stack flips together.
+# HOW : "light", "dark".
+# default: "auto"
+theme = "auto"
+
+# ==============================================================================
+# TABLES — everything below belongs to the table header above it.
+# ==============================================================================
+
+# --- Font -----------------------------------------------------------------------
+# WHAT: The font stack Neovide uses from the FIRST rendered frame. `normal` is
+#       an ordered list: the first family is primary, the rest are fallbacks
+#       for codepoints it lacks.
+# WHY : The Nerd Font MONO build, because Neovim draws icon glyphs in the
+#       statusline, file tree and diagnostic gutter, and the Mono build keeps
+#       every icon to exactly one cell so columns stay aligned.
+#       This section exists to prevent the wrong-font flash at startup: once
+#       init.lua runs, Neovim's own 'guifont' takes over for the session, so
+#       KEEP FAMILY AND SIZE IN SYNC with nvim/lua/core/neovide.lua.
+# HOW : Verify a family name resolves before trusting it (Neovide silently
+#       falls back): `ghostty +list-fonts | grep -i jetbrains` lists what the
+#       system exposes. macOS also reports these as "JetBrainsMono NFM".
+[font]
+normal = ["JetBrainsMono Nerd Font Mono", "Fira Code", "Source Code Pro", "IBM Plex Mono"]
+size = 14
+
+# WHAT: OpenType features, keyed by family name. `+tag` enables, `-tag`
+#       disables.
+# WHY : Ligatures ON. Neovide is an EDITOR, and this is the editor half of the
+#       stack-wide split: `calt`/`liga` fuse `!=`, `->` and `=>` here and in
+#       Zed's editor pane, while Ghostty and Zed's terminal disable them so
+#       command output shows exact characters. Consequence worth knowing:
+#       Neovim has ligatures in Neovide but not in a Ghostty terminal.
+# HOW : This table is keyed PER FAMILY, and a family with no entry gets no
+#       features — so EVERY font in `normal` above needs its own line, not
+#       just the primary. Fira Code in particular is a ligature-first typeface
+#       and would render flat if it were omitted. Family names must match
+#       `normal` exactly.
+#       Source Code Pro ships no programming ligatures, so the tags are simply
+#       inert there; listing it costs nothing and means the table stays
+#       correct if the fallback order ever changes.
+[font.features]
+"JetBrainsMono Nerd Font Mono" = ["+calt", "+liga"]
+"Fira Code" = ["+calt", "+liga"]
+"Source Code Pro" = ["+calt", "+liga"]
+"IBM Plex Mono" = ["+calt", "+liga"]
+
+# --- Box drawing ------------------------------------------------------------------
+# WHAT: How box-drawing characters (│ ─ ┌ …) are rendered — the lines that make
+#       up window borders, the file tree's guides and floating-window frames.
+# WHY : "native" draws them geometrically instead of using the font's glyphs,
+#       so segments join with no hairline gaps between cells.
+# NOTE: This key MUST live under the [box-drawing] header. A previous version
+#       of this file had it stranded under [font], where it did nothing.
+# default: "font-glyph"
+[box-drawing]
+mode = "native"

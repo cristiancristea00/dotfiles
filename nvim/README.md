@@ -194,6 +194,14 @@ Leader = **Space**. `<leader>fk` fuzzy-searches this whole list at runtime.
 * **Swift and Objective-C on Linux** — the entries stay, but sourcekit-lsp only
   exists if you install the swift.org toolchain. If it is absent the server
   simply never starts; nothing else is affected.
+* **XML has no language server here.** The entry gives treesitter
+  highlighting, indent and folds, but no completion, no schema validation and
+  no formatting. The only XML server `nvim-lspconfig` knows is `lemminx`, and
+  it has **no Homebrew formula** — every other dependency in this repo comes
+  from the Brewfile, and a hand-downloaded Java binary would be the sole
+  exception. This is the one language where Zed and VS Code are ahead: both
+  bundle lemminx inside their own extensions. To close the gap, put a lemminx
+  binary on `$PATH` and set `servers = { "lemminx" }` in `lua/languages.lua`.
 
 ## Troubleshooting
 

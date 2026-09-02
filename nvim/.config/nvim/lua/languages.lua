@@ -58,6 +58,22 @@ return {
         formatters = { "clang_format" }, -- reads the project's .clang-format
     },
     {
+        name = "CMake",
+        -- Sits next to C/C++ because it is that stack's build system: the
+        -- CMakeLists.txt beside the sources above.
+        filetypes = { "cmake" },
+        parsers = { "cmake" },
+        -- neocmakelsp, not cmake-language-server. Both exist as formulae and
+        -- both have nvim-lspconfig entries, but Zed's `neocmake` extension
+        -- drives the same binary, so the two editors report identical
+        -- diagnostics on the same file. It is also a single Rust binary rather
+        -- than a Python package.
+        servers = { "neocmake" }, -- brew install neocmakelsp
+        -- neocmakelsp formats through the LSP (textDocument/formatting), so
+        -- <leader>F works without a separate conform formatter.
+        formatters = {},
+    },
+    {
         name = "Swift",
         filetypes = { "swift" },
         parsers = { "swift" },
@@ -94,6 +110,40 @@ return {
         parsers = { "yaml" },
         servers = { "yamlls" }, -- schemastore.org schemas enabled in after/lsp/yamlls.lua
         formatters = { "yamlfmt" },
+    },
+    {
+        name = "XML",
+        filetypes = { "xml", "xsd", "xsl", "xslt", "svg" },
+        parsers = { "xml" }, -- one parser covers all five filetypes
+        -- EMPTY, and this is the one place Neovim is behind the GUI editors.
+        -- The only XML server nvim-lspconfig knows is lemminx, and lemminx has
+        -- NO Homebrew formula — `brew search lemminx` finds nothing. Every
+        -- other dependency in this repo comes from the Brewfile, and a
+        -- hand-downloaded Java binary would be the only exception.
+        -- Consequence: highlighting, indent and folds work; completion,
+        -- validation against a schema and formatting do not. Zed (the `xml`
+        -- extension) and VS Code (redhat.vscode-xml, which embeds lemminx)
+        -- both have the full experience.
+        -- To close the gap yourself: install lemminx from
+        -- https://github.com/eclipse-lemminx/lemminx/releases onto $PATH, then
+        -- change this to { "lemminx" }. Nothing else needs touching.
+        servers = {},
+        formatters = {},
+    },
+    {
+        name = "Dockerfile",
+        filetypes = { "dockerfile" },
+        parsers = { "dockerfile" },
+        -- docker-language-server (Docker's own Go binary), not the older
+        -- dockerls, which needs docker-langserver from an npm package.
+        -- Worth knowing: this server's filetypes are `dockerfile` and
+        -- `yaml.docker-compose` — it deliberately does NOT claim plain `yaml`,
+        -- so it cannot fight yamlls over an ordinary YAML file. Compose files
+        -- only get it once Neovim resolves them to the compound filetype.
+        servers = { "docker_language_server" }, -- brew install docker-language-server
+        -- The server formats through the LSP, and there is no separate
+        -- Dockerfile formatter worth installing.
+        formatters = {},
     },
     {
         name = "Markdown",

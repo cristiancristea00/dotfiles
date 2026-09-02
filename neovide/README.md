@@ -22,16 +22,16 @@ Settings precedence: command-line flags > this file > environment > defaults.
 
 ## What's configured
 
-| Setting              | Value                                                              | Why                                                                              |
-| -------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| `fork`               | `true`                                                             | Launching from a shell returns the prompt immediately                            |
-| `frame`              | `transparent`                                                      | Seamless titlebar; matches Ghostty's default `macos-titlebar-style`              |
-| `title-hidden`       | `false`                                                            | The title labels each native tab                                                 |
-| `system-native-tabs` | `true`                                                             | Real macOS tabs — separate from Neovim's own `:tabnew` tabpages                  |
-| `srgb`               | `false`                                                            | The macOS default; enabling it made colours diverge from every other app         |
-| `theme`              | `auto`                                                             | Follows macOS, like Ghostty, Zed and bat                                         |
-| Font                 | `JetBrainsMono Nerd Font Mono` + fallbacks, 14pt, **ligatures on** | Mono build keeps Neovim's icons to one cell; ligatures because this is an editor |
-| `box-drawing`        | `native`                                                           | Draws `│ ─ ┌` geometrically so borders join without hairline gaps                |
+| Setting              | Value                                                              | Why                                                                                                                        |
+| -------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| `fork`               | `true`                                                             | Launching from a shell returns the prompt immediately                                                                      |
+| `frame`              | `transparent`                                                      | Seamless titlebar; matches Ghostty's default `macos-titlebar-style`                                                        |
+| `title-hidden`       | `false`                                                            | The title labels each native tab                                                                                           |
+| `system-native-tabs` | `true`                                                             | Real macOS tabs — separate from Neovim's own `:tabnew` tabpages                                                            |
+| `srgb`               | `false`                                                            | The default on **both** macOS and Linux (`neovide --help` confirms); enabling it made colours diverge from every other app |
+| `theme`              | `auto`                                                             | Follows macOS, like Ghostty, Zed and bat                                                                                   |
+| Font                 | `JetBrainsMono Nerd Font Mono` + fallbacks, 14pt, **ligatures on** | Mono build keeps Neovim's icons to one cell; ligatures because this is an editor                                           |
+| `box-drawing`        | `native`                                                           | Draws `│ ─ ┌` geometrically so borders join without hairline gaps                                                          |
 
 ## Two traps this file has fallen into
 
@@ -46,6 +46,19 @@ Settings precedence: command-line flags > this file > environment > defaults.
    ```sh
    python3 -c "import tomllib;print(tomllib.load(open('$HOME/.config/neovide/config.toml','rb')))"
    ```
+
+## Why this file is not split per OS
+
+Unlike `bat` and `ghostty`, Neovide ships **one** config for both platforms.
+Its macOS-only keys (`system-native-tabs`, `title-hidden`, `frame =
+"transparent"`) are inert on Linux rather than harmful, and `srgb = false` is
+the default on both — so duplicating a heavily documented file to vary one
+setting would cost more than it buys. The per-OS behaviour is annotated inline
+instead.
+
+The one open question is what `frame = "transparent"` does on Linux: it refers
+to the macOS titlebar, and the expected fallback is a normal frame. If it
+misbehaves on your desktop, set `frame = "full"`.
 
 ## Font sync
 

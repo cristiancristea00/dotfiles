@@ -119,11 +119,16 @@ theme = "auto"
 #       This section exists to prevent the wrong-font flash at startup: once
 #       init.lua runs, Neovim's own 'guifont' takes over for the session, so
 #       KEEP FAMILY AND SIZE IN SYNC with nvim/lua/core/neovide.lua.
+#       The second Nerd build backs up the first, so a glyph missing from
+#       JetBrains Mono is still drawn by a font that HAS icons before the chain
+#       degrades to the icon-less faces.
 # HOW : Verify a family name resolves before trusting it (Neovide silently
-#       falls back): `ghostty +list-fonts | grep -i jetbrains` lists what the
-#       system exposes. macOS also reports these as "JetBrainsMono NFM".
+#       falls back). On macOS: `ghostty +list-fonts | grep -i nerd`; on Linux:
+#       `fc-list : family | grep -i nerd`. Note the two Nerd builds report
+#       differently — macOS also exposes JetBrains Mono's as "JetBrainsMono
+#       NFM", while Fira Code's uses the full "FiraCode Nerd Font Mono".
 [font]
-normal = ["JetBrainsMono Nerd Font Mono", "Fira Code", "Source Code Pro", "IBM Plex Mono"]
+normal = ["JetBrainsMono Nerd Font Mono", "FiraCode Nerd Font Mono", "Fira Code", "Source Code Pro", "IBM Plex Mono"]
 size = 14
 
 # WHAT: OpenType features, keyed by family name. `+tag` enables, `-tag`
@@ -143,6 +148,7 @@ size = 14
 #       correct if the fallback order ever changes.
 [font.features]
 "JetBrainsMono Nerd Font Mono" = ["+calt", "+liga"]
+"FiraCode Nerd Font Mono" = ["+calt", "+liga"]
 "Fira Code" = ["+calt", "+liga"]
 "Source Code Pro" = ["+calt", "+liga"]
 "IBM Plex Mono" = ["+calt", "+liga"]

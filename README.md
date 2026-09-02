@@ -209,21 +209,21 @@ must move together.
 
 ## Light and dark
 
-Everything visual uses **Catppuccin**, in the Latte (light) and Macchiato
+Everything visual uses **Catppuccin**, in the Latte (light) and Mocha
 (dark) flavours. On **macOS** the tools that can follow the system appearance
 all do, so the stack flips together:
 
 | Tool     | Mechanism                                                       |
 | -------- | --------------------------------------------------------------- |
-| Ghostty  | `theme = light:Catppuccin Latte,dark:Catppuccin Macchiato`      |
-| Zed      | `"theme": { "mode": "system", … }` — Latte / Macchiato          |
+| Ghostty  | `theme = light:Catppuccin Latte,dark:Catppuccin Mocha`          |
+| Zed      | `"theme": { "mode": "system", … }` — Latte / Mocha              |
 | VS Code / Cursor | `window.autoDetectColorScheme` + `preferredLight`/`DarkColorTheme` |
-| bat      | `--theme=auto:system` — Latte / Macchiato                       |
+| bat      | `--theme=auto:system` — Latte / Mocha                           |
 | Neovim   | `flavour = "auto"`, reading `background`                        |
 | Neovide  | `theme = "auto"` (window chrome only)                           |
 | tlrc     | Palette **names**, which resolve through the terminal's colours |
 
-Two tools **cannot** follow the appearance, and are pinned to Macchiato:
+Two tools **cannot** follow the appearance, and are pinned to Mocha:
 
 | Tool       | Why it is fixed                                                    |
 | ---------- | ------------------------------------------------------------------ |

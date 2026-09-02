@@ -36,7 +36,7 @@
 #           a test written for one silently applies to the other.
 # HOW : Swap the theme by changing the filename; list the bundled ones with
 #         ls (brew --prefix oh-my-posh)/themes/
-#       For a flavour-matched prompt instead, use catppuccin_macchiato.omp.json.
+#       For a flavour-matched prompt instead, use catppuccin_mocha.omp.json.
 #       If you ever install oh-my-posh outside Homebrew, replace the
 #       `brew --prefix` substitution with $POSH_THEMES_PATH.
 #       Remove this whole block to fall back to fish's own (fast, plain) prompt.

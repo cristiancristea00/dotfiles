@@ -90,7 +90,7 @@
     #       `light:…,dark:…` form and no system detection, so the diff colours
     #       do not follow the appearance. List alternatives with
     #       `delta --list-syntax-themes`.
-    syntax-theme = Catppuccin Macchiato
+    syntax-theme = Catppuccin Mocha
 
 [interactive]
     # WHAT: Also route `git add -p` hunks through delta.

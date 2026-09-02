@@ -2,7 +2,7 @@
   theme.lua — colorscheme selection
   ============================================================================
 
-  Current choice: Catppuccin, in the Latte (light) and Macchiato (dark)
+  Current choice: Catppuccin, in the Latte (light) and Mocha (dark)
   flavours used by every other tool in this repo — Ghostty, bat, Zed and
   delta all name the same pair, so one palette follows you from the terminal
   to the editor to a git diff.
@@ -39,7 +39,7 @@
     :colorscheme <Tab> to browse.)
 
   Light/dark: `flavour = "auto"` makes Catppuccin read vim.o.background, so it
-  flips between Latte and Macchiato exactly as the built-in default scheme did.
+  flips between Latte and Mocha exactly as the built-in default scheme did.
   Neovim under Neovide and modern terminals detects the OS appearance; force it
   with `vim.o.background = "light"` (or "dark") above the colorscheme line.
   lualine (plugins/statusline.lua) uses theme = "auto" and follows along.
@@ -64,7 +64,7 @@ pcall(function()
         flavour = "auto",
         background = {
             light = "latte",
-            dark = "macchiato",
+            dark = "mocha",
         },
     })
 end)

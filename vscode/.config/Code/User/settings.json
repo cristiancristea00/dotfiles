@@ -99,7 +99,7 @@
 
     // --- Theme --------------------------------------------------------------
     // WHAT: Follow the OS appearance, choosing between the two named themes.
-    // WHY : Catppuccin Latte and Macchiato, the flavours the whole stack uses —
+    // WHY : Catppuccin Latte and Mocha, the flavours the whole stack uses —
     //       Ghostty, bat, Neovim, Neovide and delta all name the same pair.
     // NOTE: `workbench.colorTheme` — the ACTIVE theme — is deliberately NOT set
     //       here. With auto-detection on, VS Code rewrites that key every time
@@ -107,7 +107,7 @@
     //       spurious diffs. The two `preferred*` keys are the real settings.
     "window.autoDetectColorScheme": true,
     "workbench.preferredLightColorTheme": "Catppuccin Latte",
-    "workbench.preferredDarkColorTheme": "Catppuccin Macchiato",
+    "workbench.preferredDarkColorTheme": "Catppuccin Mocha",
 
     // WHAT: Light or dark native window chrome (titlebar, scrollbars).
     "window.systemColorTheme": "auto",
@@ -348,14 +348,14 @@
     // WHY : The Catppuccin set, so the icons share the palette with the colour
     //       theme rather than sitting beside it in unrelated colours. It
     //       replaced pkief.material-icon-theme, which is no longer installed.
-    // NOTE: The id is `catppuccin-macchiato` — one flavour, fixed. Unlike
+    // NOTE: The id is `catppuccin-mocha` — one flavour, fixed. Unlike
     //       `workbench.preferredLight/DarkColorTheme` above, icon themes have
     //       no light/dark pair, so this one does NOT follow the system
     //       appearance. The Latte icons are a separate id
     //       (`catppuccin-latte`) if you work mostly in light mode.
     // HOW : Ships in `Catppuccin.catppuccin-vsc-icons`, declared in
     //       extensions.txt. Run "Preferences: File Icon Theme" to switch.
-    "workbench.iconTheme": "catppuccin-macchiato",
+    "workbench.iconTheme": "catppuccin-mocha",
 
     // WHAT: Product icons — the toolbar, activity-bar and status-bar glyphs.
     // WHY : Catppuccin does not provide a product icon theme, so this stays

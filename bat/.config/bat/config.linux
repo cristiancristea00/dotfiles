@@ -18,8 +18,8 @@
 #
 #   QUOTING TRAP: a value containing spaces MUST be quoted, because each line
 #   is split into arguments the way a shell would.
-#   `--theme-dark=Catppuccin Macchiato` becomes two arguments and bat then treats
-#   "Macchiato" as a filename to display. Write `--theme-dark="Catppuccin Macchiato"`.
+#   `--theme-dark=Catppuccin Mocha` becomes two arguments and bat then treats
+#   "Mocha" as a filename to display. Write `--theme-dark="Catppuccin Mocha"`.
 #
 # WHERE ELSE bat IS USED
 #   fish/conf.d/10-environment.fish routes $MANPAGER through bat, so these
@@ -42,7 +42,7 @@
 #       the terminal's own 16 colours — an exact Ghostty match at the cost of
 #       flatter highlighting. Any name from --list-themes also works.
 --theme=auto
---theme-dark="Catppuccin Macchiato"
+--theme-dark="Catppuccin Mocha"
 --theme-light="Catppuccin Latte"
 
 # --- Decorations ----------------------------------------------------------------

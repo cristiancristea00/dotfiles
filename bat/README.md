@@ -22,7 +22,7 @@ the repo, so the selector would land in version control.
 | Setting                          | Value                    | Why                                                                                           |
 | -------------------------------- | ------------------------ | --------------------------------------------------------------------------------------------- |
 | `--theme`                        | `auto:system`            | Reads the macOS appearance and picks the light or dark theme below                            |
-| `--theme-dark` / `--theme-light` | Catppuccin Macchiato / Latte | A matched pair designed for switching                                                         |
+| `--theme-dark` / `--theme-light` | Catppuccin Mocha / Latte | A matched pair designed for switching                                                         |
 | `--style`                        | `numbers,changes,header` | Line numbers, Git gutter marks, filename — without the full box grid                          |
 | `--italic-text`                  | `always`                 | Ghostty renders real italics; comments read better                                            |
 | `--tabs`                         | `4`                      | Matches Neovim's `shiftwidth` and Zed's `tab_size`                                            |
@@ -52,9 +52,9 @@ so these settings shape `man` output too.
 ## Gotchas
 
 * **Each line is a command-line argument**, not a `key = value` pair.
-* **Values containing spaces must be quoted.** `--theme-dark=Catppuccin Macchiato`
+* **Values containing spaces must be quoted.** `--theme-dark=Catppuccin Mocha`
   is split into two arguments and bat then tries to open a file called
-  `Macchiato`. Write `--theme-dark="Catppuccin Macchiato"`.
+  `Mocha`. Write `--theme-dark="Catppuccin Mocha"`.
 
 ## Recipes
 

@@ -72,7 +72,7 @@ stow -R --no-folding --ignore='\.config' --target="$HOME" --dir="$HOME/personal/
 | ---- | ------ | --- |
 | Editor font | `JetBrains Mono` + fallbacks, 14pt, **ligatures on** | Plain build: both editors draw their own UI icons, so the Nerd build buys nothing in the code pane |
 | Terminal font | `JetBrainsMono Nerd Font Mono` + fallbacks, 14pt, **ligatures off** | The integrated terminal runs Neovim and the oh-my-posh prompt, both of which draw icon glyphs |
-| Theme | `autoDetectColorScheme` → Catppuccin Latte / Macchiato | Follows the system appearance, like the rest of the stack |
+| Theme | `autoDetectColorScheme` → Catppuccin Latte / Mocha | Follows the system appearance, like the rest of the stack |
 | Indentation | 4 spaces, `detectIndentation` **off** | Matches Neovim's `expandtab` + `shiftwidth = 4`. Without the `off`, `tabSize` is only advisory |
 | `formatOnSave` | `off` | Matches Neovim and Zed, where formatting is a manual `<leader>F` |
 | Inlay hints | `"on"` | Matches Zed. Note the value is a string, not a boolean |

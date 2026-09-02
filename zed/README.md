@@ -32,8 +32,8 @@ self-documenting.
 | ---------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | Editor font      | `JetBrains Mono` + fallbacks, 14pt, **ligatures on**                | Plain build: Zed has its own UI icons, so the Nerd build buys nothing in the code pane |
 | Terminal font    | `JetBrainsMono Nerd Font Mono` + fallbacks, 14pt, **ligatures off** | Neovim runs in here and draws icon glyphs; command output should show exact characters |
-| Theme            | `system` → Catppuccin Latte / Catppuccin Macchiato                  | Follows macOS, like the rest of the stack                                              |
-| Icon theme       | `system` → Catppuccin Latte / Catppuccin Macchiato                  | Same object form as the theme — VS Code's equivalent cannot do this                    |
+| Theme            | `system` → Catppuccin Latte / Catppuccin Mocha                       | Follows macOS, like the rest of the stack                                              |
+| Icon theme       | `system` → Catppuccin Latte / Catppuccin Mocha                       | Same object form as the theme — VS Code's equivalent cannot do this                    |
 | Indentation      | 4 spaces, no hard tabs                                              | Matches Neovim's `expandtab` + `shiftwidth = 4`                                        |
 | `format_on_save` | `off`                                                               | Matches Neovim, where formatting is a manual `<leader>F`                               |
 | Inlay hints      | on                                                                  | Unlike Neovim, where they sit behind a `<leader>ti` toggle                             |

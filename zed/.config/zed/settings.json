@@ -59,7 +59,7 @@
     // --- Theme --------------------------------------------------------------
     // WHAT: "mode": "system" follows the OS appearance, picking "light" or
     //       "dark" from the two named themes.
-    // WHY : Catppuccin Latte and Macchiato, the same flavours Ghostty, bat,
+    // WHY : Catppuccin Latte and Mocha, the same flavours Ghostty, bat,
     //       Neovim and delta use — one palette across the whole stack.
     // NOTE: Unlike every other tool here, these themes are NOT built in: they
     //       come from an extension, declared below. Until it installs, Zed
@@ -67,14 +67,14 @@
     "theme": {
         "mode": "system",
         "light": "Catppuccin Latte",
-        "dark": "Catppuccin Macchiato"
+        "dark": "Catppuccin Mocha"
     },
 
     // WHAT: The icon set used for files and folders in the project panel and
     //       tabs, in the same light/dark form as "theme" above.
     // WHY : Written as an object rather than a plain string so the icons
     //       follow the system appearance with everything else — a bare
-    //       "Catppuccin Macchiato" would leave dark-flavoured icons sitting in
+    //       "Catppuccin Mocha" would leave dark-flavoured icons sitting in
     //       a Latte window. The four names come from the extension's own
     //       icon_themes/catppuccin-icons.json, which is where to look if one
     //       stops resolving.
@@ -93,7 +93,7 @@
     "icon_theme": {
         "mode": "system",
         "light": "Catppuccin Latte",
-        "dark": "Catppuccin Macchiato"
+        "dark": "Catppuccin Mocha"
     },
 
     // WHAT: Extensions Zed installs by itself on startup, as id → enabled.

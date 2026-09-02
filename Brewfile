@@ -4,7 +4,7 @@
 #
 # Install or update everything with:
 #
-#     brew bundle --file ~/work/dotfiles/Brewfile
+#     brew bundle --file ~/personal/dotfiles/Brewfile
 #
 # or just run ./install.sh, which does this and everything around it.
 #
@@ -12,7 +12,7 @@
 # re-running after adding a line is always safe. To find what is installed but
 # NOT listed here:
 #
-#     brew bundle cleanup --file ~/work/dotfiles/Brewfile
+#     brew bundle cleanup --file ~/personal/dotfiles/Brewfile
 #
 # ── A BREWFILE IS RUBY ────────────────────────────────────────────────────────
 #   That is what makes one file serve both platforms. `OS.mac?` and `OS.linux?`
@@ -55,12 +55,28 @@ cask "font-source-code-pro"          if OS.mac?
 cask "font-ibm-plex-mono"            if OS.mac?
 
 # --- Applications ------------------------------------------------------------------
-# macOS gets all three as casks. On Linux, Neovide has a real formula so brew
-# still handles it; Ghostty and Zed are cask-only, so install.sh installs them
-# through the distribution's package manager instead.
-cask "ghostty"     if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # terminal    -> ghostty/
-cask "zed"         if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # GUI editor  -> zed/
-cask "neovide-app" if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # Neovim GUI  -> neovide/
+# Every application this repo configures is declared here, so that the Brewfile
+# and the package list stay in step — a package with no application to configure
+# is as wrong as an application nobody declared.
+#
+# macOS gets all five as casks. Linux differs per application:
+#   * Neovide has a real formula, so brew still handles it.
+#   * Ghostty and Zed are cask-only; install.sh installs them through the
+#     distribution's package manager instead.
+#   * Visual Studio Code and Cursor are installed BY HAND on Linux, and
+#     deliberately so. Code would need Microsoft's apt/dnf repository —
+#     importing a signing key and writing a sources file — and Cursor ships
+#     only an AppImage. Adding a third-party system repository is a larger
+#     change than a dotfiles installer should make unattended, the same
+#     reasoning that stops it fetching Ghostty's community .deb. The
+#     configuration still deploys; only the applications are manual.
+#       https://code.visualstudio.com/docs/setup/linux
+#       https://cursor.com/downloads
+cask "ghostty"            if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # terminal    -> ghostty/
+cask "zed"                if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # GUI editor  -> zed/
+cask "neovide-app"        if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # Neovim GUI  -> neovide/
+cask "visual-studio-code" if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # GUI editor  -> vscode/
+cask "cursor"             if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # GUI editor  -> cursor/
 brew "neovide"     if OS.linux? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"] # same, as a formula
 
 # --- Dotfiles management -------------------------------------------------------------

@@ -134,6 +134,13 @@ brew "yaml-language-server"  # YAML (with schemastore.org schemas)
 brew "marksman"              # Markdown
 brew "bash-language-server"  # sh/bash
 brew "fish-lsp"              # fish
+brew "neocmakelsp"           # CMake — the same server Zed's `neocmake` extension uses
+brew "docker-language-server" # Dockerfile + Compose (Docker's own, not the npm one)
+
+# NOTE: XML has no line here on purpose. Its server, lemminx, has no Homebrew
+#       formula, so the Neovim entry for XML is treesitter-only. Zed and VS
+#       Code both bundle lemminx inside their own extensions and are unaffected
+#       — see the XML entry in nvim/.config/nvim/lua/languages.lua.
 
 # --- Formatters and linters ---------------------------------------------------------------
 # Used by <leader>F in Neovim via conform.nvim. If one is missing, formatting

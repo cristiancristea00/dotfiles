@@ -84,11 +84,14 @@ font-feature = -liga
 # --- Theme --------------------------------------------------------------------
 # WHAT: Colour scheme. The `light:NAME,dark:NAME` form selects per system
 #       appearance and switches live when macOS does.
-# WHY : Previously pinned to TokyoNight Night, which stayed dark even in light
-#       mode while Zed and Neovim followed the system — the stack now flips
-#       together.
-# HOW : Browse all 400+ bundled themes with `ghostty +list-themes`.
-theme = light:TokyoNight Day,dark:TokyoNight Night
+# WHY : Catppuccin Latte and Macchiato, the flavours used across the whole
+#       stack — bat, Zed, Neovim and delta all name the same pair, so one
+#       palette follows you between the terminal, the editor and every diff.
+#       Ghostty bundles all four Catppuccin flavours, so nothing is installed.
+# HOW : Browse all 400+ bundled themes with `ghostty +list-themes`. The other
+#       dark flavours are `Catppuccin Frappe` (lightest) and `Catppuccin Mocha`
+#       (darkest); note Ghostty spells Frappe without the accent.
+theme = light:Catppuccin Latte,dark:Catppuccin Macchiato
 
 # --- Window -------------------------------------------------------------------
 # WHAT: Initial size, in cells (not pixels).

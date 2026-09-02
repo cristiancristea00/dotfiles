@@ -83,6 +83,10 @@ rust-lang.rust-analyzer
 tamasfe.even-better-toml
 redhat.vscode-yaml
 bmalehorn.vscode-fish
+# Embeds lemminx, the Eclipse XML language server. Worth knowing: this is the
+# one language where Neovim is behind — lemminx has no Homebrew formula, so the
+# XML entry in ../nvim/.config/nvim/lua/languages.lua is treesitter-only.
+redhat.vscode-xml
 
 # --- Markdown -----------------------------------------------------------------
 yzhang.markdown-all-in-one

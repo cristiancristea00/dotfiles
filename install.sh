@@ -11,8 +11,9 @@
 #     --cli-only           Skip GUI applications (Ghostty, Zed, Neovide).
 #     --packages a,b,c     Only handle the named stow packages.
 #     --uninstall          Remove the symlinks this script created.
-#     --yes, -y            Assume yes; never prompt. Implied when stdin is not
-#                          a terminal, so piping the script never hangs.
+#     --yes, -y            Answer yes to every prompt. Required for
+#                          non-interactive runs: without a terminal the script
+#                          refuses prompts rather than assuming consent.
 #     --help, -h           This message.
 #
 # WHAT IT DOES, IN ORDER
@@ -119,18 +120,40 @@ run() {
     fi
 }
 
-# WHAT: Ask a yes/no question, defaulting to no.
-# WHY : Returns yes immediately under --yes or when stdin is not a terminal, so
-#       `curl … | bash` and CI runs never block on a prompt nobody can answer.
+# WHAT: Ask a yes/no question. First argument is the default — `yes` or `no` —
+#       which is what pressing Enter selects and what the [Y/n] / [y/N] hint
+#       shows. The rest is the prompt.
+# WHY : The default has to differ per question. Backing files up destroys
+#       nothing and is the expected path, so Enter should accept it; enabling a
+#       third-party package repository or changing your login shell should not
+#       happen because you tapped Enter.
+# NOTE: When stdin is not a terminal this REFUSES rather than assuming yes.
+#       An earlier version returned yes, which meant piping the script into a
+#       shell silently moved your existing configs aside — consent inferred
+#       from the absence of a keyboard. `--yes` is how you say yes without one.
 confirm() {
-    if [ "$ASSUME_YES" -eq 1 ] || [ ! -t 0 ]; then
+    local default="$1"
+    shift
+
+    if [ "$ASSUME_YES" -eq 1 ]; then
         return 0
     fi
-    printf '    %s [y/N] ' "$*"
-    local reply
+
+    if [ ! -t 0 ]; then
+        warn "No terminal to ask on: $*"
+        warn "Re-run with --yes to answer yes to prompts like this one."
+        return 1
+    fi
+
+    local hint reply
+    if [ "$default" = "yes" ]; then hint="[Y/n]"; else hint="[y/N]"; fi
+    printf '    %s %s ' "$*" "$hint" >&2
     read -r reply
+
     case "$reply" in
         [yY] | [yY][eE][sS]) return 0 ;;
+        [nN] | [nN][oO]) return 1 ;;
+        "") [ "$default" = "yes" ] && return 0 || return 1 ;;
         *) return 1 ;;
     esac
 }
@@ -395,7 +418,7 @@ install_gui_apps_linux() {
                 ;;
             dnf)
                 info "Ghostty on Fedora comes from a COPR repository."
-                if confirm "Enable the scottames/ghostty COPR?"; then
+                if confirm no "Enable the scottames/ghostty COPR?"; then
                     # Sequential ifs, not `A && B || C`: with the latter, C also
                     # runs when A succeeds but B fails, so a failed install
                     # would be reported twice and a failed COPR not at all.
@@ -467,10 +490,24 @@ EOF
     BACKUP_DIR="$HOME/.dotfiles-backup-$(date +%Y%m%d-%H%M%S)"
     warn "These existing files are in the way and would be moved to:"
     warn "  $BACKUP_DIR"
-    printf '%s' "$conflicts" | sed 's|^|      |'
+    # WHY >&2: the list belongs with the warning lines above and the question
+    #       below. Sending it to stdout instead let redirection interleave the
+    #       three parts of one message out of order.
+    printf '%s' "$conflicts" | sed 's|^|      |' >&2
 
-    if ! confirm "Move them and continue?"; then
-        die "Aborted. Nothing was changed."
+    if ! confirm yes "Move them and continue?"; then
+        # WHY THIS WORDING: an earlier version claimed "Nothing was changed",
+        #       which was false — by the time this prompt appears the package
+        #       manager has already run. Aborting here leaves a half-set-up
+        #       machine, and saying so is the difference between a user who
+        #       re-runs and one who wonders what state they are in.
+        warn "Aborted before linking any configuration."
+        warn "Already done and NOT undone by this abort:"
+        warn "  • Homebrew installed or updated"
+        warn "  • packages from the Brewfile installed"
+        [ "$OS" = "linux" ] && warn "  • GUI applications installed"
+        warn "Nothing in \$HOME was moved. Re-run to continue from here."
+        exit 1
     fi
 
     local f
@@ -650,7 +687,7 @@ set_login_shell() {
         return 0
     fi
 
-    if ! confirm "Change the login shell? (needs your password)"; then
+    if ! confirm no "Change the login shell? (needs your password)"; then
         warn "Skipped. Change it later with: chsh -s $fish_path"
         return 0
     fi

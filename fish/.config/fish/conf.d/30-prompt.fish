@@ -26,10 +26,14 @@
 #         * Apple Terminal is excluded because it cannot render the Nerd Font
 #           powerline glyphs the theme uses; you would get boxes. The check is
 #           inert on Linux, where $TERM_PROGRAM is never that value.
-#         * Zed's integrated terminal is excluded because Zed draws its own
-#           prompt decorations. NOTE: The file zed/.config/zed/settings.json
-#           sets terminal.shell.program = fish, which is what makes $TERM_PROGRAM
-#           equal "zed" here — the two files are coupled.
+#           No other terminal is excluded. An earlier version also skipped Zed,
+#           on the theory that Zed decorates its own prompt; it does not, and
+#           the result was a plain fish prompt in one terminal and oh-my-posh
+#           in every other. Zed, VS Code and Cursor all ship the Nerd Font that
+#           the theme needs, configured in their own settings files, so the
+#           prompt renders correctly in all three. Beware if you add a test
+#           here: VS Code AND Cursor both report $TERM_PROGRAM as "vscode", so
+#           a test written for one silently applies to the other.
 # HOW : Swap the theme by changing the filename; list the bundled ones with
 #         ls (brew --prefix oh-my-posh)/themes/
 #       For a flavour-matched prompt instead, use catppuccin_macchiato.omp.json.
@@ -40,6 +44,5 @@ if status is-interactive
     and type --query oh-my-posh
     and type --query brew
     and test "$TERM_PROGRAM" != Apple_Terminal
-    and test "$TERM_PROGRAM" != zed
     oh-my-posh init fish --config "$(brew --prefix oh-my-posh)/themes/catppuccin.omp.json" | source
 end

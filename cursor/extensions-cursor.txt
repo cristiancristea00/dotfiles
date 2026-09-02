@@ -1,0 +1,17 @@
+# ==============================================================================
+# extensions-cursor.txt — Cursor only
+# ==============================================================================
+#
+# WHAT: Extensions installed into Cursor but not VS Code.
+# WHY : Cursor resolves extensions through Open VSX rather than Microsoft's
+#       Marketplace, so the Microsoft-published language extensions VS Code
+#       uses are unavailable there. Anysphere ships forks under its own
+#       namespace to fill the gap. See the registry note in
+#       vscode/extensions.txt.
+# HOW : Same format — one id per line, # for comments.
+# ==============================================================================
+
+# Nothing yet. The Anysphere language extensions (anysphere.cpptools,
+# anysphere.cursorpyright) are installed on this machine but are Cursor's own
+# defaults rather than deliberate choices, so they are not declared here.
+# Add an id above when you install something you would want on a new machine.

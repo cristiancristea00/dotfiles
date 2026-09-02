@@ -24,6 +24,16 @@
 #   List every available key and its default with:
 #       ghostty +show-config --default
 #
+# PLATFORM-SPECIFIC SETTINGS
+#   Anything that only makes sense on one OS lives in a sibling file — the
+#   macOS-only keys and the ⌘ keybinds in os-darwin.conf, the Ctrl+Shift
+#   keybinds in os-linux.conf. install.sh symlinks ~/.config/ghostty/os.conf at
+#   whichever applies, and the `config-file = ?os.conf` line at the very bottom
+#   of this file pulls it in. The `?` prefix makes the include optional, so
+#   Ghostty starts cleanly even before the installer has run.
+#   The include sits LAST because later values win — the per-OS file is meant
+#   to be able to override anything here.
+#
 # THE FONT SPLIT (see the repo README for the whole matrix)
 #   This is a TERMINAL, so it gets the Nerd Font build (Neovim draws icons in
 #   here) with ligatures OFF — in command output and diffs you want to see the
@@ -42,14 +52,15 @@
 #       Without any font-family set (as this config previously had), Ghostty
 #       used its bundled default and every Nerd Font icon in Neovim's
 #       statusline, file tree and diagnostic gutter rendered as a blank box.
-#       The plain "JetBrains Mono" sits first in the fallback chain: it is the
-#       same typeface without the patched-in icons, so anything the Nerd build
-#       cannot draw is still rendered in the identical design rather than
-#       jumping to a different family. It is also the safety net if the Nerd
-#       Font build is ever missing.
+#       The two Nerd builds lead the chain so that a glyph missing from the
+#       first is still served by a font that HAS icons, before the chain
+#       degrades to the icon-less faces. Plain "JetBrains Mono" then follows as
+#       the same typeface without the patched-in icons, and as the safety net
+#       if no Nerd build is installed at all.
 # HOW : Verify a family name resolves before trusting it:
 #           ghostty +list-fonts | grep -i "jetbrains"
 font-family = JetBrainsMono Nerd Font Mono
+font-family = FiraCode Nerd Font Mono
 font-family = JetBrains Mono
 font-family = Fira Code
 font-family = Source Code Pro
@@ -69,12 +80,6 @@ font-size = 14
 # HOW : Delete these two lines to get ligatures back.
 font-feature = -calt
 font-feature = -liga
-
-# WHAT: Render glyphs with a slightly thicker stroke (macOS only).
-# WHY : Compensates for macOS's thin subpixel rendering on non-Retina and
-#       scaled displays.
-# default: false
-font-thicken = true
 
 # --- Theme --------------------------------------------------------------------
 # WHAT: Colour scheme. The `light:NAME,dark:NAME` form selects per system
@@ -125,30 +130,23 @@ cursor-style = block
 # default: false
 mouse-hide-while-typing = true
 
-# --- Keyboard -------------------------------------------------------------------
-# WHAT: Treat the LEFT Option key as Alt/Meta; the right one keeps composing
-#       macOS special characters (é, ß, …).
-# WHY : REQUIRED for Neovim's <M-j> / <M-k> line-moving keymaps to work in the
-#       terminal — without it macOS swallows Option as a compose modifier and
-#       those mappings are simply dead. Mirrors
-#       vim.g.neovide_input_macos_option_key_is_meta = "only_left".
-# HOW : Values: true, false, left, right.
-# default: false
-macos-option-as-alt = left
-
 # --- Shell --------------------------------------------------------------------
-# WHAT: The program Ghostty launches, and how it integrates with it.
-# WHY : Setting `command` explicitly normally DEFEATS Ghostty's automatic
-#       shell-integration injection (it can no longer be sure what it started),
-#       which is why `shell-integration = fish` is stated manually right after
-#       — that pairing is intentional, not redundant.
-#       `--login --interactive` makes fish read login-shell config, matching
-#       what Terminal.app would do.
-# NOTE: The Homebrew path is hardcoded because Ghostty's config format has no
-#       conditionals. On an Intel Mac this becomes /usr/local/bin/fish.
-command = /opt/homebrew/bin/fish --login --interactive
+# WHAT: Which shell Ghostty starts, and how it integrates with it.
+# WHY : `command` is deliberately NOT set. It used to pin
+#       /opt/homebrew/bin/fish, which broke on Intel Macs (/usr/local) and on
+#       Linux (/usr/bin) — an absolute path in a format that has no
+#       conditionals. Leaving it unset makes Ghostty launch your LOGIN shell,
+#       which install.sh sets to fish, so the right shell starts on every
+#       platform with nothing hardcoded anywhere.
+#       Dropping `command` also restores automatic shell-integration detection.
+#       Ghostty disables its own injection when it cannot be sure what it
+#       started, which is exactly why the old config had to name `fish`
+#       explicitly; `detect` is correct now and stays correct if the login
+#       shell ever changes.
+# HOW : To pin a shell anyway, set both together — `command = /path/to/shell`
+#       AND `shell-integration = <name>` — or the integration silently stops.
 # default: detect
-shell-integration = fish
+shell-integration = detect
 
 # WHAT: Which integration features to enable.
 # WHY : `no-cursor` opts OUT of shell-driven cursor shape changes (see
@@ -158,28 +156,12 @@ shell-integration = fish
 shell-integration-features = no-cursor,sudo,title
 
 # --- Keybinds -------------------------------------------------------------------
-# The bindings below MIRROR Ghostty's current macOS defaults. They are stated
-# explicitly so this config documents its own interface and keeps working if
-# upstream defaults ever change. Format is `trigger=action`; `super` is ⌘.
+# Keybinds live in the per-OS include (see PLATFORM-SPECIFIC SETTINGS above),
+# because the correct modifier differs: macOS uses ⌘ (`super`), while on Linux
+# `super` is the Windows key, which desktop environments grab for themselves —
+# GNOME opens the Overview on it. Linux therefore uses Ctrl+Shift, matching
+# Ghostty's own Linux defaults.
 # See every default with: ghostty +list-keybinds --default
-#
-# Splits
-keybind = super+d=new_split:right
-keybind = super+shift+d=new_split:down
-keybind = super+shift+enter=toggle_split_zoom
-#
-# Split navigation (⌘⌥ + arrows moves directionally)
-keybind = super+alt+arrow_left=goto_split:left
-keybind = super+alt+arrow_right=goto_split:right
-keybind = super+alt+arrow_up=goto_split:up
-keybind = super+alt+arrow_down=goto_split:down
-#
-# Tabs and surfaces
-keybind = super+t=new_tab
-keybind = super+w=close_surface
-#
-# Config
-keybind = super+shift+comma=reload_config
 
 # --- Documented extension points (inactive) ----------------------------------------
 # WHAT: The copy-on-select option is already ON by default — selecting copies.
@@ -194,3 +176,14 @@ keybind = super+shift+comma=reload_config
 # WHAT: Quit Ghostty entirely when the last window closes (macOS apps
 #       normally stay running with no windows).
 # quit-after-last-window-closed = true   # default: false
+
+# --- Platform include ---------------------------------------------------------
+# WHAT: Pull in the OS-specific settings. `?` marks the include OPTIONAL, so a
+#       missing file is not an error — Ghostty still starts before install.sh
+#       has created the symlink.
+# WHY : Last line in the file because later values override earlier ones, which
+#       lets the per-OS file adjust anything above it.
+# HOW : install.sh points ~/.config/ghostty/os.conf at os-darwin.conf or
+#       os-linux.conf. Check what actually resolved with:
+#           ghostty +show-config
+config-file = ?os.conf

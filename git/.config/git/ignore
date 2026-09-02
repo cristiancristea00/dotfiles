@@ -1,0 +1,25 @@
+# ==============================================================================
+# git/ignore — global gitignore
+# ==============================================================================
+#
+# WHAT: Patterns Git ignores in EVERY repository on this machine, on top of
+#       each repo's own .gitignore.
+# WHY : This is Git's native XDG location (~/.config/git/ignore) and needs no
+#       core.excludesFile pointing at it — Git reads it automatically. The old
+#       setup used a hand-configured ~/.gitignore_global instead; both files
+#       are merged here.
+# HOW : Keep this list to noise that is genuinely machine- or OS-level. Project
+#       build artefacts belong in the project's own .gitignore, not here —
+#       other contributors don't share this file.
+# ==============================================================================
+
+# macOS Finder metadata, created in any directory Finder visits.
+.DS_Store
+
+# Editor backup files (Vim, Emacs and friends).
+*~
+
+# Claude Code's per-machine local settings: contains machine-specific
+# permissions and should never be shared, but the directory it sits in is
+# often committed.
+**/.claude/settings.local.json

@@ -1,0 +1,260 @@
+# ==============================================================================
+# git/config — global Git configuration
+# ==============================================================================
+#
+# WHAT THIS FILE IS
+#   Git's user-level ("global") configuration. It lives at
+#   ~/.config/git/config, Git's XDG location, rather than the older
+#   ~/.gitconfig. Both are read; ~/.gitconfig wins if it exists, so it must be
+#   removed for this file to take effect (the repo README covers that step).
+#
+#   Precedence, lowest to highest:
+#     /etc/gitconfig  ->  THIS FILE  ->  ~/.gitconfig  ->  <repo>/.git/config
+#
+# IDENTITY: PERSONAL BY DEFAULT, WORK UNDER ~/work/
+#   The [user] block below is the PERSONAL identity and applies everywhere by
+#   default. The WORK identity lives in config.work next to this file and is
+#   pulled in by the [includeIf] at the bottom for any repository under
+#   ~/work/, overriding the personal values. Both files are committed — see
+#   the note in config.work about what that means for a public repo.
+#
+# THE ONE GOTCHA
+#   commit.gpgSign + tag.gpgSign + gpg.minTrustLevel = fully means EVERY commit
+#   and tag is signed, and Git HARD-FAILS if the matching secret key is missing
+#   or not ultimately trusted. On a fresh machine, import your key before your
+#   first commit, or temporarily `git -c commit.gpgSign=false commit`.
+#
+#   Reference for every key below: `git help config`.
+# ==============================================================================
+
+# --- Identity -----------------------------------------------------------------
+# WHAT: Author/committer name and email, and the OpenPGP key used for signing.
+# WHY : Personal identity is the default because most repositories on this
+#       machine are personal; work repos live under ~/work/ and are switched
+#       automatically by the [includeIf] at the end of this file.
+# HOW : Publishing a *public* key fingerprint is harmless — that is what makes
+#       signatures verifiable. Never put a work email here in a public repo.
+[user]
+    name = Cristian Cristea
+    email = cristiancristea00@gmail.com
+    signingKey = D76E05349B9D14CE0888E5247B7B2BF9EF9E63F9
+
+# --- Core behavior ------------------------------------------------------------
+[core]
+    # WHAT: Editor launched for commit messages, interactive rebase, etc.
+    editor = nvim
+
+    # WHAT: Pager for diff/log/show output — delta renders side-by-side,
+    #       syntax-highlighted diffs (configured in [delta] below).
+    # HOW : Set to `less` to fall back to Git's plain output.
+    pager = delta
+
+    # WHAT: Line-ending policy. `eol = native` checks files out with the
+    #       platform's endings; autocrlf/safecrlf off means Git stores and
+    #       returns bytes unchanged.
+    # WHY : With .gitattributes doing the real work per-repo, blanket CRLF
+    #       translation only causes surprises on a Unix-only machine.
+    eol = native
+    autocrlf = false
+    safecrlf = false
+
+    # WHAT: Which whitespace errors `git diff --check` and `git apply` flag.
+    # WHY : trailing-space is Git's shorthand for blank-at-eol + blank-at-eof,
+    #       so listing those separately (as this config used to) is redundant.
+    #       The remaining three cover the genuinely distinct cases.
+    whitespace = trailing-space,space-before-tab,tab-in-indent
+
+    # WHAT: Allow path components longer than 260 chars (a Windows limit).
+    # WHY : Harmless on macOS; kept so the file is portable.
+    longpaths = true
+
+    # WHAT: Transport used for ssh:// remotes.
+    sshCommand = ssh
+
+# --- delta (diff renderer) ------------------------------------------------------
+# WHAT: The delta pager reformats Git's diff output.
+# HOW : `n` / `N` jump between files when navigate is on. Run
+#       `delta --show-syntax-themes` to preview alternatives.
+[delta]
+    navigate = true
+    side-by-side = true
+    line-numbers = true
+
+[interactive]
+    # WHAT: Also route `git add -p` hunks through delta.
+    diffFilter = delta --color-only
+
+# --- Diff, merge, rebase ---------------------------------------------------------
+[diff]
+    # WHAT: Diff algorithm; histogram is patience plus occurrence counting.
+    # WHY : Produces markedly more readable diffs than the default `myers`
+    #       when code is moved or indentation changes.
+    algorithm = histogram
+
+    # WHAT: Detect copies as well as renames.
+    renames = copies
+
+[merge]
+    # WHAT: Conflict marker style. zdiff3 shows the common ancestor alongside
+    #       both sides, with common lines trimmed.
+    # WHY : Strictly more informative than the default two-sided `merge` style
+    #       — you can see what the original text was.
+    conflictStyle = zdiff3
+
+    # WHAT: Re-normalize line endings before merging.
+    renormalize = true
+
+[rerere]
+    # WHAT: "Reuse recorded resolution" — remembers how you resolved a
+    #       conflict and replays it if the same conflict reappears.
+    # WHY : Pays for itself on any long-running rebase or repeated merge.
+    enabled = true
+    autoUpdate = true
+
+[pull]
+    # WHAT: `git pull` rebases instead of creating a merge commit.
+    rebase = true
+
+# --- Fetch, push ---------------------------------------------------------------
+[fetch]
+    # WHAT: Delete local remote-tracking refs whose upstream branch is gone.
+    prune = true
+    parallel = 8
+
+    # WHAT: Verify object integrity on receipt.
+    # WHY : Cheap protection against a corrupt or malicious remote.
+    fsckObjects = true
+
+[push]
+    # WHAT: Push only the current branch to its upstream of the same name.
+    default = simple
+
+    # WHAT: Push annotated tags reachable from the pushed commits.
+    followTags = true
+
+    # WHAT: Refuse the push if a submodule commit isn't pushed yet.
+    recurseSubmodules = check
+
+    # WHAT: First push of a new branch creates its upstream automatically,
+    #       instead of erroring with "no upstream branch".
+    autoSetupRemote = true
+
+[transfer]
+    fsckObjects = true
+
+[receive]
+    fsckObjects = true
+
+# --- Branches, tags, logs ---------------------------------------------------------
+[init]
+    defaultBranch = main
+
+[branch]
+    # WHAT: Sort `git branch` by most recent commit instead of alphabetically.
+    # WHY : What you worked on last is what you want at the top.
+    sort = -committerdate
+
+[tag]
+    # WHAT: Sort tags by version number, so v10 comes after v9, not before it.
+    sort = version:refname
+    gpgSign = true
+    forceSignAnnotated = true
+
+[commit]
+    gpgSign = true
+
+[log]
+    decorate = short
+
+[blame]
+    # WHAT: Tint blame output by commit age.
+    coloring = highlightRecent
+
+[column]
+    # WHAT: Print branch/tag/status listings in columns when the terminal is
+    #       wide enough.
+    ui = auto
+
+# --- Colors ---------------------------------------------------------------------
+[color]
+    ui = true
+    diff = auto
+    status = auto
+    branch = auto
+    interactive = auto
+
+# --- Signing --------------------------------------------------------------------
+[gpg]
+    program = gpg
+    format = openpgp
+
+    # WHAT: Minimum trust level a key needs before Git accepts its signature.
+    # WHY : `fully` rejects signatures from keys you have not personally
+    #       validated. See THE ONE GOTCHA in this file's header — this is the
+    #       setting that makes a missing/untrusted key a hard error.
+    # HOW : Loosen to `marginal` or `undefined` if verifying others' commits
+    #       is more useful to you than strictness.
+    minTrustLevel = fully
+
+# --- Submodules -------------------------------------------------------------------
+[submodule]
+    recursive = true
+    fetchJobs = 8
+
+[grep]
+    threads = 8
+
+# --- Custom log formats ------------------------------------------------------------
+# WHAT: Named --pretty formats, used by the `history` and `logs` aliases below.
+# HOW : `git log --pretty=history` works anywhere once defined here.
+[pretty]
+    history = [%C(yellow)%h%C(reset)] [%C(cyan)%ah%C(reset)] %C(bold white)%s%C(reset) (%C(dim white)%an%C(reset))%C(auto)%d%C(reset)
+    logs = Commit %C(yellow)%h%C(reset) by %C(dim white)%an%C(reset) (%C(dim white)%ae%C(reset))%C(auto)%d%C(reset)%nOn %C(cyan)%ai%C(reset) (%C(green)%ar%C(reset)) %n%n%w(0,4,4)%C(bold white)%s%C(reset)%n%n%C(white)%b%C(reset)
+
+# --- Aliases -----------------------------------------------------------------------
+# Safe, everyday shortcuts.
+[alias]
+    history = log --graph --color=always --pretty=history
+    logs = log --graph --color=always --pretty=logs
+    all = add --all
+    amend = commit --amend --no-edit
+    eamend = commit --amend
+    fpull = pull --force --rebase --prune
+
+    # WHAT: Force-push that REFUSES to overwrite commits you have not seen.
+    # WHY : Prefer this over `fpush`. If a colleague pushed since your last
+    #       fetch, this aborts instead of destroying their work.
+    spush = push --force-with-lease
+
+    # ---------------------------------------------------------------------------
+    # DESTRUCTIVE — these discard work irreversibly. Read before using.
+    # ---------------------------------------------------------------------------
+    # fpush      Overwrites the remote branch unconditionally. Any commits on
+    #            the remote you don't have locally are GONE. Prefer `spush`.
+    fpush = push --force
+
+    # fpushall   The same, for EVERY branch at once. There is no undo.
+    fpushall = push --force --all
+
+    # purge      Deletes all untracked files and directories in the worktree
+    #            (ignored files are kept). Run `git clean -nd` first to preview.
+    purge = clean --quiet --force -d
+
+    # obliterate Throws away every uncommitted change, staged or not.
+    obliterate = reset --hard
+
+# --- Work identity (uncommitted, machine-local) --------------------------------------
+# WHAT: For any repository under ~/work/, load extra config that overrides the
+#       personal [user] block above with the work name/email/signing key.
+# WHY : Makes the switch automatic — no per-repo `git config user.email` to
+#       remember, and no commits accidentally authored under the wrong name.
+# HOW : config.work sits next to this file and is stowed into place with it,
+#       so this works on a fresh clone with no extra setup. If the file is ever
+#       missing Git silently skips the include and the personal identity
+#       applies everywhere. Verify with:
+#           cd ~/work/anything && git config --get user.email
+# NOTE: The trailing slash matters — it makes this match the directory's
+#       contents. The path is absolute so it resolves correctly even though
+#       this file is a symlink into the dotfiles repo.
+[includeIf "gitdir:~/work/"]
+    path = ~/.config/git/config.work

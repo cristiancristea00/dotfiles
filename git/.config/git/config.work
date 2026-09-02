@@ -1,0 +1,30 @@
+# ==============================================================================
+# git/config.work — work identity
+# ==============================================================================
+#
+# WHAT: The Git identity used for every repository under ~/work/. Pulled in by
+#       the [includeIf "gitdir:~/work/"] directive at the bottom of `config`,
+#       which is evaluated last and therefore overrides the personal [user]
+#       block defined there.
+# WHY : Kept in its own file rather than inline so the switch is declarative
+#       and visible: one file is "who I am by default", this one is "who I am
+#       at work", and the directory decides.
+# HOW : Verify which identity applies where:
+#           cd ~/work/<any-repo> && git config --get user.email   # this file
+#           cd ~                 && git config --get user.email   # personal
+#       To extend the rule to another directory, add a second [includeIf] in
+#       `config` pointing here (or at a third file).
+#
+# NOTE: This file is COMMITTED, so the work email and public key fingerprint
+#       are part of the repository. A key fingerprint is public by design —
+#       that is what makes signatures verifiable — but the email address is
+#       harvestable if this repo is ever published. To make it local-only
+#       again: `git rm --cached git/.config/git/config.work`, add it to
+#       .gitignore, and keep the working copy in place — the includeIf keeps
+#       working either way, because a missing include is silently skipped.
+# ==============================================================================
+
+[user]
+    email = crcristea@bitdefender.com
+    signingKey = 1E88F09E52DD18FF0BF57AF06719A214B5E50D7F
+    # name is inherited from the personal identity in `config`.

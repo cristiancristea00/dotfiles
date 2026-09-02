@@ -143,14 +143,15 @@
     //       command output should show exact characters. Plain "JetBrains
     //       Mono" leads the fallback chain (same typeface minus the patched
     //       icons), so a glyph the Nerd build lacks keeps the identical design
-    //       instead of jumping to another family.
+    //       instead of jumping to another family. FiraCode's Nerd build sits
+    //       between them, so icons survive one more step down the chain.
     // NOTE: Setting fish here is what makes $TERM_PROGRAM equal "zed" inside
     //       the shell, which fish/conf.d/30-prompt.fish uses to skip
     //       oh-my-posh. The two files are coupled — change one, check the other.
     "terminal": {
         "shell": { "program": "fish" },
         "font_family": "JetBrainsMono Nerd Font Mono",
-        "font_fallbacks": ["JetBrains Mono", "Fira Code", "Source Code Pro", "IBM Plex Mono"],
+        "font_fallbacks": ["FiraCode Nerd Font Mono", "JetBrains Mono", "Fira Code", "Source Code Pro", "IBM Plex Mono"],
         "font_features": { "calt": false, "liga": false },
         "font_size": 14
     },

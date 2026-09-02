@@ -53,6 +53,9 @@ oh-my-posh (Zed draws its own prompt decorations). Change one, check the other.
 * `.m` / `.mm` are mapped to **C++** because Zed has no first-class
   Objective-C support. Neovim handles them properly as `objc` / `objcpp` via
   clangd, so the same file gets better treatment there.
+* On **Linux, Zed is not installed by Homebrew** — it is a cask, and casks are
+  macOS-only. `install.sh` uses your package manager, which has Zed only on
+  Arch; elsewhere it points you at <https://zed.dev/download>.
 * `agent_servers`, `edit_predictions` and `proxy` from the previous live
   settings were **not** carried over. Zed has no include mechanism, so unlike
   fish and git there is no local-overlay escape hatch — re-add them here if you

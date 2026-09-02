@@ -1,0 +1,779 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# install.sh — take a fresh macOS or Linux machine from `git clone` to a
+#              working environment
+# ==============================================================================
+#
+# USAGE
+#     ./install.sh [OPTIONS]
+#
+#     --dry-run            Show every action without changing anything.
+#     --cli-only           Skip GUI applications (Ghostty, Zed, Neovide).
+#     --packages a,b,c     Only handle the named stow packages.
+#     --uninstall          Remove the symlinks this script created.
+#     --yes, -y            Assume yes; never prompt. Implied when stdin is not
+#                          a terminal, so piping the script never hangs.
+#     --help, -h           This message.
+#
+# WHAT IT DOES, IN ORDER
+#     1. Detect OS, distribution and package manager.
+#     2. Install Homebrew's prerequisites (Linux only).
+#     3. Install Homebrew if missing, and put it on PATH for this run.
+#     4. `brew bundle` the repo's Brewfile.
+#     5. Install GUI apps that Homebrew cannot provide (Linux only).
+#     6. Back up anything in the way, then stow every package.
+#     7. Create the per-OS selector symlinks that stow cannot express.
+#     8. Bootstrap Neovim, prime the tldr cache, set fish as the login shell.
+#     9. Print what happened and what needs restarting.
+#
+# WHY BASH 3.2
+#     macOS still ships bash 3.2 from 2007 and that is what `#!/usr/bin/env
+#     bash` finds there. This script therefore avoids everything from bash 4+:
+#     no associative arrays, no `mapfile`, no `${var,,}`. If you extend it,
+#     keep to that — `bash --version` on macOS is the constraint, not your
+#     Linux box.
+#
+# IDEMPOTENCY
+#     Re-running is safe and is the intended way to apply repo changes. The
+#     rule that makes it work: *a symlink pointing into this repo is ours*, so
+#     it is replaced without ceremony. Only real files are ever backed up, and
+#     they are only ever moved, never deleted.
+# ==============================================================================
+
+set -euo pipefail
+
+# ==============================================================================
+# Configuration
+# ==============================================================================
+
+# WHAT: The repository root, resolved from this script's own location.
+# WHY : Makes the script runnable from anywhere (`~/work/dotfiles/install.sh`
+#       works as well as `./install.sh`) without depending on the caller's
+#       working directory.
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# WHAT: Packages stowed with directory folding — the whole directory becomes one
+#       symlink into the repo.
+# WHY : Correct when nothing else needs to live in that directory. `nvim` is
+#       folded deliberately: vim.pack writes nvim-pack-lock.json into the config
+#       directory, and folding is what lands it in the repo where it belongs.
+PACKAGES_FOLD="neovide nvim tlrc"
+
+# WHAT: Packages stowed with --no-folding — the directory stays real and each
+#       file is linked individually.
+# WHY : Required whenever a directory must hold machine-local state alongside
+#       the symlinks. Two kinds qualify: apps that write next to their config
+#       (fish's fish_variables, Zed's conversations/, whatever `git config
+#       --global` appends), and directories that must hold one of the OS
+#       selector symlinks created in step 7 (bat, ghostty).
+PACKAGES_NOFOLD="bat fish ghostty git zed"
+
+# WHAT: Fonts the configs reference, for the message printed on Linux.
+# WHY : Homebrew cannot install fonts on Linux (they are casks) and distro
+#       packaging is inconsistent, so this is the one part of the setup left
+#       deliberately manual.
+FONTS_NEEDED="JetBrainsMono Nerd Font, FiraCode Nerd Font, Fira Code, Source Code Pro, IBM Plex Mono"
+
+# ==============================================================================
+# Options, populated by parse_args
+# ==============================================================================
+DRY_RUN=0
+CLI_ONLY=0
+UNINSTALL=0
+ASSUME_YES=0
+PACKAGES_REQUESTED=""
+
+# Filled in by detect_platform.
+OS=""
+DISTRO=""
+PKG_MANAGER=""
+BACKUP_DIR=""
+
+# ==============================================================================
+# Output helpers
+# ==============================================================================
+# WHAT: Colour codes, emitted only when stdout is a terminal.
+# WHY : Keeps the output readable interactively without polluting a log file or
+#       CI transcript with escape sequences.
+if [ -t 1 ]; then
+    C_RESET=$'\033[0m'; C_BOLD=$'\033[1m'; C_DIM=$'\033[2m'
+    C_BLUE=$'\033[34m'; C_GREEN=$'\033[32m'; C_YELLOW=$'\033[33m'; C_RED=$'\033[31m'
+else
+    C_RESET=""; C_BOLD=""; C_DIM=""; C_BLUE=""; C_GREEN=""; C_YELLOW=""; C_RED=""
+fi
+
+step()  { printf '\n%s==> %s%s\n' "$C_BOLD$C_BLUE" "$*" "$C_RESET"; }
+info()  { printf '    %s\n' "$*"; }
+ok()    { printf '    %s✓%s %s\n' "$C_GREEN" "$C_RESET" "$*"; }
+warn()  { printf '    %s!%s %s\n' "$C_YELLOW" "$C_RESET" "$*" >&2; }
+die()   { printf '\n%serror:%s %s\n' "$C_RED" "$C_RESET" "$*" >&2; exit 1; }
+
+# WHAT: Echo a command in dry-run mode, otherwise run it.
+# WHY : One wrapper means --dry-run cannot drift out of sync with what the
+#       script really does — there is no second code path to keep correct.
+run() {
+    if [ "$DRY_RUN" -eq 1 ]; then
+        printf '    %s[dry-run]%s %s\n' "$C_DIM" "$C_RESET" "$*"
+    else
+        "$@"
+    fi
+}
+
+# WHAT: Ask a yes/no question, defaulting to no.
+# WHY : Returns yes immediately under --yes or when stdin is not a terminal, so
+#       `curl … | bash` and CI runs never block on a prompt nobody can answer.
+confirm() {
+    if [ "$ASSUME_YES" -eq 1 ] || [ ! -t 0 ]; then
+        return 0
+    fi
+    printf '    %s [y/N] ' "$*"
+    local reply
+    read -r reply
+    case "$reply" in
+        [yY] | [yY][eE][sS]) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+# WHAT: True if $1 is already provided by this repository.
+# WHY : The ownership test the whole idempotency story rests on. Anything that
+#       resolves into the repo was created by a previous run (or by stow), so it
+#       can be replaced silently. Anything else is the user's real file and is
+#       treated as precious.
+# HOW : Two cases, and missing the second one is a real trap. A file can belong
+#       to the repo either because it IS a symlink into it (a --no-folding
+#       package, e.g. ~/.config/bat/config.darwin), or because a PARENT
+#       directory is (a folded package: ~/.config/nvim is one symlink, so
+#       ~/.config/nvim/lua/theme.lua is a plain file reached through it).
+#       Testing only for a leaf symlink would classify every file in a folded
+#       package as a stranger and "back up" the entire deployed config on each
+#       run. `pwd -P` resolves symlinked parents, which covers that case.
+is_ours() {
+    local path="$1" resolved
+    [ -e "$path" ] || [ -L "$path" ] || return 1
+
+    if [ -L "$path" ]; then
+        # Resolve the link target relative to the directory holding the link,
+        # so relative targets (which is what stow creates) work.
+        resolved="$(cd "$(dirname "$path")" 2>/dev/null \
+            && cd "$(dirname "$(readlink "$path")")" 2>/dev/null && pwd -P)" || return 1
+    else
+        resolved="$(cd "$(dirname "$path")" 2>/dev/null && pwd -P)" || return 1
+    fi
+
+    case "$resolved/" in
+        "$DOTFILES_DIR"/*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+usage() { sed -n '2,30p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+
+# ==============================================================================
+# 1. Argument parsing
+# ==============================================================================
+parse_args() {
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --dry-run)   DRY_RUN=1 ;;
+            --cli-only)  CLI_ONLY=1 ;;
+            --uninstall) UNINSTALL=1 ;;
+            -y | --yes)  ASSUME_YES=1 ;;
+            -h | --help) usage; exit 0 ;;
+            --packages)
+                shift
+                [ $# -gt 0 ] || die "--packages needs a comma-separated list"
+                # WHY: commas to spaces, so the value slots into the same
+                #      space-separated form as PACKAGES_FOLD/PACKAGES_NOFOLD.
+                PACKAGES_REQUESTED="$(printf '%s' "$1" | tr ',' ' ')"
+                ;;
+            --packages=*)
+                PACKAGES_REQUESTED="$(printf '%s' "${1#*=}" | tr ',' ' ')"
+                ;;
+            *) die "unknown option: $1 (try --help)" ;;
+        esac
+        shift
+    done
+}
+
+# WHAT: Filter a package list down to what --packages asked for.
+# WHY : Keeps the fold/no-fold split intact under --packages: each group is
+#       filtered separately, so a selective run still stows each package the
+#       way that package requires.
+select_packages() {
+    local candidates="$1" pkg want result=""
+    [ -n "$PACKAGES_REQUESTED" ] || { printf '%s' "$candidates"; return; }
+    for pkg in $candidates; do
+        for want in $PACKAGES_REQUESTED; do
+            [ "$pkg" = "$want" ] && result="$result $pkg"
+        done
+    done
+    printf '%s' "${result# }"
+}
+
+# ==============================================================================
+# 2. Platform detection
+# ==============================================================================
+# WHAT: Identify the OS, and on Linux the distribution and its package manager.
+# WHY : Only three things actually depend on this — Homebrew's prerequisites,
+#       the GUI applications, and which per-OS config variant gets linked. The
+#       script degrades rather than refusing on an unrecognised distribution,
+#       because Homebrew itself works nearly everywhere.
+detect_platform() {
+    step "Detecting platform"
+
+    case "$(uname -s)" in
+        Darwin) OS="macos" ;;
+        Linux)  OS="linux" ;;
+        *) die "unsupported operating system: $(uname -s). This setup targets macOS and Linux." ;;
+    esac
+
+    if [ "$OS" = "linux" ]; then
+        # /etc/os-release is the systemd-era standard and is present on every
+        # mainstream distribution.
+        if [ -r /etc/os-release ]; then
+            # shellcheck disable=SC1091
+            DISTRO="$(. /etc/os-release && printf '%s' "${ID:-unknown}")"
+        else
+            DISTRO="unknown"
+        fi
+
+        # WHY: probe for the binary rather than trusting the distro ID, which
+        #      covers derivatives (Mint→apt, Manjaro→pacman) for free.
+        if   command -v apt-get >/dev/null 2>&1; then PKG_MANAGER="apt"
+        elif command -v dnf     >/dev/null 2>&1; then PKG_MANAGER="dnf"
+        elif command -v pacman  >/dev/null 2>&1; then PKG_MANAGER="pacman"
+        else PKG_MANAGER="none"
+        fi
+    fi
+
+    ok "OS: $OS${DISTRO:+ ($DISTRO)}"
+    ok "Architecture: $(uname -m)"
+    [ "$OS" = "linux" ] && ok "Package manager: $PKG_MANAGER"
+    [ "$DRY_RUN" -eq 1 ] && warn "DRY RUN — nothing will be changed"
+    return 0
+}
+
+# ==============================================================================
+# 3. Homebrew prerequisites (Linux only)
+# ==============================================================================
+# WHAT: Install the compiler and utilities Homebrew needs before it will run.
+# WHY : macOS gets these from the Command Line Tools, which Homebrew's own
+#       installer handles. On Linux they must exist first, and Homebrew fails
+#       confusingly without them. An unknown package manager is a warning, not
+#       an error — the user may well have the tools already.
+install_prerequisites() {
+    [ "$OS" = "linux" ] || return 0
+    command -v brew >/dev/null 2>&1 && return 0
+
+    step "Installing Homebrew prerequisites"
+    case "$PKG_MANAGER" in
+        apt)
+            run sudo apt-get update
+            run sudo apt-get install -y build-essential procps curl file git
+            ;;
+        dnf)
+            run sudo dnf group install -y development-tools
+            run sudo dnf install -y procps-ng curl file git
+            ;;
+        pacman)
+            run sudo pacman -Sy --needed --noconfirm base-devel procps-ng curl file git
+            ;;
+        *)
+            warn "Unrecognised package manager; skipping prerequisites."
+            warn "Homebrew needs: a C compiler, procps, curl, file, git."
+            warn "Install them with your distribution's tools, then re-run."
+            return 0
+            ;;
+    esac
+    ok "Prerequisites installed"
+}
+
+# ==============================================================================
+# 4. Homebrew
+# ==============================================================================
+# WHAT: Install Homebrew if absent, then make it usable for the rest of this run.
+# WHY : `brew shellenv` is the critical second half. The installer does not
+#       modify the running shell, so without evaluating it here every later step
+#       — brew bundle, stow, nvim — would fail with "command not found" on a
+#       machine where Homebrew was just installed.
+install_homebrew() {
+    step "Homebrew"
+
+    if command -v brew >/dev/null 2>&1; then
+        ok "Already installed: $(command -v brew)"
+    else
+        info "Installing Homebrew from the official installer…"
+        run /bin/bash -c \
+            "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    fi
+
+    # Probe every prefix Homebrew uses, mirroring fish/conf.d/00-path.fish.
+    local prefix
+    for prefix in /opt/homebrew /usr/local /home/linuxbrew/.linuxbrew "$HOME/.linuxbrew"; do
+        if [ -x "$prefix/bin/brew" ]; then
+            eval "$("$prefix/bin/brew" shellenv)"
+            ok "Using $prefix"
+            return 0
+        fi
+    done
+
+    [ "$DRY_RUN" -eq 1 ] && return 0
+    die "Homebrew is not on PATH after installation. Open a new shell and re-run."
+}
+
+# ==============================================================================
+# 5. Brewfile
+# ==============================================================================
+# WHAT: Install everything the Brewfile declares.
+# WHY : The Brewfile is Ruby and guards its own entries with OS.mac? / OS.linux?
+#       and the CLI-only flag, so one file and one command serve both platforms.
+# NOTE: The environment variable MUST be HOMEBREW_-prefixed. Homebrew sanitises
+#       its environment and silently drops anything else, which would make
+#       --cli-only appear to work while installing the GUI apps anyway.
+install_brewfile() {
+    step "Installing packages from the Brewfile"
+    [ -f "$DOTFILES_DIR/Brewfile" ] || die "No Brewfile at $DOTFILES_DIR"
+
+    # WHY NOT FATAL: `brew bundle` fails the whole run if any single entry
+    #       fails, and the commonest cause is trivial — a font already installed
+    #       by hand that the cask refuses to adopt, or a formula unavailable on
+    #       this platform. None of that should stop the configuration from being
+    #       linked, which is the part of this script only it can do. The failure
+    #       is reported loudly and the run continues; `brew bundle check` at the
+    #       end tells you exactly what is still missing.
+    local bundle_status=0
+    if [ "$CLI_ONLY" -eq 1 ]; then
+        info "CLI-only: GUI applications will be skipped"
+        run env HOMEBREW_DOTFILES_CLI_ONLY=1 \
+            brew bundle install --file "$DOTFILES_DIR/Brewfile" || bundle_status=$?
+    else
+        run brew bundle install --file "$DOTFILES_DIR/Brewfile" || bundle_status=$?
+    fi
+
+    if [ "$bundle_status" -eq 0 ]; then
+        ok "Brewfile applied"
+    else
+        warn "Some Brewfile entries failed to install (exit $bundle_status)."
+        warn "Continuing — configuration will still be linked."
+        warn "List what is missing with:"
+        warn "  brew bundle check --verbose --file \"$DOTFILES_DIR/Brewfile\""
+    fi
+}
+
+# ==============================================================================
+# 6. GUI applications Homebrew cannot install (Linux only)
+# ==============================================================================
+# WHAT: Install Ghostty and Zed through the distribution's package manager.
+# WHY : Both are Homebrew *casks*, and casks are macOS-only — on Linux brew
+#       cannot provide them at all. Neovide is different: it has a real formula,
+#       so the Brewfile already handled it.
+#       Every step here is best-effort and never fatal. Packaging for these two
+#       varies a lot between distributions, and a missing terminal emulator
+#       should not stop a dotfiles install that is otherwise fine.
+install_gui_apps_linux() {
+    [ "$OS" = "linux" ] || return 0
+    [ "$CLI_ONLY" -eq 0 ] || return 0
+
+    step "GUI applications"
+
+    if command -v ghostty >/dev/null 2>&1; then
+        ok "Ghostty already installed"
+    else
+        case "$PKG_MANAGER" in
+            pacman) run sudo pacman -S --needed --noconfirm ghostty || warn "Ghostty install failed" ;;
+            apt)
+                # Ghostty entered the official Ubuntu archive in 26.04. Older
+                # releases need the community .deb, which is not something this
+                # script should fetch on the user's behalf.
+                if run sudo apt-get install -y ghostty; then
+                    ok "Ghostty installed"
+                else
+                    warn "Ghostty is not in this release's archive (it landed in Ubuntu 26.04)."
+                    warn "See https://ghostty.org/docs/install/binary for the community package."
+                fi
+                ;;
+            dnf)
+                info "Ghostty on Fedora comes from a COPR repository."
+                if confirm "Enable the scottames/ghostty COPR?"; then
+                    # Sequential ifs, not `A && B || C`: with the latter, C also
+                    # runs when A succeeds but B fails, so a failed install
+                    # would be reported twice and a failed COPR not at all.
+                    if run sudo dnf copr enable -y scottames/ghostty; then
+                        run sudo dnf install -y ghostty || warn "Ghostty install failed"
+                    else
+                        warn "Could not enable the COPR; skipping Ghostty"
+                    fi
+                else
+                    warn "Skipped Ghostty. See https://ghostty.org/docs/install/binary"
+                fi
+                ;;
+            *) warn "Cannot install Ghostty automatically. See https://ghostty.org/docs/install/binary" ;;
+        esac
+    fi
+
+    if command -v zed >/dev/null 2>&1; then
+        ok "Zed already installed"
+    else
+        case "$PKG_MANAGER" in
+            pacman) run sudo pacman -S --needed --noconfirm zed || warn "Zed install failed" ;;
+            *)
+                # Debian/Fedora have no official Zed package. The upstream
+                # method is `curl … | sh`, which this script deliberately does
+                # not run for you — piping a remote script into a shell should
+                # be your decision, not a side effect of installing dotfiles.
+                warn "Zed has no official package for $PKG_MANAGER."
+                warn "Install it yourself from https://zed.dev/download (or Flathub: dev.zed.Zed)."
+                ;;
+        esac
+    fi
+}
+
+# ==============================================================================
+# 7. Backing up and stowing
+# ==============================================================================
+# WHAT: Find real files that stow would collide with, and move them aside.
+# WHY : Stow refuses to overwrite anything it does not own, which is the
+#       behaviour we want — but on a machine with existing configs that means it
+#       refuses to do anything at all. Moving conflicts into a timestamped
+#       directory clears the way while destroying nothing.
+#       Symlinks into this repo are skipped: those are ours from a previous run,
+#       and backing them up would fill the backup with junk on every re-run.
+backup_conflicts() {
+    local packages="$1" pkg src rel target conflicts=""
+
+    for pkg in $packages; do
+        [ -d "$DOTFILES_DIR/$pkg" ] || continue
+        # Walk every file the package would install. `find -print` (not -print0)
+        # is safe here because these paths are ours and contain no newlines;
+        # they do contain spaces, hence the quoting and IFS handling below.
+        while IFS= read -r src; do
+            rel="${src#"$DOTFILES_DIR/$pkg/"}"
+            case "$rel" in
+                README.md | .stow-local-ignore) continue ;;
+            esac
+            target="$HOME/$rel"
+            if [ -e "$target" ] && ! is_ours "$target"; then
+                conflicts="$conflicts$target
+"
+            fi
+        done <<EOF
+$(find "$DOTFILES_DIR/$pkg" -type f 2>/dev/null)
+EOF
+    done
+
+    [ -n "$conflicts" ] || { ok "No conflicting files"; return 0; }
+
+    BACKUP_DIR="$HOME/.dotfiles-backup-$(date +%Y%m%d-%H%M%S)"
+    warn "These existing files are in the way and would be moved to:"
+    warn "  $BACKUP_DIR"
+    printf '%s' "$conflicts" | sed 's|^|      |'
+
+    if ! confirm "Move them and continue?"; then
+        die "Aborted. Nothing was changed."
+    fi
+
+    local f
+    while IFS= read -r f; do
+        [ -n "$f" ] || continue
+        rel="${f#"$HOME"/}"
+        run mkdir -p "$BACKUP_DIR/$(dirname "$rel")"
+        run mv "$f" "$BACKUP_DIR/$rel"
+    done <<EOF
+$conflicts
+EOF
+    ok "Backed up to $BACKUP_DIR"
+}
+
+# WHAT: Remove folded symlinks left by a previous layout.
+# WHY : A package that used to be folded leaves ~/.config/<pkg> as a single
+#       symlink into the repo. Stowing it with --no-folding afterwards would
+#       conflict, because stow cannot turn a symlink into a real directory. As
+#       these links are ours, deleting them is safe and is what makes the
+#       fold→no-fold migration invisible.
+unfold_stale_links() {
+    local packages="$1" pkg dir
+    # shellcheck disable=SC2086  # deliberate: $packages is a space-separated list
+    for pkg in $packages; do
+        dir="$HOME/.config/$pkg"
+        if [ -L "$dir" ] && is_ours "$dir"; then
+            info "Converting folded $dir to a real directory"
+            run rm "$dir"
+        fi
+    done
+}
+
+stow_packages() {
+    command -v stow >/dev/null 2>&1 || {
+        [ "$DRY_RUN" -eq 1 ] && { warn "stow not installed; skipping (dry run)"; return 0; }
+        die "stow is not installed — the Brewfile step should have provided it"
+    }
+
+    local fold nofold
+    fold="$(select_packages "$PACKAGES_FOLD")"
+    nofold="$(select_packages "$PACKAGES_NOFOLD")"
+
+    step "Linking configuration"
+    backup_conflicts "$fold $nofold"
+    unfold_stale_links "$nofold"
+
+    # Two invocations because folding is a per-run flag, not per-package.
+    # The unquoted expansions below are deliberate: each list must split into
+    # several arguments for stow. Package names are fixed identifiers defined at
+    # the top of this file, so there is nothing to glob or mis-split.
+    if [ -n "$fold" ]; then
+        info "Folded:    $fold"
+        # shellcheck disable=SC2086
+        run stow --target="$HOME" --dir="$DOTFILES_DIR" $fold
+    fi
+    if [ -n "$nofold" ]; then
+        info "No-fold:   $nofold"
+        # shellcheck disable=SC2086
+        run stow --no-folding --target="$HOME" --dir="$DOTFILES_DIR" $nofold
+    fi
+    ok "Packages linked"
+}
+
+# ==============================================================================
+# 8. Per-OS selector symlinks
+# ==============================================================================
+# WHAT: The three links stow cannot express, because they depend on the OS.
+# WHY : bat and Ghostty have config formats with no conditionals, so each ships
+#       a .darwin and a .linux variant and this picks one. tlrc needs the
+#       opposite treatment: its config lives at the portable XDG path, and macOS
+#       needs a bridge from the Application Support location it actually reads.
+#       These are recreated on every run, which is how a --dry-run followed by a
+#       real run, or an OS change, converges correctly.
+link_os_selectors() {
+    local suffix
+    if [ "$OS" = "macos" ]; then suffix="darwin"; else suffix="linux"; fi
+
+    step "Selecting per-OS configuration ($suffix)"
+
+    if [ -d "$HOME/.config/bat" ]; then
+        run ln -sfn "config.$suffix" "$HOME/.config/bat/config"
+        ok "bat → config.$suffix"
+    fi
+
+    if [ -d "$HOME/.config/ghostty" ]; then
+        run ln -sfn "os-$suffix.conf" "$HOME/.config/ghostty/os.conf"
+        ok "ghostty → os-$suffix.conf"
+    fi
+
+    # WHY: tlrc resolves its config through the Rust `dirs` crate, which returns
+    #      ~/.config on Linux but ~/Library/Application Support on macOS. The
+    #      repo ships only the portable path; this bridges the macOS one so both
+    #      platforms read the same file from any shell.
+    if [ "$OS" = "macos" ] && [ -f "$HOME/.config/tlrc/config.toml" ]; then
+        run mkdir -p "$HOME/Library/Application Support/tlrc"
+        run ln -sfn "$HOME/.config/tlrc/config.toml" \
+            "$HOME/Library/Application Support/tlrc/config.toml"
+        ok "tlrc → bridged to Application Support"
+    fi
+}
+
+# ==============================================================================
+# 9. Post-install steps
+# ==============================================================================
+# WHAT: Run Neovim once with no UI so it installs plugins and compiles parsers.
+# WHY : vim.pack clones on first start and nvim-treesitter then compiles ~22
+#       parsers. Doing it here means the first real launch is instant instead of
+#       a several-minute wait with half-broken highlighting.
+bootstrap_neovim() {
+    command -v nvim >/dev/null 2>&1 || { warn "nvim not found; skipping bootstrap"; return 0; }
+    step "Bootstrapping Neovim (plugins and parsers)"
+    info "This takes a few minutes on a fresh machine…"
+    # WHY THE EXPLICIT WAIT: starting Neovim is enough to make vim.pack clone
+    #       the plugins, but plugins/treesitter.lua calls install() WITHOUT
+    #       waiting — deliberately, so an interactive session is never blocked.
+    #       Headless, that means Neovim would exit before a single parser
+    #       finished compiling. Collecting the parser list from languages.lua
+    #       and waiting on the handle is what actually does the work here.
+    # NOTE: Not fatal. One grammar that will not compile should not fail an
+    #       otherwise good install; :checkhealth will show it later.
+    run nvim --headless "+lua
+        local seen, parsers = {}, {}
+        for _, lang in ipairs(require('languages')) do
+            for _, p in ipairs(lang.parsers or {}) do
+                if not seen[p] then seen[p] = true; parsers[#parsers + 1] = p end
+            end
+        end
+        require('nvim-treesitter').install(parsers):wait(600000)
+    " "+qa!" 2>/dev/null || warn "Neovim bootstrap reported errors; run :checkhealth to inspect"
+    ok "Neovim ready"
+}
+
+# WHAT: Download the tldr page cache.
+# WHY : The config defers auto-updates until after a page renders, so the very
+#       first lookup on a fresh machine would otherwise be the slow one.
+prime_tldr_cache() {
+    command -v tldr >/dev/null 2>&1 || return 0
+    step "Priming the tldr cache"
+    run tldr --update || warn "tldr cache update failed (offline?)"
+    ok "tldr ready"
+}
+
+# WHAT: Make fish the login shell.
+# WHY : Everything in fish/ only applies to an interactive fish session, so
+#       without this the shell config is installed but never used.
+#       Resolved with `command -v` *after* Homebrew is on PATH, so it finds the
+#       brew-installed fish rather than a system one.
+# NOTE: Never fatal. It needs a password, it touches a system file, and it can
+#       legitimately be refused — none of which should fail the install.
+set_login_shell() {
+    command -v fish >/dev/null 2>&1 || { warn "fish not found; skipping shell change"; return 0; }
+
+    local fish_path current
+    fish_path="$(command -v fish)"
+    current="${SHELL:-}"
+
+    if [ "$current" = "$fish_path" ]; then
+        ok "fish is already the login shell"
+        return 0
+    fi
+
+    step "Setting fish as the login shell"
+    info "Current: ${current:-unknown}"
+    info "New:     $fish_path"
+
+    # WHY THE TTY TEST: `chsh` prompts for your password ITSELF, and there is
+    #       no flag to feed it one. Without a terminal that prompt cannot be
+    #       answered and the command hangs forever — which is exactly what
+    #       happens if this runs under CI, a pipe, or an automation harness.
+    #       `--yes` deliberately does NOT override this: assuming consent is
+    #       reasonable for moving a file, not for an operation that will then
+    #       block on credentials nobody can supply.
+    if [ ! -t 0 ]; then
+        warn "Not running in a terminal, so the login shell was left alone."
+        warn "chsh needs to prompt for your password. Change it yourself with:"
+        warn "  chsh -s $fish_path"
+        return 0
+    fi
+
+    if ! confirm "Change the login shell? (needs your password)"; then
+        warn "Skipped. Change it later with: chsh -s $fish_path"
+        return 0
+    fi
+
+    # chsh refuses a shell that is not listed in /etc/shells, so that comes
+    # first. Also a password prompt, hence also gated on the terminal above.
+    if ! grep -qxF "$fish_path" /etc/shells 2>/dev/null; then
+        info "Adding $fish_path to /etc/shells (needs sudo)"
+        run sudo sh -c "printf '%s\n' '$fish_path' >> /etc/shells" \
+            || { warn "Could not update /etc/shells; skipping shell change"; return 0; }
+    fi
+
+    if run chsh -s "$fish_path"; then
+        ok "Login shell changed (takes effect in a new terminal)"
+    else
+        warn "chsh failed. Change it later with: chsh -s $fish_path"
+    fi
+}
+
+# ==============================================================================
+# 10. Uninstall
+# ==============================================================================
+# WHAT: Remove every symlink this script created, leaving software installed.
+# WHY : Stow can unstow its own packages, but it knows nothing about the three
+#       OS selector links from step 8 — those must be removed explicitly or they
+#       are left dangling at paths stow will never look at again.
+uninstall() {
+    step "Removing symlinks"
+
+    local link
+    for link in "$HOME/.config/bat/config" \
+        "$HOME/.config/ghostty/os.conf" \
+        "$HOME/Library/Application Support/tlrc/config.toml"; do
+        if [ -L "$link" ]; then
+            run rm "$link"
+            ok "Removed $link"
+        fi
+    done
+
+    local fold nofold
+    fold="$(select_packages "$PACKAGES_FOLD")"
+    nofold="$(select_packages "$PACKAGES_NOFOLD")"
+
+    if command -v stow >/dev/null 2>&1; then
+        # shellcheck disable=SC2086  # deliberate word splitting, as above
+        [ -n "$fold" ] && run stow -D --target="$HOME" --dir="$DOTFILES_DIR" $fold
+        # shellcheck disable=SC2086
+        [ -n "$nofold" ] && run stow -D --no-folding --target="$HOME" --dir="$DOTFILES_DIR" $nofold
+        true  # the guarded commands above must not set the function's exit status
+        ok "Packages unstowed"
+    else
+        warn "stow is not installed; only the selector links were removed"
+    fi
+
+    info ""
+    info "Installed software was left alone. To remove it too:"
+    info "    brew bundle cleanup --file \"$DOTFILES_DIR/Brewfile\" --force"
+    info "Backups from previous runs are in ~/.dotfiles-backup-*"
+}
+
+# ==============================================================================
+# 11. Summary
+# ==============================================================================
+print_summary() {
+    step "Done"
+
+    if [ "$DRY_RUN" -eq 1 ]; then
+        info "This was a dry run — nothing was changed."
+        info "Re-run without --dry-run to apply."
+        return 0
+    fi
+
+    info "Restart these for the new configuration to take effect:"
+    info "  • your terminal (or reload Ghostty with the reload-config binding)"
+    info "  • any running Neovim, Neovide or Zed"
+    [ -n "$BACKUP_DIR" ] && info "Displaced files were saved to: $BACKUP_DIR"
+
+    if [ "$OS" = "linux" ]; then
+        info ""
+        warn "Fonts are not installed automatically on Linux."
+        info "Install these, then run: fc-cache -fv"
+        info "  $FONTS_NEEDED"
+        info "Nerd Font builds: https://github.com/ryanoasis/nerd-fonts/releases"
+    fi
+
+    info ""
+    info "Verify with:"
+    info "  nvim \"+checkhealth vim.pack vim.lsp nvim-treesitter\""
+    [ "$OS" = "linux" ] && info "  nvim \"+checkhealth vim.provider\"   # clipboard"
+    command -v ghostty >/dev/null 2>&1 && info "  ghostty +validate-config"
+    return 0
+}
+
+# ==============================================================================
+# Main
+# ==============================================================================
+main() {
+    parse_args "$@"
+
+    printf '%s%s\n' "$C_BOLD" "dotfiles installer$C_RESET"
+    printf '    %s%s%s\n' "$C_DIM" "$DOTFILES_DIR" "$C_RESET"
+
+    detect_platform
+
+    if [ "$UNINSTALL" -eq 1 ]; then
+        uninstall
+        return 0
+    fi
+
+    install_prerequisites
+    install_homebrew
+    install_brewfile
+    install_gui_apps_linux
+    stow_packages
+    link_os_selectors
+
+    if [ "$DRY_RUN" -eq 0 ]; then
+        bootstrap_neovim
+        prime_tldr_cache
+        set_login_shell
+    fi
+
+    print_summary
+}
+
+main "$@"

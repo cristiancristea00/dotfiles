@@ -80,9 +80,11 @@ example_prefix = "- "
 edit_link = false
 
 # WHAT: Strip blank lines between examples.
-# WHY : ON. This is the difference between a page that fits on screen and one
-#       you have to scroll. The whole point of tldr is the answer at a glance.
-compact = true
+# WHY : OFF. Compact output fits more on screen, but running the examples
+#       together makes them harder to tell apart at a glance — which is the
+#       thing tldr is for. The blank lines earn their height.
+# HOW : Set true to reclaim the vertical space on a short terminal.
+compact = false
 
 # WHAT: Maximum line width; 0 means "use the terminal width".
 line_length = 0

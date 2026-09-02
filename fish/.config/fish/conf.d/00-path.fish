@@ -11,11 +11,19 @@
 # WHAT: Locate Homebrew and load its environment via `brew shellenv`.
 # WHY : `shellenv` sets PATH, MANPATH, INFOPATH and HOMEBREW_PREFIX together
 #       and always in the right order. The previous approach hardcoded
-#       `set -x PATH /opt/homebrew/bin $PATH`, which set only PATH and broke on
-#       Intel Macs, where the prefix is /usr/local. Probing both prefixes makes
-#       this file portable across both architectures.
+#       `set -x PATH /opt/homebrew/bin $PATH`, which set only PATH and broke
+#       everywhere else. The three probed prefixes are every location Homebrew
+#       uses:
+#         /opt/homebrew              Apple Silicon macOS
+#         /usr/local                 Intel macOS
+#         /home/linuxbrew/.linuxbrew Linux (the default, shared prefix)
+#       Order matters only in that the first match wins, and no machine has two.
+# NOTE: This is the single most load-bearing line in the shell config. If no
+#       prefix matches, `brew shellenv` never runs and every tool installed
+#       through Homebrew — eza, fd, bat, oh-my-posh, every language server —
+#       silently falls off PATH.
 # HOW : To see exactly what it applies, run: brew shellenv fish
-for __brew_prefix in /opt/homebrew /usr/local
+for __brew_prefix in /opt/homebrew /usr/local /home/linuxbrew/.linuxbrew
     if test -x $__brew_prefix/bin/brew
         $__brew_prefix/bin/brew shellenv fish | source
         break

@@ -47,8 +47,21 @@ beside the symlinks. This is the sanctioned way to keep work-only helpers
 * **`fish_prompt_pwd_dir_length` was a universal variable** (`set -U`), so
   every shell start rewrote `fish_variables`. It is `set -g` now — the correct
   scope for a config-driven value.
-* **PATH was hardcoded to `/opt/homebrew`.** It now probes both Homebrew
-  prefixes and uses `brew shellenv`, which also sets `MANPATH` and `INFOPATH`.
+* **PATH was hardcoded to `/opt/homebrew`.** It now probes all three Homebrew
+  prefixes — `/opt/homebrew` (Apple Silicon), `/usr/local` (Intel) and
+  `/home/linuxbrew/.linuxbrew` (Linux) — and uses `brew shellenv`, which also
+  sets `MANPATH` and `INFOPATH`. This is the most load-bearing line in the
+  shell config: if no prefix matches, every brew-installed tool falls off PATH.
+
+## Platform differences
+
+| Piece | Behaviour |
+|---|---|
+| `conf.d/00-path.fish` | Probes all three Homebrew prefixes, so one file covers Intel Mac, Apple Silicon and Linux |
+| `conf.d/10-environment.fish` | `$MANPAGER` is guarded on `col`, which Debian/Ubuntu moved into `bsdextrautils` and minimal images often lack |
+| `conf.d/30-prompt.fish` | Guarded on `brew` as well as `oh-my-posh` — the theme path is resolved via `brew --prefix`, so a non-Homebrew oh-my-posh would otherwise print an error on every shell start |
+| `functions/signed.fish` | Defined **only on macOS**; `codesign` has no Linux equivalent, so on Linux the name simply does not exist |
+| `functions/coffee.fish` | Drops `--greedy` off macOS — the flag only means anything for casks, which Linux Homebrew does not have |
 
 ## Gotchas
 

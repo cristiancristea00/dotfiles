@@ -23,6 +23,15 @@ set -gx HOMEBREW_NO_ENV_HINTS 1
 #       keeps bat's decorations off so the page still looks like a man page.
 #       MANROFFOPT=-c is required alongside it — without it groff re-inserts
 #       the overstrikes and the output is mangled.
-# HOW : Unset both to get the plain `less` experience back.
-set -gx MANPAGER "sh -c 'col -bx | bat --language man --plain'"
-set -gx MANROFFOPT -c
+# NOTE: Guarded on `col`, which is NOT universally present. It lives in
+#       util-linux on most distributions but Debian and Ubuntu moved it into
+#       the separate `bsdextrautils` package, and minimal container images
+#       routinely lack it. Without the guard, `man` would break entirely on
+#       those systems rather than falling back. macOS always ships it.
+# HOW : Unset both to get the plain `less` experience back. If man pages look
+#       garbled with stray ^H sequences, `col` is missing — install
+#       bsdextrautils (Debian/Ubuntu) or util-linux (elsewhere).
+if command --query col
+    set -gx MANPAGER "sh -c 'col -bx | bat --language man --plain'"
+    set -gx MANROFFOPT -c
+end

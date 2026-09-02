@@ -70,18 +70,78 @@
         "dark": "Catppuccin Macchiato"
     },
 
+    // WHAT: The icon set used for files and folders in the project panel and
+    //       tabs, in the same light/dark form as "theme" above.
+    // WHY : Written as an object rather than a plain string so the icons
+    //       follow the system appearance with everything else — a bare
+    //       "Catppuccin Macchiato" would leave dark-flavoured icons sitting in
+    //       a Latte window. The four names come from the extension's own
+    //       icon_themes/catppuccin-icons.json, which is where to look if one
+    //       stops resolving.
+    // NOTE: Zed can do this and VS Code CANNOT. Its `workbench.iconTheme`
+    //       takes a single value with no light/dark pair, so
+    //       ../../../vscode/.config/Code/User/settings.json pins one flavour
+    //       and says so. This is the rare setting where the two editors are
+    //       not equivalent.
+    // NOTE: Zed's settings UI writes this key as a plain string, and it wrote
+    //       it into the middle of the buffer-font block above when it did.
+    //       If it reappears there, move it back here rather than editing
+    //       around it.
+    // HOW : Provided by the `catppuccin-icons` extension, declared below.
+    //       Set "mode" to "light" or "dark" to pin one regardless of the
+    //       system, or replace the whole object with a single name.
+    "icon_theme": {
+        "mode": "system",
+        "light": "Catppuccin Latte",
+        "dark": "Catppuccin Macchiato"
+    },
+
     // WHAT: Extensions Zed installs by itself on startup, as id → enabled.
-    // WHY : Makes the theme reproducible from this file alone. Without it, a
-    //       fresh machine would need the extension installed by hand before
-    //       the "theme" block above resolves to anything.
-    // HOW : Extension ids come from the Zed extension registry; `catppuccin`
-    //       provides the four flavour themes. Zed merges this map over its
-    //       defaults, so adding a key here does not disable the built-in ones.
-    // NOTE: The extension ships only the mauve accent. Other accents are
-    //       separate theme files dropped into ~/.config/zed/themes/, which is
-    //       Zed-managed state outside this repo.
+    // WHY : Makes this whole configuration reproducible from one file. Zed has
+    //       no other declarative install mechanism, and several settings above
+    //       resolve to nothing without the extension that provides them — the
+    //       "theme" and "icon_theme" blocks are the obvious ones, but the
+    //       language entries matter just as much, since without them Zed falls
+    //       back to plain-text editing for those files.
+    //       This is the capability Visual Studio Code and Cursor lack entirely:
+    //       nothing in their settings.json can install an extension, which is
+    //       why they need the separate .txt lists in ../../../vscode/.
+    // HOW : Ids come from the Zed extension registry and are exactly the
+    //       directory names under the extensions/installed/ path Zed manages —
+    //       on macOS ~/Library/Application Support/Zed/extensions/installed.
+    //       List what is actually present with:
+    //         ls ~/Library/Application\ Support/Zed/extensions/installed
+    //       Zed merges this map over its defaults, so adding a key here never
+    //       disables a built-in one. Set a value to false to keep an extension
+    //       declared but uninstalled.
+    // NOTE: Zed ships C, Rust, Python, TOML-adjacent and Markdown support
+    //       built in; only the entries below need declaring.
     "auto_install_extensions": {
-        "catppuccin": true
+        // Appearance. The theme extension ships only the mauve accent — other
+        // accents are separate theme files dropped into ~/.config/zed/themes/,
+        // which is Zed-managed state outside this repo.
+        "catppuccin": true,
+        "catppuccin-icons": true,
+
+        // Languages Zed does not cover out of the box. Each provides a
+        // treesitter grammar, and the first three also provide a language
+        // server, so they are the counterpart of an entry in
+        // ../../../nvim/.config/nvim/lua/languages.lua.
+        "dockerfile": true,
+        "neocmake": true,
+        "xml": true,
+        "toml": true,
+
+        // Swift. Two extensions, because they do different jobs: `swift` is
+        // the language itself via sourcekit-lsp, while `package-swift-lsp`
+        // understands Package.swift manifests specifically.
+        "swift": true,
+        "package-swift-lsp": true,
+
+        // Git file formats — .gitconfig, .gitattributes, rebase todo lists and
+        // commit messages. Highlighting only, no server, which matches the
+        // "Git files" entry in the Neovim language table.
+        "git-firefly": true
     },
 
     // --- Editing behaviour --------------------------------------------------

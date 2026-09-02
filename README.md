@@ -70,9 +70,9 @@ Run `./install.sh --dry-run` first if you want to see exactly what it will do.
 | [`tlrc/`](tlrc/README.md) | `~/.config/tlrc/` | `tldr` client — macOS gets a bridge symlink, see below |
 | [`zed/`](zed/README.md)         | `~/.config/zed/`                      | GUI editor, configured as a normal (non-modal) editor    |
 
-Root files — `install.sh`, `Brewfile` (every dependency), `CLAUDE.md`
-(conventions for AI agents working here), `.gitignore` — are not packages and
-are never stowed.
+Root files — `install.sh`, `Brewfile` (every dependency), `AGENTS.md`
+(conventions for AI coding agents, symlinked as `CLAUDE.md` and `GEMINI.md`),
+`.gitignore` — are not packages and are never stowed.
 
 ---
 

@@ -1,9 +1,9 @@
 # ==============================================================================
-# extensions.txt — extensions both editors need
+# extensions.txt — extensions both editors get
 # ==============================================================================
 #
-# WHAT: Extension ids, one per line, installed into BOTH VS Code and Cursor by
-#       install.sh. Blank lines and lines starting with # are ignored.
+# WHAT: Extension ids, one per line, installed into BOTH Visual Studio Code and
+#       Cursor by install.sh. Blank lines and lines starting with # are ignored.
 #
 # WHY : Neither editor has a declarative equivalent of Zed's
 #       auto_install_extensions — nothing in settings.json can install an
@@ -13,17 +13,28 @@
 #       third-party manager.
 #
 # HOW : The installer runs `code --install-extension <id> --force`, and the
-#       same for `cursor`. --force makes it idempotent and upgrades in place.
-#       Regenerate a starting point with `code --list-extensions`.
+#       same for `cursor`. The --force flag makes it idempotent and upgrades in
+#       place. Regenerate a starting point with `code --list-extensions`.
 #
-# THE REGISTRY SPLIT — why this list is short and there are two more
-#       VS Code installs from Microsoft's Marketplace; Cursor installs from
-#       Open VSX. An id only resolves where it is published, and Microsoft's
-#       own extensions (ms-python.*, ms-vscode.*) are licence-restricted off
-#       the Marketplace. That is why Cursor uses anysphere.cursorpyright and
-#       anysphere.cpptools instead. Only put something here if it exists in
-#       BOTH registries; otherwise use extensions-vscode.txt or
-#       extensions-cursor.txt.
+# THE REGISTRY SPLIT — why there are three lists
+#       The editors resolve ids against DIFFERENT galleries. Visual Studio Code
+#       uses Microsoft's Marketplace. Cursor uses its OWN gallery at
+#       marketplace.cursorapi.com (declared in Cursor.app's product.json), which
+#       mirrors a large slice of the Marketplace — which is why ms-python.python
+#       and ms-vscode.cmake-tools appear below rather than in the VS Code-only
+#       list. What it does NOT carry is Microsoft's licence-restricted
+#       extensions: Pylance, the C++ tools, and the ms-vscode-remote.* family.
+#       Anysphere publishes forks of those, listed in
+#       ../cursor/extensions-cursor.txt.
+#
+#       Do not guess which gallery has what — ask it:
+#         curl -s -X POST \
+#           https://marketplace.cursorapi.com/_apis/public/gallery/extensionquery \
+#           -H 'Content-Type: application/json' \
+#           -H 'Accept: application/json;api-version=7.2-preview.1' \
+#           -d '{"filters":[{"criteria":[{"filterType":7,
+#                "value":"<publisher.name>"}]}],"flags":914}'
+#       An id that comes back empty belongs in extensions-vscode.txt instead.
 #
 # DELIBERATELY ABSENT: vscodevim.vim. These editors are configured as normal,
 #       non-modal editors, exactly as Zed is — Neovim is where modal editing
@@ -31,7 +42,55 @@
 #       an oversight.
 # ==============================================================================
 
-# The theme. Published on both the Marketplace and Open VSX, which is what lets
-# one id serve both editors. Provides the four Catppuccin flavour themes named
-# in settings.json, and the catppuccin.* settings that configure them.
-Catppuccin.catppuccin-vsc
+# --- Appearance ---------------------------------------------------------------
+# The colour theme, providing the four Catppuccin flavours named in
+# settings.json, and the catppuccin.* keys that configure them.
+catppuccin.catppuccin-vsc
+# File icons, palette-matched to the theme above. This replaced
+# pkief.material-icon-theme, which is no longer installed.
+catppuccin.catppuccin-vsc-icons
+# Product icons — the toolbar and activity-bar glyphs, which the Catppuccin
+# extension does not cover.
+miguelsolorio.fluent-icons
+
+# --- Agents -------------------------------------------------------------------
+anthropic.claude-code
+
+# --- Python -------------------------------------------------------------------
+# The language extension, the debugger and the environment manager. Note that
+# Cursor's gallery serves all three, but NOT Pylance — the type checker is the
+# licence-restricted piece, substituted by anysphere.cursorpyright.
+ms-python.python
+ms-python.debugpy
+ms-python.vscode-python-envs
+# The linter and formatter, matching what Neovim runs through its LSP config.
+charliermarsh.ruff
+# The type checker, matching Neovim's choice.
+astral-sh.ty
+
+# --- C, C++ and Swift ---------------------------------------------------------
+# The debug adapters. Microsoft's cpptools is absent here because Cursor's
+# gallery does not carry it — see extensions-vscode.txt.
+llvm-vs-code-extensions.lldb-dap
+vadimcn.vscode-lldb
+ms-vscode.cmake-tools
+ms-vscode.makefile-tools
+swiftlang.swift-vscode
+sweetpad.sweetpad
+
+# --- Other languages ----------------------------------------------------------
+rust-lang.rust-analyzer
+tamasfe.even-better-toml
+redhat.vscode-yaml
+bmalehorn.vscode-fish
+
+# --- Markdown -----------------------------------------------------------------
+yzhang.markdown-all-in-one
+davidanson.vscode-markdownlint
+bierner.markdown-mermaid
+bierner.markdown-preview-github-styles
+
+# --- Containers and CI --------------------------------------------------------
+ms-azuretools.vscode-docker
+ms-azuretools.vscode-containers
+github.vscode-github-actions

@@ -98,11 +98,30 @@ only. So the lists live here and `install.sh` feeds them to each editor's CLI:
 | [`../cursor/extensions-cursor.txt`](../cursor/extensions-cursor.txt) | Cursor only |
 
 There are three lists rather than one because **the editors use different
-registries**: VS Code resolves ids against Microsoft's Marketplace, Cursor
-against [Open VSX](https://open-vsx.org). An id only installs where it is
-published, and Microsoft's own extensions are licence-restricted off the
-Marketplace — which is why Cursor ships `anysphere.cursorpyright` where VS Code
-has `ms-python`. Only ids published in **both** belong in the shared list.
+galleries**. VS Code resolves ids against Microsoft's Marketplace. Cursor
+resolves them against its own gallery at `marketplace.cursorapi.com`, declared
+in `Cursor.app/Contents/Resources/app/product.json` — **not** Open VSX, which
+is a common and wrong assumption. That gallery mirrors a large slice of the
+Marketplace, which is why `ms-python.python` and `ms-vscode.cmake-tools` sit in
+the *shared* list.
+
+What it does not carry is Microsoft's licence-restricted extensions: Pylance,
+the C++ tools and the `ms-vscode-remote.*` family. Anysphere publishes forks of
+exactly those, so each one has a substitute declared in
+[`../cursor/extensions-cursor.txt`](../cursor/extensions-cursor.txt). Four
+markdown-preview extensions have no counterpart at all and are simply absent
+from Cursor.
+
+Do not guess which gallery has what — ask it, and let the answer decide the
+list:
+
+```sh
+curl -s -X POST \
+  https://marketplace.cursorapi.com/_apis/public/gallery/extensionquery \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json;api-version=7.2-preview.1' \
+  -d '{"filters":[{"criteria":[{"filterType":7,"value":"<publisher.name>"}]}],"flags":914}'
+```
 
 ```sh
 code   --install-extension <id> --force

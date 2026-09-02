@@ -6,31 +6,62 @@
 #
 #     brew bundle --file ~/work/dotfiles/Brewfile
 #
+# or just run ./install.sh, which does this and everything around it.
+#
 # `brew bundle` is idempotent — already-installed entries are skipped — so
 # re-running after adding a line is always safe. To find what is installed but
 # NOT listed here:
 #
 #     brew bundle cleanup --file ~/work/dotfiles/Brewfile
 #
-# NOT listed here, because they are managed by other toolchains:
-#   * clangd, sourcekit-lsp   — ship with Xcode
-#   * rust-analyzer, rustfmt  — ship with rustup (see fish/conf.d/00-path.fish)
-#   * fish_indent             — ships with fish itself
+# ── A BREWFILE IS RUBY ────────────────────────────────────────────────────────
+#   That is what makes one file serve both platforms. `OS.mac?` and `OS.linux?`
+#   are provided by Homebrew, and any entry can carry a trailing condition:
+#
+#       brew "gnupg" if OS.mac?
+#
+#   This matters because **casks are macOS-only**. Homebrew on Linux installs
+#   formulae only, so every cask below is guarded — without the guard,
+#   `brew bundle` fails on Linux at the first one.
+#
+#   `ENV["HOMEBREW_DOTFILES_CLI_ONLY"]` is set by `./install.sh --cli-only` and
+#   skips the GUI applications, which is what you want on a server or in a
+#   container.
+#
+#   THE HOMEBREW_ PREFIX IS MANDATORY. Homebrew sanitises its environment and
+#   passes through only variables named HOMEBREW_*. A plain DOTFILES_CLI_ONLY
+#   is silently stripped before this file is evaluated, so the guard would read
+#   as nil and every GUI app would install anyway — with no error to tell you.
+#
+# ── NOT LISTED HERE ───────────────────────────────────────────────────────────
+#   * clangd       — Xcode on macOS; an LLVM package on Linux (often versioned
+#                    as clangd-18, with `clangd` via update-alternatives)
+#   * sourcekit-lsp — Xcode on macOS; the swift.org toolchain on Linux
+#   * rust-analyzer, rustfmt — rustup (see fish/conf.d/00-path.fish)
+#   * fish_indent  — ships with fish itself
+#   * Fonts on Linux — casks cannot install them and distro packaging is
+#                    inconsistent, so install.sh prints the list and you install
+#                    them by hand. See the root README's font matrix.
 # ==============================================================================
 
-# --- Fonts ----------------------------------------------------------------------
-# The font stack used by every tool here, in fallback order. The Nerd Font build
-# carries the icon glyphs Neovim draws; the other three are per-glyph fallbacks.
+# --- Fonts (macOS only: these are casks) ---------------------------------------
+# The font stack used by every tool here, in fallback order. The two Nerd builds
+# carry the icon glyphs Neovim draws; the rest are per-glyph fallbacks.
 # See the root README for which surface uses which build.
-cask "font-jetbrains-mono-nerd-font"
-cask "font-fira-code"
-cask "font-source-code-pro"
-cask "font-ibm-plex-mono"
+cask "font-jetbrains-mono-nerd-font" if OS.mac?
+cask "font-fira-code-nerd-font"      if OS.mac?
+cask "font-fira-code"                if OS.mac?
+cask "font-source-code-pro"          if OS.mac?
+cask "font-ibm-plex-mono"            if OS.mac?
 
 # --- Applications ------------------------------------------------------------------
-cask "ghostty"       # terminal emulator      -> ghostty/
-cask "zed"           # GUI editor             -> zed/
-cask "neovide-app"   # Neovim GUI             -> neovide/
+# macOS gets all three as casks. On Linux, Neovide has a real formula so brew
+# still handles it; Ghostty and Zed are cask-only, so install.sh installs them
+# through the distribution's package manager instead.
+cask "ghostty"     if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # terminal    -> ghostty/
+cask "zed"         if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # GUI editor  -> zed/
+cask "neovide-app" if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # Neovim GUI  -> neovide/
+brew "neovide"     if OS.linux? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"] # same, as a formula
 
 # --- Dotfiles management -------------------------------------------------------------
 # GNU stow creates the symlinks from this repo into $HOME. Required to install
@@ -46,6 +77,17 @@ brew "fd"            # find replacement       -> fish/functions/{ff,fx,fd}.fish,
 brew "ripgrep"       # grep replacement       -> fzf-lua live grep
 brew "fzf"           # fuzzy matcher          -> fzf-lua
 brew "tlrc"          # tldr client (installs the `tldr` binary) -> tlrc/
+
+# --- Linux-only runtime dependencies ---------------------------------------------------
+# WHAT: Clipboard providers for Neovim's `clipboard=unnamedplus`.
+# WHY : macOS ships pbcopy/pbpaste, so Neovim finds a provider for free. Linux
+#       has no built-in equivalent: without one of these, every yank silently
+#       stops reaching the system clipboard and `:checkhealth vim.provider`
+#       reports "No clipboard tool found". Both are installed because the right
+#       one depends on the session — wl-clipboard for Wayland (the default on
+#       current GNOME and KDE), xclip for X11 — and Neovim picks at runtime.
+brew "wl-clipboard" if OS.linux?
+brew "xclip"        if OS.linux?
 
 # --- Git -----------------------------------------------------------------------------
 brew "git-delta"     # diff pager             -> git/config [delta]
@@ -73,9 +115,12 @@ brew "fish-lsp"              # fish
 # Used by <leader>F in Neovim via conform.nvim. If one is missing, formatting
 # falls back to the language server.
 brew "clang-format"  # C/C++/ObjC — reads each project's .clang-format
-brew "swift-format"  # Swift — Apple's official formatter (also ships inside
-                     # Xcode; the formula keeps it on PATH independently of
-                     # which Xcode is selected)
 brew "shfmt"         # shell scripts
 brew "yamlfmt"       # YAML
 brew "shellcheck"    # not a formatter: bash-language-server surfaces its lints
+
+# WHAT: Apple's official Swift formatter.
+# WHY : macOS-only here. It also ships inside Xcode, and on Linux Swift comes
+#       from the swift.org toolchain, which bundles its own — so installing it
+#       through brew there would be a second, possibly mismatched copy.
+brew "swift-format" if OS.mac?

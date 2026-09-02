@@ -38,7 +38,7 @@
 --       KEEP IN SYNC with the [font] section in neovide/config.toml — that
 --       file sets the same font for Neovide's first frames (before init.lua
 --       runs); this option takes over for the rest of the session.
-vim.o.guifont = "JetBrainsMono Nerd Font Mono,Fira Code,Source Code Pro,IBM Plex Mono:h14"
+vim.o.guifont = "JetBrainsMono Nerd Font Mono,FiraCode Nerd Font Mono,Fira Code,Source Code Pro,IBM Plex Mono:h14"
 
 -- Everything below only applies inside Neovide --------------------------------
 if not vim.g.neovide then
@@ -95,40 +95,84 @@ vim.g.neovide_remember_window_size = true -- Neovide default: true
 --       vim.o.confirm for the ⌘Q / close-button path.
 vim.g.neovide_confirm_quit = true -- Neovide default: true
 
--- macOS keyboard ---------------------------------------------------------------
--- WHAT: Make the LEFT Option key act as Meta/Alt (so <M-j>/<M-k> line-move
---       maps work) while the RIGHT Option key keeps composing macOS special
---       characters (é, ß, …).
--- HOW : Values: "none" (default), "only_left", "only_right", "both".
-vim.g.neovide_input_macos_option_key_is_meta = "only_left" -- Neovide default: "none"
-
--- ⌘-key mappings ----------------------------------------------------------------
--- WHAT: Standard macOS shortcuts. Neovide delivers the Command key as the
---       <D-...> modifier; terminals never see it, so these live here.
--- NOTE: With clipboard=unnamedplus (core/options.lua) plain y/p already use
---       the system clipboard — these exist for muscle memory and for the
---       modes where y/p don't apply (insert, command-line, terminal).
+-- Platform split ------------------------------------------------------------------
+-- WHAT: Everything below differs per operating system, so it branches here.
+-- WHY : Neovide runs on macOS and Linux, and the modifier conventions are not
+--       merely different — the wrong one is actively harmful. `<D-…>` is
+--       Neovim's Command/Super modifier: on macOS it is ⌘, exactly right; on
+--       Linux it is the Windows key, which GNOME and KDE grab system-wide, so
+--       those mappings would register and then never fire. Guarding is what
+--       keeps the config honest about what it actually does on each platform.
+local is_macos = vim.uv.os_uname().sysname == "Darwin"
 local map = vim.keymap.set
-map("v", "<D-c>", '"+y', { desc = "Copy selection (⌘C)" })
-map({ "n", "v" }, "<D-v>", '"+p', { desc = "Paste (⌘V)" })
-map("i", "<D-v>", "<C-r><C-o>+", { desc = "Paste (⌘V)" }) -- <C-o>: paste literally, don't autoindent
-map("c", "<D-v>", "<C-r>+", { desc = "Paste into command line (⌘V)" })
-map("t", "<D-v>", '<C-\\><C-n>"+pa', { desc = "Paste into terminal (⌘V)" })
-map("n", "<D-s>", "<cmd>write<CR>", { desc = "Save (⌘S)" })
-map("n", "<D-a>", "ggVG", { desc = "Select all (⌘A)" })
 
--- Live font zoom ------------------------------------------------------------------
--- WHAT: ⌘= / ⌘- scale the UI by ±10%, ⌘0 resets. Implemented via Neovide's
---       scale factor, which multiplies the guifont size without changing it.
+-- WHAT: Scale the UI by a factor, clamped so a runaway key repeat cannot make
+--       the window unusable. Neovide multiplies the guifont size by this
+--       rather than rewriting 'guifont'.
+-- WHY : Defined once and bound to different keys per platform below.
 local function zoom(delta)
     return function()
         local factor = (vim.g.neovide_scale_factor or 1.0) * delta
-        -- Clamp so a runaway key repeat can't make the UI unusable.
         vim.g.neovide_scale_factor = math.min(3.0, math.max(0.5, factor))
     end
 end
-map("n", "<D-=>", zoom(1.1), { desc = "Zoom in (⌘=)" })
-map("n", "<D-->", zoom(1 / 1.1), { desc = "Zoom out (⌘-)" })
-map("n", "<D-0>", function()
-    vim.g.neovide_scale_factor = 1.0
-end, { desc = "Reset zoom (⌘0)" })
+
+if is_macos then
+    -- macOS keyboard -----------------------------------------------------------
+    -- WHAT: Make the LEFT Option key act as Meta/Alt (so <M-j>/<M-k> line-move
+    --       maps work) while the RIGHT Option key keeps composing macOS special
+    --       characters (é, ß, …).
+    -- WHY : macOS-only. On Linux, Alt is already Meta, so nothing is needed —
+    --       and this variable is simply never read there.
+    -- HOW : Values: "none" (default), "only_left", "only_right", "both".
+    vim.g.neovide_input_macos_option_key_is_meta = "only_left" -- Neovide default: "none"
+
+    -- ⌘-key mappings -----------------------------------------------------------
+    -- WHAT: Standard macOS shortcuts. Neovide delivers the Command key as the
+    --       <D-...> modifier; terminals never see it, so these live here.
+    -- NOTE: With clipboard=unnamedplus (core/options.lua) plain y/p already use
+    --       the system clipboard — these exist for muscle memory and for the
+    --       modes where y/p don't apply (insert, command-line, terminal).
+    map("v", "<D-c>", '"+y', { desc = "Copy selection (⌘C)" })
+    map({ "n", "v" }, "<D-v>", '"+p', { desc = "Paste (⌘V)" })
+    map("i", "<D-v>", "<C-r><C-o>+", { desc = "Paste (⌘V)" }) -- <C-o>: paste literally, don't autoindent
+    map("c", "<D-v>", "<C-r>+", { desc = "Paste into command line (⌘V)" })
+    map("t", "<D-v>", '<C-\\><C-n>"+pa', { desc = "Paste into terminal (⌘V)" })
+    map("n", "<D-s>", "<cmd>write<CR>", { desc = "Save (⌘S)" })
+    map("n", "<D-a>", "ggVG", { desc = "Select all (⌘A)" })
+
+    -- WHAT: ⌘= / ⌘- scale the UI by ±10%, ⌘0 resets.
+    map("n", "<D-=>", zoom(1.1), { desc = "Zoom in (⌘=)" })
+    map("n", "<D-->", zoom(1 / 1.1), { desc = "Zoom out (⌘-)" })
+    map("n", "<D-0>", function()
+        vim.g.neovide_scale_factor = 1.0
+    end, { desc = "Reset zoom (⌘0)" })
+else
+    -- Linux keyboard -----------------------------------------------------------
+    -- WHAT: The same actions on Ctrl+Shift, the Linux terminal convention.
+    -- WHY : Plain Ctrl+key is unavailable — Ctrl+C is SIGINT, Ctrl+V is Vim's
+    --       VISUAL BLOCK (which must not be shadowed), Ctrl+A increments a
+    --       number. Adding Shift frees the whole set, and matches what every
+    --       Linux terminal already uses for copy and paste.
+    --       Super was deliberately NOT used, even though Neovide would deliver
+    --       it as <D-…>: desktop environments intercept it globally. This
+    --       mirrors the same choice in ghostty/os-linux.conf, so the two
+    --       agree.
+    -- NOTE: These need a GUI that can distinguish Ctrl+Shift+key from
+    --       Ctrl+key, which Neovide can and a terminal generally cannot — and
+    --       this whole file only runs under Neovide anyway.
+    map("v", "<C-S-c>", '"+y', { desc = "Copy selection (Ctrl+Shift+C)" })
+    map({ "n", "v" }, "<C-S-v>", '"+p', { desc = "Paste (Ctrl+Shift+V)" })
+    map("i", "<C-S-v>", "<C-r><C-o>+", { desc = "Paste (Ctrl+Shift+V)" })
+    map("c", "<C-S-v>", "<C-r>+", { desc = "Paste into command line (Ctrl+Shift+V)" })
+    map("t", "<C-S-v>", '<C-\\><C-n>"+pa', { desc = "Paste into terminal (Ctrl+Shift+V)" })
+    map("n", "<C-s>", "<cmd>write<CR>", { desc = "Save (Ctrl+S)" })
+    map("n", "<C-S-a>", "ggVG", { desc = "Select all (Ctrl+Shift+A)" })
+
+    -- WHAT: Ctrl+Shift+= / Ctrl+Shift+- scale the UI by ±10%, Ctrl+Shift+0 resets.
+    map("n", "<C-S-=>", zoom(1.1), { desc = "Zoom in (Ctrl+Shift+=)" })
+    map("n", "<C-S-->", zoom(1 / 1.1), { desc = "Zoom out (Ctrl+Shift+-)" })
+    map("n", "<C-S-0>", function()
+        vim.g.neovide_scale_factor = 1.0
+    end, { desc = "Reset zoom (Ctrl+Shift+0)" })
+end

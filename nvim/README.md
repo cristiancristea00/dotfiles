@@ -16,21 +16,15 @@ config, and the common "how do I…" recipes.
 ## Installation
 
 ```sh
-# 1. Back up anything already in place (Neovim's state in ~/.local is separate
-#    and untouched).
-mv ~/.config/nvim ~/.config/nvim.backup 2>/dev/null
+# The repo installer does all of this — dependencies, backups, symlinks, and a
+# headless first run that installs plugins and compiles every parser.
+cd ~/work/dotfiles && ./install.sh
 
-# 2. Install the dependencies: fonts, stow, language servers, formatters.
-brew bundle --file ~/work/dotfiles/Brewfile
-
-# 3. Symlink both halves of the setup into place with GNU stow.
+# Or just this package, by hand:
 stow --target="$HOME" --dir="$HOME/work/dotfiles" nvim neovide
+nvim   # first launch: vim.pack asks to install the plugins — answer y
 
-# 4. First launch: vim.pack asks to install the plugins — answer y.
-#    Treesitter parsers compile in the background; reopen files (:e) once done.
-nvim
-
-# 5. Sanity check.
+# Sanity check.
 nvim "+checkhealth vim.pack vim.lsp nvim-treesitter"
 ```
 
@@ -189,6 +183,17 @@ Leader = **Space**. `<leader>fk` fuzzy-searches this whole list at runtime.
 * **Swift in Xcode projects** — sourcekit-lsp works out of the box for SwiftPM;
   Xcode projects need a build-server shim such as
   [xcode-build-server](https://github.com/SolaWing/xcode-build-server).
+* **Linux needs a clipboard provider.** `clipboard=unnamedplus` relies on an
+  external tool: macOS has pbcopy built in, Linux needs `wl-clipboard`
+  (Wayland) or `xclip` (X11). Both are in the Brewfile under `OS.linux?`.
+  Check with `:checkhealth vim.provider`.
+* **clangd resolves per platform** — Apple's `/usr/bin/clangd` on macOS, plain
+  `clangd` from `$PATH` elsewhere. Debian and Ubuntu ship it versioned
+  (`clangd-18`) with the bare name via update-alternatives, so install
+  `clangd` or name the version in `after/lsp/clangd.lua`.
+* **Swift and Objective-C on Linux** — the entries stay, but sourcekit-lsp only
+  exists if you install the swift.org toolchain. If it is absent the server
+  simply never starts; nothing else is affected.
 
 ## Troubleshooting
 

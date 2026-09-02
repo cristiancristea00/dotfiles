@@ -11,22 +11,27 @@
   for user overrides (:h lsp-config-merge).
 
   clangd needs to know how each file is compiled: generate a
-  compile_commands.json in the project root (CMake:
-  -DCMAKE_EXPORT_COMPILE_COMMANDS=ON; Xcode projects: xcpretty/xcodebuild
-  wrappers or `xcode-build-server`). Without it, clangd guesses flags and
-  ObjC/C++ features may misbehave.
+  compile_commands.json in the project root. CMake does it with
+  -DCMAKE_EXPORT_COMPILE_COMMANDS=ON on any platform; Makefile projects can use
+  `bear -- make`; Xcode projects need a wrapper such as `xcode-build-server`.
+  Without it, clangd guesses flags and ObjC/C++ features may misbehave.
 ===========================================================================]]--
 
 return {
-    -- WHAT: Pin Apple's clangd from Xcode (also reachable at /usr/bin/clangd)
-    --       plus a few quality flags. Overriding `cmd` replaces the default
-    --       entirely, so the flags are restated here.
-    -- WHY : Apple's build understands Apple SDKs, frameworks and ObjC best —
-    --       the priority for this machine. For newest-C++-standard work,
-    --       switch the first element to Homebrew LLVM's clangd:
-    --       "/opt/homebrew/opt/llvm/bin/clangd" (brew install llvm).
+    -- WHAT: How to launch clangd, resolved per platform at load time.
+    -- WHY : macOS pins Apple's clangd from Xcode (also reachable at
+    --       /usr/bin/clangd) because that build understands Apple SDKs,
+    --       frameworks and Objective-C best — the priority on a Mac.
+    --       Everywhere else the executable is looked up on $PATH: Linux
+    --       distributions install clangd from an LLVM package, often VERSIONED
+    --       (/usr/bin/clangd-18) with the unsuffixed name provided through
+    --       update-alternatives. Hardcoding the macOS path there would fail
+    --       with ENOENT and leave C/C++ with no language server at all.
+    -- HOW : To use a different build, change the first element. Homebrew LLVM
+    --       is at "/opt/homebrew/opt/llvm/bin/clangd" (brew install llvm);
+    --       on Debian/Ubuntu name the version explicitly, e.g. "clangd-18".
     cmd = {
-        "/usr/bin/clangd",
+        vim.uv.os_uname().sysname == "Darwin" and "/usr/bin/clangd" or "clangd",
         -- Index the whole project in the background => fast references/rename.
         "--background-index",
         -- Run clang-tidy checks (configured per-project via .clang-tidy).

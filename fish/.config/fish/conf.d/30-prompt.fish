@@ -45,4 +45,41 @@ if status is-interactive
     and type --query brew
     and test "$TERM_PROGRAM" != Apple_Terminal
     oh-my-posh init fish --config "$(brew --prefix oh-my-posh)/themes/catppuccin.omp.json" | source
+
+    # --- Blank line before the prompt ---------------------------------------
+    # WHAT: Wrap the fish_prompt that oh-my-posh just defined, so every prompt
+    #       is preceded by one empty line.
+    # WHY : Command output runs straight into the next prompt otherwise, and at
+    #       two lines this prompt is tall enough that the separation matters.
+    #       The upstream mechanism is the theme's own `"newline": true` on its
+    #       first block, which is NOT used here for a concrete reason: the theme
+    #       is Homebrew's bundled catppuccin.omp.json, living in the brew prefix
+    #       rather than this repo, so `brew upgrade` would silently revert it.
+    #       Wrapping keeps the change in version control at the cost noted below.
+    # NOTE: The oh-my-posh tool owns fish_prompt. A future version that redefines
+    #       it AFTER init would silently drop this wrapper — the prompt would
+    #       still work, the blank line would just vanish. If that happens, ship a
+    #       copy of the theme in this repo with `"newline": true` instead.
+    # HOW : Delete this block for the compact prompt. To put the blank line
+    #       AFTER the prompt instead, move the `echo` below the inner call.
+    # NOTE: The --erase is required, not defensive. Two facts make this the
+    #       right shape, and both were checked rather than assumed:
+    #         * `functions --copy` FAILS if the destination already exists, so
+    #           a re-source would abort here and leave the prompt unwrapped.
+    #         * The oh-my-posh init above has just (re)defined fish_prompt, so
+    #           immediately after it the function is always the pristine
+    #           original — never this wrapper. Copying unconditionally can
+    #           therefore never nest, and no guard is needed to prevent it.
+    #       An earlier version guarded on `not functions --query
+    #       __posh_wrapped_prompt` instead. That prevented nesting but was
+    #       wrong in the other direction: on a re-source it skipped the wrap
+    #       while init had already replaced fish_prompt, silently losing the
+    #       blank line. Erasing an absent function is a no-op, so this is safe
+    #       on the first run too.
+    functions --erase __posh_wrapped_prompt
+    functions --copy fish_prompt __posh_wrapped_prompt
+    function fish_prompt --description 'oh-my-posh prompt, preceded by a blank line'
+        echo ''
+        __posh_wrapped_prompt
+    end
 end

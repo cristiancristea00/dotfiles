@@ -69,6 +69,29 @@ PACKAGES_FOLD="neovide nvim tlrc"
 #       selector symlinks created in step 7 (bat, ghostty).
 PACKAGES_NOFOLD="bat fish ghostty git zed"
 
+# WHAT: Packages stowed with --no-folding AND a per-OS --ignore, in a third
+#       invocation of their own.
+# WHY : Visual Studio Code and Cursor read their settings from an XDG path on
+#       Linux but from ~/Library/Application Support on macOS, and neither
+#       format has a conditional. Each package therefore ships BOTH trees and
+#       the wrong one is filtered out at link time by EDITOR_IGNORE below.
+#       The separate invocation is not stylistic: --ignore is a per-run flag,
+#       so folding these into PACKAGES_NOFOLD would apply --ignore='\.config'
+#       to fish, ghostty, git and zed as well and erase their entire trees.
+#       --no-folding is required for the usual reason — User/ also holds
+#       globalStorage/, History/ and workspaceStorage/, all machine-local.
+PACKAGES_EDITOR="vscode cursor"
+
+# WHAT: The regex that selects one of the two trees each editor package ships.
+# WHY : Stow's --ignore drops matching path elements, so ignoring the tree the
+#       platform does NOT use is what leaves exactly one deployed. The value is
+#       set by detect_platform, which is the only place that knows the OS.
+# NOTE: This is also the skip-prefix backup_conflicts uses, so that the walker
+#       does not check the undeployed tree for conflicts. The two uses must
+#       agree — see backup_conflicts and stow_packages.
+EDITOR_IGNORE=""
+EDITOR_SKIP_PREFIX=""
+
 # WHAT: Fonts the configs reference, for the message printed when they cannot
 #       be installed automatically.
 FONTS_NEEDED="JetBrainsMono Nerd Font, FiraCode Nerd Font, JetBrains Mono, Fira Code, Source Code Pro, IBM Plex Mono"
@@ -297,6 +320,17 @@ detect_platform() {
         fi
     fi
 
+    # WHY: macOS reads the editors' settings from Library/, so the .config tree
+    #      is the one to drop, and the reverse holds on Linux. The pattern is a
+    #      regex matched against each path element, hence the escaped dot.
+    if [ "$OS" = "macos" ]; then
+        EDITOR_IGNORE='\.config'
+        EDITOR_SKIP_PREFIX=".config/"
+    else
+        EDITOR_IGNORE='Library'
+        EDITOR_SKIP_PREFIX="Library/"
+    fi
+
     ok "OS: $OS${DISTRO:+ ($DISTRO)}"
     ok "Architecture: $(uname -m)"
     [ "$OS" = "linux" ] && ok "Package manager: $PKG_MANAGER"
@@ -418,6 +452,12 @@ install_brewfile() {
 # WHY : Both are Homebrew *casks*, and casks are macOS-only — on Linux brew
 #       cannot provide them at all. Neovide is different: it has a real formula,
 #       so the Brewfile already handled it.
+# NOTE: Visual Studio Code and Cursor are casks too, and are NOT handled here.
+#       Code needs Microsoft's third-party apt/dnf repository and Cursor ships
+#       only an AppImage; adding a system repository unattended is out of scope
+#       for this script, exactly as fetching Ghostty's community .deb is. Their
+#       configuration still deploys — only the applications are manual. The
+#       Brewfile records the same decision and carries the download links.
 #       Every step here is best-effort and never fatal. Packaging for these two
 #       varies a lot between distributions, and a missing terminal emulator
 #       should not stop a dotfiles install that is otherwise fine.
@@ -585,8 +625,15 @@ SELECTION
 #       directory clears the way while destroying nothing.
 #       Symlinks into this repo are skipped: those are ours from a previous run,
 #       and backing them up would fill the backup with junk on every re-run.
+# WHAT: Walk every file a package would install and back up whatever is in the
+#       way. The optional second argument is a leading path fragment to skip.
+# WHY : The skip is for the editor packages only, whose undeployed tree must not
+#       be treated as something to install — see EDITOR_IGNORE. It must NEVER be
+#       applied to the general call: every other package lives under .config/,
+#       so a .config/ skip there would silently disable conflict detection for
+#       bat, fish, ghostty, git and zed.
 backup_conflicts() {
-    local packages="$1" pkg src rel target conflicts=""
+    local packages="$1" skip="${2:-}" pkg src rel target conflicts=""
 
     for pkg in $packages; do
         [ -d "$DOTFILES_DIR/$pkg" ] || continue
@@ -597,14 +644,23 @@ backup_conflicts() {
             rel="${src#"$DOTFILES_DIR/$pkg/"}"
             case "$rel" in
                 README.md | .stow-local-ignore) continue ;;
+                # The extension lists are inputs to this script, not files that
+                # belong in $HOME; .stow-local-ignore keeps stow off them too.
+                extensions*.txt) continue ;;
             esac
+            # WHY: Skip the tree this platform does not deploy, if asked.
+            [ -n "$skip" ] && case "$rel" in "$skip"*) continue ;; esac
             target="$HOME/$rel"
-            if [ -e "$target" ] && ! is_ours "$target"; then
+            # WHY: The -L test is not redundant with -e. A DANGLING symlink —
+            #      one left by a previous install from a repo that has since
+            #      moved — fails -e, and without the second test it would be
+            #      skipped here and then collide during stow.
+            if { [ -e "$target" ] || [ -L "$target" ]; } && ! is_ours "$target"; then
                 conflicts="$conflicts$target
 "
             fi
         done <<EOF
-$(find "$DOTFILES_DIR/$pkg" -type f 2>/dev/null)
+$(find "$DOTFILES_DIR/$pkg" \( -type f -o -type l \) 2>/dev/null)
 EOF
     done
 
@@ -669,13 +725,17 @@ stow_packages() {
         die "stow is not installed — the Brewfile step should have provided it"
     }
 
-    local fold nofold
+    local fold nofold editor
     fold="$(select_packages "$PACKAGES_FOLD")"
     nofold="$(select_packages "$PACKAGES_NOFOLD")"
+    editor="$(select_packages "$PACKAGES_EDITOR")"
 
     step "Linking configuration"
     backup_conflicts "$fold $nofold"
-    unfold_stale_links "$nofold"
+    # WHY: The editor packages are checked separately so the skip-prefix that
+    #      hides their undeployed tree cannot reach the packages above.
+    [ -n "$editor" ] && backup_conflicts "$editor" "$EDITOR_SKIP_PREFIX"
+    unfold_stale_links "$nofold $editor"
 
     # Two invocations because folding is a per-run flag, not per-package.
     # The unquoted expansions below are deliberate: each list must split into
@@ -690,6 +750,14 @@ stow_packages() {
         info "No-fold:   $nofold"
         # shellcheck disable=SC2086
         run stow --no-folding --target="$HOME" --dir="$DOTFILES_DIR" $nofold
+    fi
+    # A third invocation, because --ignore is a per-run flag like --no-folding.
+    # Applying it to the list above would erase the other packages' trees.
+    if [ -n "$editor" ]; then
+        info "Editors:   $editor (ignoring /$EDITOR_IGNORE/)"
+        # shellcheck disable=SC2086
+        run stow --no-folding --ignore="$EDITOR_IGNORE" \
+            --target="$HOME" --dir="$DOTFILES_DIR" $editor
     fi
     ok "Packages linked"
 }
@@ -739,6 +807,71 @@ link_os_selectors() {
 # WHY : vim.pack clones on first start and nvim-treesitter then compiles ~22
 #       parsers. Doing it here means the first real launch is instant instead of
 #       a several-minute wait with half-broken highlighting.
+# WHAT: Install the extensions listed in the editor packages' .txt files.
+# WHY : Neither editor has a declarative equivalent of Zed's
+#       auto_install_extensions — nothing in settings.json can install an
+#       extension, and .vscode/extensions.json is workspace-level
+#       *recommendations* only. Each editor's own CLI is the shipped mechanism,
+#       so the lists live in the repo and this feeds them in.
+#       The step is best-effort by design: a missing CLI, an unpublished id or
+#       an offline machine must not fail an install whose real job — linking
+#       configuration — has already succeeded.
+# NOTE: The two editors resolve ids against DIFFERENT registries. VS Code uses
+#       Microsoft's Marketplace, Cursor uses Open VSX, and an id only installs
+#       where it is published. That is why there are three lists rather than
+#       one; see vscode/extensions.txt for the full explanation.
+# HOW : The `code` CLI appears on $PATH via the editor's "Shell Command:
+#       Install 'code' command in PATH" palette action, which is why its
+#       absence is a warning rather than an error.
+install_editor_extensions() {
+    step "Installing editor extensions"
+
+    local any=0
+    # Each pair is "<cli>:<list> <list>…"; the lists are relative to the repo.
+    install_extension_list "code"   "vscode/extensions.txt" "vscode/extensions-vscode.txt" && any=1
+    install_extension_list "cursor" "vscode/extensions.txt" "cursor/extensions-cursor.txt" && any=1
+
+    [ "$any" -eq 1 ] || info "Neither editor CLI is on \$PATH; nothing to do"
+    return 0
+}
+
+# WHAT: Feed one editor's CLI every id from the given lists.
+# WHY : Split out so the two editors share the parsing, and so a failure in one
+#       cannot stop the other.
+install_extension_list() {
+    local cli="$1" list path id failed=0 count=0
+    shift
+
+    command -v "$cli" >/dev/null 2>&1 || {
+        warn "$cli is not on \$PATH; skipping its extensions"
+        return 1
+    }
+
+    for list in "$@"; do
+        path="$DOTFILES_DIR/$list"
+        [ -f "$path" ] || continue
+        # WHY: The `|| true` is load-bearing. grep exits 1 when nothing matches,
+        #      which is the normal state of a list that is entirely comments,
+        #      and `set -e` would end the script there.
+        while IFS= read -r id; do
+            [ -n "$id" ] || continue
+            count=$((count + 1))
+            # --force makes this idempotent and upgrades in place.
+            run "$cli" --install-extension "$id" --force >/dev/null 2>&1 \
+                || { warn "$cli could not install $id"; failed=$((failed + 1)); }
+        done <<EOF
+$(grep -v -e '^[[:space:]]*#' -e '^[[:space:]]*$' "$path" 2>/dev/null || true)
+EOF
+    done
+
+    if [ "$failed" -eq 0 ]; then
+        ok "$cli: $count extensions"
+    else
+        warn "$cli: $((count - failed)) of $count installed, $failed failed"
+    fi
+    return 0
+}
+
 bootstrap_neovim() {
     command -v nvim >/dev/null 2>&1 || { warn "nvim not found; skipping bootstrap"; return 0; }
     step "Bootstrapping Neovim (plugins and parsers)"
@@ -850,15 +983,21 @@ uninstall() {
         fi
     done
 
-    local fold nofold
+    local fold nofold editor
     fold="$(select_packages "$PACKAGES_FOLD")"
     nofold="$(select_packages "$PACKAGES_NOFOLD")"
+    editor="$(select_packages "$PACKAGES_EDITOR")"
 
     if command -v stow >/dev/null 2>&1; then
         # shellcheck disable=SC2086  # deliberate word splitting, as above
         [ -n "$fold" ] && run stow -D --target="$HOME" --dir="$DOTFILES_DIR" $fold
         # shellcheck disable=SC2086
         [ -n "$nofold" ] && run stow -D --no-folding --target="$HOME" --dir="$DOTFILES_DIR" $nofold
+        # WHY: --ignore must match the install-time value, or stow tries to
+        #      unlink the tree that was never deployed and reports it missing.
+        # shellcheck disable=SC2086
+        [ -n "$editor" ] && run stow -D --no-folding --ignore="$EDITOR_IGNORE" \
+            --target="$HOME" --dir="$DOTFILES_DIR" $editor
         true  # the guarded commands above must not set the function's exit status
         ok "Packages unstowed"
     else
@@ -934,6 +1073,7 @@ main() {
 
     if [ "$DRY_RUN" -eq 0 ]; then
         bootstrap_neovim
+        install_editor_extensions
         prime_tldr_cache
         set_login_shell
     fi

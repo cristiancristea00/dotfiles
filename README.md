@@ -1,8 +1,8 @@
 # dotfiles
 
 Configuration for a **macOS and Linux** development setup: **Ghostty** running
-**fish**, **Neovim** (terminal and via **Neovide**), **Zed**, **Git**, **bat**
-and **tlrc**. Installed by one script, deployed with GNU **stow**.
+**fish**, **Neovim** (terminal and via **Neovide**), **Zed**, **Visual Studio
+Code**, **Cursor**, **Git**, **bat** and **tlrc**. Installed by one script, deployed with GNU **stow**.
 
 Two things make this repo what it is:
 
@@ -32,7 +32,7 @@ Neovim, and offers to make fish your login shell.
 | Option           | Effect                                                                 |
 | ---------------- | ---------------------------------------------------------------------- |
 | `--dry-run`      | Print every action, change nothing                                     |
-| `--cli-only`     | Skip the GUI apps (Ghostty, Zed, Neovide) — for servers and containers |
+| `--cli-only`     | Skip the GUI apps (Ghostty, Zed, Neovide, VS Code, Cursor) — for servers and containers |
 | `--packages a,b` | Only handle the named packages                                         |
 | `--uninstall`    | Remove the symlinks, leave the software installed                      |
 | `--yes`          | Never prompt; implied when stdin is not a terminal                     |
@@ -72,7 +72,9 @@ Run `./install.sh --dry-run` first if you want to see exactly what it will do.
 | [`neovide/`](neovide/README.md) | `~/.config/neovide/`                  | Neovim's GUI: window and startup font                    |
 | [`nvim/`](nvim/README.md)       | `~/.config/nvim/`                     | The editor: LSP, treesitter, plugins, keymaps            |
 | [`tlrc/`](tlrc/README.md) | `~/.config/tlrc/` | `tldr` client — macOS gets a bridge symlink, see below |
+| [`vscode/`](vscode/README.md)   | `~/.config/Code/` \| `~/Library/…/Code/` | GUI editor. Holds the settings file **Cursor also uses** |
 | [`zed/`](zed/README.md)         | `~/.config/zed/`                      | GUI editor, configured as a normal (non-modal) editor    |
+| [`cursor/`](cursor/README.md)   | `~/.config/Cursor/` \| `~/Library/…/Cursor/` | Nothing but symlinks into `vscode/`               |
 
 Root files — `install.sh`, `Brewfile` (every dependency), `AGENTS.md`
 (conventions for AI coding agents, symlinked as `CLAUDE.md` and `GEMINI.md`),
@@ -87,7 +89,9 @@ A stow package mirrors the path its contents occupy under `$HOME`. So
 `Library/Application Support/…` path needs no special handling — it is just
 what that file's real location is.
 
-Two invocations, because the packages want different linking strategies:
+Three invocations, because the packages want different linking strategies
+and because both `--no-folding` and `--ignore` are **per-run** flags rather
+than per-package ones:
 
 **Folded** — `neovide nvim tlrc`. Stow links the whole directory, so
 `~/.config/nvim` *is* a symlink to this repo. New files appear live with no
@@ -104,6 +108,21 @@ anything machine-local has to live in it.** Two kinds qualify:
 * Directories that hold one of the **per-OS selector symlinks** described
   below — `bat` and `ghostty`. A folded directory is a symlink into the repo,
   so a selector created inside it would land in version control.
+
+**`--no-folding` plus `--ignore`** — `vscode cursor`, in a third invocation of
+their own. Both editors read their settings from `~/.config` on Linux but from
+`~/Library/Application Support` on macOS, and the format has no conditional, so
+each package ships **both** trees and `--ignore` drops the one this platform
+does not use:
+
+```sh
+stow --no-folding --ignore='\.config' --target="$HOME" --dir="$PWD" vscode cursor  # macOS
+stow --no-folding --ignore='Library'  --target="$HOME" --dir="$PWD" vscode cursor  # Linux
+```
+
+Keeping this separate is not tidiness. Adding these two to the `--no-folding`
+list above would apply `--ignore='\.config'` to **fish, ghostty, git and zed**
+as well, and erase their entire trees.
 
 The no-fold directories are also what make local overlays possible:
 
@@ -148,6 +167,8 @@ The rule: **the Nerd Font build goes wherever icons are drawn.**
 | Neovide / Neovim          | `JetBrainsMono Nerd Font Mono` | on        |
 | Zed — editor pane         | `JetBrains Mono`               | on        |
 | Zed — integrated terminal | `JetBrainsMono Nerd Font Mono` | off       |
+| VS Code / Cursor — editor | `JetBrains Mono`               | on        |
+| VS Code / Cursor — terminal | `JetBrainsMono Nerd Font Mono` | off     |
 
 Fallbacks, in order: **FiraCode Nerd Font Mono** (a second icon-carrying build,
 so icons survive one more step down the chain), then **JetBrains Mono**
@@ -174,8 +195,15 @@ Where ligatures are on, they are enabled for **every family in the chain**, not
 only the primary — Fira Code is a ligature-first typeface and would otherwise
 render flat whenever it was the font actually supplying a glyph.
 
-Changing the font means changing it in four places: `ghostty/`,
-`zed/` (twice — buffer and terminal), `neovide/`, and Neovim's `guifont`.
+Changing the font means changing it in five places: `ghostty/`, `zed/` (twice
+— buffer and terminal), `vscode/` (twice, and the eight further keys below),
+`neovide/`, and Neovim's `guifont`.
+
+VS Code needs the extra care: it does **not** inherit `editor.fontFamily` into
+its other surfaces, so the CodeLens, inlay-hint, inline-suggestion, debug
+console, SCM input, notebook and chat fonts each carry their own key. That is
+product fragmentation, not preference — they are all set to the same family and
+must move together.
 
 ---
 
@@ -189,6 +217,7 @@ all do, so the stack flips together:
 | -------- | --------------------------------------------------------------- |
 | Ghostty  | `theme = light:Catppuccin Latte,dark:Catppuccin Macchiato`      |
 | Zed      | `"theme": { "mode": "system", … }` — Latte / Macchiato          |
+| VS Code / Cursor | `window.autoDetectColorScheme` + `preferredLight`/`DarkColorTheme` |
 | bat      | `--theme=auto:system` — Latte / Macchiato                       |
 | Neovim   | `flavour = "auto"`, reading `background`                        |
 | Neovide  | `theme = "auto"` (window chrome only)                           |

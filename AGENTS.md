@@ -64,23 +64,39 @@ under `$HOME`** — `bat/.config/bat/config` becomes `~/.config/bat/config`. Whe
 adding a file, put it where it really lives; the path is the deployment
 instruction.
 
-Packages: `bat` `fish` `ghostty` `git` `neovide` `nvim` `tlrc` `zed`. Root
+Packages: `bat` `cursor` `fish` `ghostty` `git` `neovide` `nvim` `tlrc`
+`vscode` `zed`. Root
 files (`README.md`, `AGENTS.md` and its symlinks, `install.sh`, `Brewfile`,
 `LICENSE`, `.gitignore`) are not packages and are never stowed. Each package has its own
 `README.md`, which stow's default ignore list keeps out of `$HOME`.
 
-Two linking strategies, and the distinction is load-bearing:
+Three linking strategies, and the distinction is load-bearing:
 
 * **Folded** (`neovide nvim tlrc`) — the whole directory is one symlink. New
   files go live with no restow.
 * **`--no-folding`** (`bat fish ghostty git zed`) — per-file symlinks, so the
   directory stays real. **Adding a file to one of these requires
   `stow -R --no-folding … <pkg>`**, or it simply will not appear.
+* **`--no-folding --ignore=…`** (`vscode cursor`) — as above, plus a per-OS
+  filter. Each package ships both a `.config/` and a `Library/` tree, and
+  `--ignore` drops the one the platform does not read.
 
 The rule for which group a package belongs to: **a directory must stay real if
 anything machine-local has to live in it** — either runtime state the app
-writes (fish, git, zed) or one of the per-OS selector symlinks below (bat,
-ghostty).
+writes (fish, git, zed, and the editors' `globalStorage/` and `History/`) or one
+of the per-OS selector symlinks below (bat, ghostty).
+
+**The `--ignore` trap.** That third invocation must stay separate. `--ignore`
+is a per-run flag, so merging `vscode cursor` into the `--no-folding` call
+would apply `--ignore='\.config'` to **fish, ghostty, git and zed** and erase
+their entire trees. `install.sh` keeps the two lists apart for this reason, and
+`backup_conflicts` takes a matching skip-prefix that must likewise never be
+passed for the other packages.
+
+One further consequence: `vscode/` holds the only real `settings.json`, and the
+other three paths — one in `vscode/`, two in `cursor/` — are **committed
+symlinks** (mode `120000`), the same mechanism as `CLAUDE.md`. Edit the real
+file; never replace a link with a copy.
 
 ## Cross-platform
 
@@ -113,9 +129,17 @@ Structural things worth knowing before editing:
   formatter routing. Add a language there, not in three plugin files.
 * `nvim/.config/nvim/after/lsp/*.lua` overrides nvim-lspconfig's defaults. The
   `after/` prefix is required — a plain `lsp/` loses the merge.
-* The font stack spans four files and the fallback chain differs between
+* The font stack spans five packages and the fallback chain differs between
   editors and terminals. Consult the matrix in the root README before touching
-  any font setting, and change all of them together.
+  any font setting, and change all of them together. VS Code is the awkward
+  one: it does not inherit `editor.fontFamily` into its CodeLens, inlay-hint,
+  debug-console, SCM, notebook or chat surfaces, so eight further keys carry
+  the same value and must move with it.
+* `vscode/.config/Code/User/settings.json` is read by **both** VS Code and
+  Cursor through symlinks. Never add `window.zoomLevel` to it — open VS Code
+  bug #275792 deletes every comment line above a setting when it is reset, and
+  this file is almost entirely comments. Settings Sync must also stay off; it
+  is a second writer with no comment-preservation guarantee.
 
 ## Commit convention
 
@@ -132,9 +156,9 @@ Commits follow [Conventional Commits v1.0.0](https://www.conventionalcommits.org
 
 Rules:
 
-* **Scope is the package directory** — `bat`, `fish`, `ghostty`, `git`,
-  `neovide`, `nvim`, `tlrc`, `zed`. Omit it only for repo-wide changes, which
-  are usually `chore`.
+* **Scope is the package directory** — `bat`, `cursor`, `fish`, `ghostty`,
+  `git`, `neovide`, `nvim`, `tlrc`, `vscode`, `zed`. Omit it only for repo-wide
+  changes, which are usually `chore`.
 * **One package per commit.** A change spanning packages (a font-stack edit
   touching four files) is the exception, and its scope is omitted.
 * Description in lower case, imperative mood, no trailing period.
@@ -219,9 +243,11 @@ Rules:
 ./install.sh --uninstall        # remove the symlinks
 ./install.sh --yes              # required for non-interactive runs
 
-# The two stow invocations install.sh runs, if you need them by hand
+# The three stow invocations install.sh runs, if you need them by hand
 stow --target="$HOME" --dir="$PWD" neovide nvim tlrc
 stow --no-folding --target="$HOME" --dir="$PWD" bat fish ghostty git zed
+stow --no-folding --ignore='\.config' --target="$HOME" --dir="$PWD" vscode cursor  # macOS
+stow --no-folding --ignore='Library'  --target="$HOME" --dir="$PWD" vscode cursor  # Linux
 
 # Preview, re-link after adding files, remove
 stow -n -v --target="$HOME" --dir="$PWD" <pkg>     # dry run
@@ -246,8 +272,9 @@ python3 -c "import tomllib,sys;tomllib.load(open(sys.argv[1],'rb'))" <file.toml>
 nvim "+checkhealth vim.pack vim.lsp nvim-treesitter" +qa
 ```
 
-Zed's `settings.json` is **JSONC** — `json.load` will reject its comments;
-strip them first or use a JSONC-tolerant parser.
+The `settings.json` files for Zed, VS Code and Cursor are **JSONC** —
+`json.load` will reject their comments; strip them first or use a
+JSONC-tolerant parser.
 
 For Neovim, test in a clean room rather than against the live config:
 

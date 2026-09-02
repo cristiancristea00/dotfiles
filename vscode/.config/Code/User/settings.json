@@ -292,7 +292,21 @@
     //       `brew upgrade` may fight this. Harmless, but set "none" if you
     //       prefer brew to own updates exclusively.
     "update.mode": "default",
-    "extensions.autoUpdate": true,
+
+    // WHAT: Whether extensions update themselves.
+    // WHY : Enabled. Extensions move faster than the editor and are the thing
+    //       most likely to be broken by an editor update, so keeping them
+    //       current is the safer default. The alternative, "onlyEnabledExtensions",
+    //       leaves disabled ones pinned at whatever version they stopped at.
+    // NOTE: The value is a STRING, not a boolean. Visual Studio Code migrated
+    //       this key from `true`/`false` to an enum and silently rewrites the
+    //       old form on startup — which is exactly what happened to this file.
+    //       A `true` found in someone's config is therefore stale rather than
+    //       wrong; write "on".
+    // HOW : "onlyEnabledExtensions" to update only what is enabled, "none" to
+    //       pin everything and update by hand.
+    // default: "on"
+    "extensions.autoUpdate": "on",
 
     // --- Explorer and git ---------------------------------------------------
     // WHAT: Skip the confirmation dialog when deleting a file.
@@ -307,12 +321,24 @@
     "git.openRepositoryInParentFolders": "never",
 
     // --- Icon theme ---------------------------------------------------------
-    // WHAT: File and product icons.
-    // NOTE: These come from extensions listed in extensions-vscode.txt, not
-    //       from Catppuccin. `Catppuccin.catppuccin-vsc-icons` is the
-    //       palette-matched alternative if you want the icons to follow the
-    //       theme too.
-    "workbench.iconTheme": "material-icon-theme",
+    // WHAT: File icons — the glyphs beside filenames in the explorer and tabs.
+    // WHY : The Catppuccin set, so the icons share the palette with the colour
+    //       theme rather than sitting beside it in unrelated colours. It
+    //       replaced pkief.material-icon-theme, which is no longer installed.
+    // NOTE: The id is `catppuccin-macchiato` — one flavour, fixed. Unlike
+    //       `workbench.preferredLight/DarkColorTheme` above, icon themes have
+    //       no light/dark pair, so this one does NOT follow the system
+    //       appearance. The Latte icons are a separate id
+    //       (`catppuccin-latte`) if you work mostly in light mode.
+    // HOW : Ships in `Catppuccin.catppuccin-vsc-icons`, declared in
+    //       extensions.txt. Run "Preferences: File Icon Theme" to switch.
+    "workbench.iconTheme": "catppuccin-macchiato",
+
+    // WHAT: Product icons — the toolbar, activity-bar and status-bar glyphs.
+    // WHY : Catppuccin does not provide a product icon theme, so this stays
+    //       with Fluent, whose weight suits the Catppuccin file icons.
+    // HOW : Ships in `miguelsolorio.fluent-icons`, declared in extensions.txt.
+    //       Set "Default" to return to the built-in Codicons.
     "workbench.productIconTheme": "fluent-icons",
 
     // --- Copilot ------------------------------------------------------------

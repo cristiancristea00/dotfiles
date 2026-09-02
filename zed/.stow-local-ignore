@@ -1,0 +1,20 @@
+# Files stow must NOT symlink out of this package.
+#
+# IMPORTANT: this file REPLACES stow's built-in ignore list rather than adding
+# to it, so every default worth keeping has to be restated here. The entries
+# are anchored regexes; a leading ^/ anchors to the top of the package.
+
+# --- stow's defaults, restated -------------------------------------------------
+^/README.*
+^/LICENSE.*
+^/COPYING
+\.git
+\.gitignore
+\.gitmodules
+.+~
+\#.*\#
+
+# --- the addition that made this file necessary ---------------------------------
+# macOS drops these into any directory Finder visits; stow's defaults do not
+# cover them, so without this line they would be symlinked into ~/.config.
+\.DS_Store

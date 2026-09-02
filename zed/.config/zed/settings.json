@@ -1,0 +1,180 @@
+// ============================================================================
+// zed/settings.json — Zed editor
+// ============================================================================
+//
+// WHAT THIS FILE IS
+//   Zed's user settings, read from ~/.config/zed/settings.json. The format is
+//   JSONC: JSON with // comments, which is what makes this documentation
+//   possible. Zed reloads it on save.
+//
+// EDIT THIS FILE, NOT ZED'S UI
+//   This file is a symlink into the dotfiles repo. Changing a setting through
+//   Zed's settings UI rewrites the file, which may replace the symlink with a
+//   real file and strip these comments. If that happens, recover with:
+//       stow -R --no-folding --target="$HOME" --dir="$HOME/work/dotfiles" zed
+//   Prefer editing the repo copy directly.
+//
+// THE FONT SPLIT (see the repo README for the whole matrix)
+//   Zed's EDITOR pane gets the plain "JetBrains Mono" with ligatures ON — it
+//   renders code, Zed supplies its own UI icons, so the Nerd Font build buys
+//   nothing here. Zed's integrated TERMINAL gets the Nerd Font Mono build with
+//   ligatures OFF, because Neovim runs in there and draws icon glyphs.
+//
+//   Every setting Zed accepts: https://zed.dev/docs/configuring-zed
+// ============================================================================
+{
+    // --- Editor font --------------------------------------------------------
+    // WHAT: The font used in the code editor, with fallbacks consulted in
+    //       order for any codepoint the primary font lacks.
+    // WHY : The plain build, not a Nerd Font one — see THE FONT SPLIT above.
+    "buffer_font_family": "JetBrains Mono",
+    "buffer_font_fallbacks": ["Fira Code", "Source Code Pro", "IBM Plex Mono"],
+
+    // WHAT: Editor font size, in pixels.
+    // WHY : 14 matches Ghostty, Neovim and Neovide so code is the same size
+    //       everywhere. Changing it means changing it in those three too.
+    "buffer_font_size": 14,
+
+    // WHAT: OpenType features for the editor font.
+    // WHY : Ligatures ON here: `calt` is what fuses `!=`, `->` and `=>` in
+    //       JetBrains Mono, `liga` covers the standard set. This is the
+    //       editor half of the editor-on / terminal-off split.
+    // NOTE: Unlike Neovide's per-family [font.features] table, Zed applies
+    //       these to the WHOLE stack — primary and every fallback — so Fira
+    //       Code gets its ligatures here without needing its own entry.
+    "buffer_font_features": { "calt": true, "liga": true },
+
+    // WHAT: Line spacing. "standard" is tight, "comfortable" adds breathing
+    //       room; a { "custom": 1.4 } object gives an exact multiplier.
+    "buffer_line_height": "comfortable",
+
+    // --- UI font ------------------------------------------------------------
+    // WHAT: Size and weight of Zed's own chrome (panels, tabs, menus).
+    // WHY : Deliberately larger than the code font at 16 — UI labels are read
+    //       at a glance, code is read closely. The family is left unset so Zed
+    //       uses its bundled UI typeface, which is designed for the purpose.
+    "ui_font_size": 16,
+    "ui_font_weight": 400,
+
+    // --- Theme --------------------------------------------------------------
+    // WHAT: "mode": "system" follows the macOS appearance, picking "light" or
+    //       "dark" from the two named themes.
+    // WHY : Matches the whole stack — Ghostty and bat also follow the system.
+    "theme": {
+        "mode": "system",
+        "light": "Ayu Light",
+        "dark": "Ayu Dark"
+    },
+
+    // --- Editing behaviour --------------------------------------------------
+    // WHAT: Indentation. 4 spaces, never hard tabs.
+    // WHY : Matches the Neovim config's expandtab + shiftwidth = 4, so the two
+    //       editors cannot disagree about a file's indentation.
+    "tab_size": 4,
+    "hard_tabs": false,
+
+    // WHAT: Insert the closing bracket/quote when you type the opening one.
+    "use_autoclose": true,
+
+    // WHAT: Clean-ups applied on every save.
+    // WHY : Both are whitespace-only and safe; they never reformat code.
+    "ensure_final_newline_on_save": true,
+    "remove_trailing_whitespace_on_save": true,
+
+    // WHAT: Run the language server's formatter on save.
+    // WHY : OFF, deliberately, matching the Neovim config, where formatting is
+    //       a manual <leader>F. Reformatting shared codebases on save produces
+    //       diffs nobody asked for.
+    // HOW : Set to "on" to format every save, or "language_server" to be
+    //       explicit about which formatter runs.
+    "format_on_save": "off",
+
+    // WHAT: Save automatically when the editor loses focus.
+    "autosave": "on_focus_change",
+
+    // --- Display ------------------------------------------------------------
+    // WHAT: Highlight the line the cursor is on ("all" tints both the gutter
+    //       and the line background).
+    "current_line_highlight": "all",
+
+    "cursor_shape": "block",
+    "cursor_blink": true,
+
+    // WHAT: Scroll the view when you click near the edge of the window.
+    "autoscroll_on_clicks": true,
+
+    // WHAT: The condensed code overview drawn beside the scrollbar.
+    // WHY : "auto" shows it only when the file is long enough to be worth
+    //       navigating that way.
+    // HOW : "always" or "never" to force it.
+    "minimap": { "show": "auto" },
+
+    // WHAT: Inline type and parameter-name annotations from the language
+    //       server.
+    // WHY : On by default here, unlike the Neovim config where they are behind
+    //       a <leader>ti toggle — in Zed they are the main reason to have a
+    //       language server attached at all.
+    // HOW : Set "enabled": false, or turn off individual categories below.
+    "inlay_hints": {
+        "enabled": true,
+        "show_type_hints": true,
+        "show_parameter_hints": true,
+        "show_other_hints": true,
+        "show_background": false
+    },
+
+    // WHAT: Language servers, globally.
+    "enable_language_server": true,
+
+    // --- Panels -------------------------------------------------------------
+    // WHAT: Which side each panel docks to.
+    // WHY : Everything navigational on the left, the AI agent on the right, so
+    //       the two never fight for the same space.
+    "project_panel": { "dock": "left" },
+    "outline_panel": { "dock": "left" },
+    "collaboration_panel": { "dock": "left" },
+    "git_panel": { "dock": "left" },
+    "agent": { "dock": "right" },
+
+    // --- Terminal -----------------------------------------------------------
+    // WHAT: Zed's integrated terminal.
+    // WHY : Nerd Font Mono with ligatures OFF — the terminal half of the font
+    //       split, because Neovim runs in here and draws icon glyphs, while
+    //       command output should show exact characters. Plain "JetBrains
+    //       Mono" leads the fallback chain (same typeface minus the patched
+    //       icons), so a glyph the Nerd build lacks keeps the identical design
+    //       instead of jumping to another family.
+    // NOTE: Setting fish here is what makes $TERM_PROGRAM equal "zed" inside
+    //       the shell, which fish/conf.d/30-prompt.fish uses to skip
+    //       oh-my-posh. The two files are coupled — change one, check the other.
+    "terminal": {
+        "shell": { "program": "fish" },
+        "font_family": "JetBrainsMono Nerd Font Mono",
+        "font_fallbacks": ["JetBrains Mono", "Fira Code", "Source Code Pro", "IBM Plex Mono"],
+        "font_features": { "calt": false, "liga": false },
+        "font_size": 14
+    },
+
+    // --- File type associations ---------------------------------------------
+    // WHAT: Treat Objective-C (.m) and Objective-C++ (.mm) files as C++.
+    // WHY : Zed has no first-class Objective-C language support, and C++ gives
+    //       the closest usable highlighting and bracket handling. Neovim, by
+    //       contrast, handles objc/objcpp as their own filetypes with clangd —
+    //       so the same file gets better treatment there.
+    "file_types": {
+        "C++": ["mm", "m"]
+    },
+
+    // --- Privacy and updates ------------------------------------------------
+    // WHAT: Opt out of usage metrics and crash reporting.
+    "telemetry": {
+        "metrics": false,
+        "diagnostics": false
+    },
+
+    // WHAT: Let Zed update itself.
+    // NOTE: Zed is also installed as a Homebrew cask (see the root Brewfile),
+    //       so `brew upgrade` may fight this. Harmless, but if you prefer brew
+    //       to own updates exclusively, set this to false.
+    "auto_update": true
+}

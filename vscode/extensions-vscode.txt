@@ -1,0 +1,15 @@
+# ==============================================================================
+# extensions-vscode.txt — VS Code only
+# ==============================================================================
+#
+# WHAT: Extensions installed into Visual Studio Code but not Cursor.
+# WHY : Either they are Marketplace-only, or Cursor ships its own equivalent.
+#       See the registry note in extensions.txt.
+# HOW : Same format as extensions.txt — one id per line, # for comments.
+# ==============================================================================
+
+# Icon themes referenced by workbench.iconTheme / productIconTheme in
+# settings.json. Catppuccin.catppuccin-vsc-icons is the palette-matched
+# alternative if you would rather the icons follow the colour theme.
+pkief.material-icon-theme
+miguelsolorio.fluent-icons

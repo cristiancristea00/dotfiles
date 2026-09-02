@@ -1,0 +1,371 @@
+// ============================================================================
+// settings.json — shared configuration for Visual Studio Code and Cursor
+// ============================================================================
+//
+// WHAT THIS FILE IS
+//   One file, four destinations. Cursor is a VS Code fork and accepts the whole
+//   VS Code settings schema, so both editors read this same file:
+//       macOS   ~/Library/Application Support/{Code,Cursor}/User/settings.json
+//       Linux   ~/.config/{Code,Cursor}/User/settings.json
+//   The repo holds ONE real file — vscode/.config/Code/User/settings.json — and
+//   the other three paths are symlinks to it. install.sh puts them in place.
+//
+// EDIT THIS FILE, NOT THE SETTINGS UI
+//   Changing a value through the UI is usually safe: VS Code treats this file
+//   as JSONC and edits it surgically, preserving comments. But RESETTING a
+//   setting to its default deletes the setting's line AND every comment line
+//   directly above it (microsoft/vscode#275792, open). That is exactly the
+//   shape of this file, so a single reset silently destroys documentation.
+//
+//   NEVER add `window.zoomLevel`. It is the very setting that triggers that
+//   bug, because Ctrl+= / Ctrl+- write it — no Settings UI visit required. It
+//   also cannot express what it would be used for here (see UI FONT below).
+//
+//   If comments do get eaten, restore from git and re-link:
+//       stow -R --no-folding --ignore='\.config' --target="$HOME" vscode cursor
+//
+// SETTINGS SYNC MUST STAY OFF
+//   VS Code's Settings Sync is a second writer to this file, on its own
+//   schedule, driven by remote state — and "Accept Remote" would overwrite the
+//   repo copy with a cloud blob. There is no evidence its merge path preserves
+//   comments. This repo is the source of truth; Sync was turned off
+//   deliberately. If you ever re-enable it, this file stops being reliable.
+//
+// EACH EDITOR IGNORES THE OTHER'S KEYS
+//   `cursor.*` keys are greyed out in VS Code with an "Unknown Configuration
+//   Setting" warning in the Problems panel, and vice versa for the newest VS
+//   Code keys in Cursor. It is a WARNING, not an error: the key is not stripped
+//   and the rest of the file applies normally. Do not "fix" it by deleting keys.
+//
+// THE FONT SPLIT (the whole matrix is in the repo README)
+//   The EDITOR gets plain "JetBrains Mono" with ligatures ON — it renders code
+//   and the editor draws its own UI icons, so a Nerd build buys nothing. The
+//   integrated TERMINAL gets the Nerd Font Mono build with ligatures OFF,
+//   because Neovim runs in there and draws icon glyphs, while command output
+//   should show exactly the characters that are there.
+//
+//   Every setting VS Code accepts: https://code.visualstudio.com/docs/configure/settings
+// ============================================================================
+{
+    // --- Editor font --------------------------------------------------------
+    // WHAT: The editor font, as a CSS font stack.
+    // WHY : Unlike Zed, VS Code has no separate fallback key — one
+    //       comma-separated list does both. Multi-word names must be quoted,
+    //       and the trailing `monospace` keyword is the CSS-level backstop if
+    //       none of the named families resolve.
+    // HOW : Keep this in step with the terminal stack below and with the other
+    //       tools in the repo; the README carries the matrix.
+    "editor.fontFamily": "'JetBrains Mono', 'Fira Code', 'Source Code Pro', 'IBM Plex Mono', monospace",
+
+    // WHAT: Editor font size, in pixels.
+    // WHY : 14 matches Ghostty, Neovim, Neovide and Zed, so code is the same
+    //       physical size wherever you read it.
+    "editor.fontSize": 14,
+
+    // WHAT: Programming ligatures — the fusing of `!=`, `->`, `=>`.
+    // WHY : ON in the editor. A bare `true` enables the font's default set; the
+    //       string form is a raw CSS font-feature-settings value, which states
+    //       the same two features the rest of the repo names explicitly.
+    "editor.fontLigatures": "'calt', 'liga'",
+
+    // WHAT: Line spacing. 0 computes it from the font size; values under 8 are
+    //       a multiplier; 8 and above are absolute pixels.
+    // WHY : 1.5 approximates Zed's "comfortable", which is deliberately looser
+    //       than the tight default.
+    "editor.lineHeight": 1.5,
+
+    // --- The other eight font keys ------------------------------------------
+    // WHAT: The same family, repeated for every surface VS Code renders text on.
+    // WHY : This is VS Code fragmentation, not a preference. Each of these keys
+    //       defaults to something other than the editor font, so without them
+    //       the CodeLens, inlay hints, debug console, SCM input box, notebooks
+    //       and chat all render in a different typeface from the code beside
+    //       them. Zed needs none of this — it has one buffer font.
+    "editor.codeLensFontFamily": "'JetBrains Mono', monospace",
+    "editor.inlayHints.fontFamily": "'JetBrains Mono', monospace",
+    "editor.inlineSuggest.fontFamily": "'JetBrains Mono', monospace",
+    "debug.console.fontFamily": "'JetBrains Mono', monospace",
+    "scm.inputFontFamily": "'JetBrains Mono', monospace",
+    "notebook.markup.fontFamily": "'JetBrains Mono', monospace",
+    "notebook.output.fontFamily": "'JetBrains Mono', monospace",
+    "chat.editor.fontFamily": "'JetBrains Mono', monospace",
+
+    // --- UI font ------------------------------------------------------------
+    // NOTE: There is no equivalent of Zed's `ui_font_size`. VS Code has no
+    //       UI-font-size setting at all — `window.zoomLevel` scales the chrome
+    //       AND the editor together, so it cannot reproduce the deliberate
+    //       "UI larger than code" split, and it is the trigger for the
+    //       comment-deleting bug described in the header. Deliberately absent.
+
+    // --- Theme --------------------------------------------------------------
+    // WHAT: Follow the OS appearance, choosing between the two named themes.
+    // WHY : Catppuccin Latte and Macchiato, the flavours the whole stack uses —
+    //       Ghostty, bat, Neovim, Neovide and delta all name the same pair.
+    // NOTE: `workbench.colorTheme` — the ACTIVE theme — is deliberately NOT set
+    //       here. With auto-detection on, VS Code rewrites that key every time
+    //       the appearance flips, so committing it would produce endless
+    //       spurious diffs. The two `preferred*` keys are the real settings.
+    "window.autoDetectColorScheme": true,
+    "workbench.preferredLightColorTheme": "Catppuccin Latte",
+    "workbench.preferredDarkColorTheme": "Catppuccin Macchiato",
+
+    // WHAT: Light or dark native window chrome (titlebar, scrollbars).
+    "window.systemColorTheme": "auto",
+
+    // WHAT: Catppuccin's own options. The theme is an extension, so unlike
+    //       every built-in theme it contributes real settings.
+    // WHY : Worth noting that this closes a gap the Zed config documents: there
+    //       the accent could only be changed by hand-dropping theme files into
+    //       Zed-managed state. Here it is a repo-managed setting.
+    // HOW : Accents: rosewater, flamingo, pink, mauve, red, maroon, peach,
+    //       yellow, green, teal, sky, sapphire, blue, lavender.
+    "catppuccin.accentColor": "mauve",
+    "catppuccin.italicComments": true,
+    "catppuccin.italicKeywords": false,
+    "catppuccin.boldKeywords": false,
+
+    // --- Indentation --------------------------------------------------------
+    // WHAT: Four spaces, never hard tabs.
+    // WHY : Matches Neovim's expandtab + shiftwidth = 4 and Zed's tab_size, so
+    //       no two editors here can disagree about a file's indentation.
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+
+    // WHAT: Whether to infer indentation from the file being opened.
+    // WHY : MUST be false, and this key exists only to defeat a VS Code
+    //       default. It defaults to true, and when on it inspects the open file
+    //       and silently overrides both settings above — making the four-space
+    //       guarantee advisory rather than real. Neither Zed nor Neovim has
+    //       any equivalent behaviour to switch off.
+    "editor.detectIndentation": false,
+
+    // --- On save ------------------------------------------------------------
+    // WHAT: Whitespace clean-ups applied on every save.
+    // WHY : Both default to FALSE in VS Code, so they must be stated. Both are
+    //       whitespace-only and never reformat code, which is what makes them
+    //       safe to enable while formatting itself stays manual.
+    "files.insertFinalNewline": true,
+    "files.trimTrailingWhitespace": true,
+
+    // WHAT: Run a formatter on every save.
+    // WHY : OFF, matching Neovim (where formatting is a manual <leader>F via
+    //       conform) and Zed. Reformatting shared codebases on save produces
+    //       diffs nobody asked for. This was previously ON in VS Code — the
+    //       single largest behavioural change in adopting this file.
+    // HOW : Format on demand with Shift+Alt+F, or set this to true.
+    "editor.formatOnSave": false,
+
+    // WHAT: Save when the editor loses focus.
+    // NOTE: The value is camelCase — Zed's snake_case `on_focus_change` is not
+    //       valid here.
+    "files.autoSave": "onFocusChange",
+
+    // --- Display ------------------------------------------------------------
+    // WHAT: Highlight the line the cursor is on. "all" tints the gutter and the
+    //       line background, matching Zed's `current_line_highlight: "all"`.
+    "editor.renderLineHighlight": "all",
+
+    // WHAT: Cursor shape and blinking.
+    // NOTE: `cursorBlinking` is a STRING, not a boolean — "solid" is the off
+    //       state. Zed expresses the same thing with `cursor_blink: true`.
+    "editor.cursorStyle": "block",
+    "editor.cursorBlinking": "blink",
+
+    // WHAT: Absolute line numbers.
+    // WHY : Stated explicitly rather than left to the default, because it is a
+    //       deliberate choice: Neovim uses relative numbers for its motions,
+    //       but these editors are non-modal, so relative numbering would be
+    //       decoration with nothing to serve. Same reasoning as Zed's.
+    "editor.lineNumbers": "on",
+
+    // WHAT: The condensed code overview beside the scrollbar.
+    // WHY : Zed shows it only when a file is long enough to be worth it. VS
+    //       Code has no size-based rule, so this is the nearest equivalent:
+    //       enabled, but hidden until you scroll. A behavioural approximation
+    //       of a size-based one, not the same thing.
+    "editor.minimap.enabled": true,
+    "editor.minimap.autohide": "scroll",
+
+    // WHAT: A vertical guide at 80 columns.
+    // NOTE: The object form is the newer schema and works in both editors; the
+    //       bare-number form `[80]` also works but is the older spelling.
+    "editor.rulers": [{ "column": 80 }],
+
+    // WHAT: Inline type and parameter-name annotations from the language server.
+    // WHY : On, matching Zed, where they are the main reason to have a language
+    //       server attached. Neovim keeps them behind a <leader>ti toggle
+    //       instead, because there they compete with a denser display.
+    // NOTE: A STRING, not a boolean — "on", "off", "onUnlessPressed",
+    //       "offUnlessPressed". A bare `true` is invalid.
+    //       There is also no global per-category control: Zed's
+    //       show_type_hints / show_parameter_hints have no VS Code equivalent,
+    //       because each language extension owns its own hint settings
+    //       (rust-analyzer.inlayHints.*, python.analysis.inlayHints.*, …).
+    "editor.inlayHints.enabled": "on",
+
+    // --- Layout -------------------------------------------------------------
+    // WHAT: Which side the primary side bar sits on.
+    // WHY : Left, matching where Zed docks its project, outline, git and
+    //       collaboration panels. VS Code hosts all of those as views in one
+    //       side bar, so Zed's four dock settings collapse into this one.
+    // NOTE: Zed's `agent: { dock: "right" }` needs no equivalent — chat lives
+    //       in VS Code's secondary side bar, which is structurally on the
+    //       right. The layout matches by default.
+    "workbench.sideBar.location": "left",
+
+    // WHAT: The Modern UI Update — VS Code's redesigned workbench. The side
+    //       bars and bottom panel become floating cards with rounded corners
+    //       and gaps, and a refreshed set of workbench styles is applied,
+    //       matching the Agents window design.
+    // WHY : Enabled. It shipped as a preview in VS Code 1.129 and is on by
+    //       default in Insiders, so it is the direction the product is moving
+    //       rather than a fork in the road. The floating-card treatment also
+    //       reads closer to Zed and Ghostty, both of which already separate
+    //       surfaces with padding rather than hairlines.
+    //       Setting it explicitly matters for a second reason: its schema
+    //       carries `experiment: { mode: "auto" }`, meaning VS Code may switch
+    //       it on or off remotely for a share of users. A value written here
+    //       pins the choice instead of leaving it to a rollout bucket.
+    // HOW : Set false to return to the classic workbench. The companion key
+    //       `workbench.experimental.modernUIUppercaseViewHeaders` (default
+    //       false) puts view headers, side bar titles and panel tabs in
+    //       uppercase, and only does anything while this is true — add it if
+    //       you want the louder variant.
+    // NOTE: This key is VS Code only. Cursor forked before 1.129 and does not
+    //       register it, so it is inert there — the same one-way situation as
+    //       the `cursor.*` keys below, which VS Code ignores. Being
+    //       experimental, it may be renamed or graduate to a stable id; if the
+    //       UI ever stops changing, check whether the setting still exists.
+    // default: false
+    "workbench.experimental.modernUI": true,
+
+    // --- Terminal -----------------------------------------------------------
+    // WHAT: The integrated terminal's font stack — the terminal half of the
+    //       font split described in the header.
+    // WHY : The Nerd Font Mono build, because Neovim runs in here and draws
+    //       icon glyphs in its statusline, file tree and diagnostic gutter.
+    //       Plain "JetBrains Mono" follows as the same typeface without the
+    //       patched icons, with FiraCode's Nerd build between them so icons
+    //       survive one more step down the chain.
+    "terminal.integrated.fontFamily": "'JetBrainsMono Nerd Font Mono', 'FiraCode Nerd Font Mono', 'JetBrains Mono', 'Fira Code', 'Source Code Pro', 'IBM Plex Mono', monospace",
+    "terminal.integrated.fontSize": 14,
+
+    // WHAT: Ligatures in the terminal.
+    // WHY : OFF — a separate key from `editor.fontLigatures`, which is exactly
+    //       what makes the editor-on / terminal-off split expressible. Command
+    //       output, diffs and hex dumps should show the characters that are
+    //       actually there.
+    "terminal.integrated.fontLigatures.enabled": false,
+
+    // WHAT: Which shell the integrated terminal launches.
+    // WHY : The fish shell, matching the login shell the installer configures.
+    //       Both keys are
+    //       needed — VS Code takes the default profile per platform, and there
+    //       is no shared key.
+    // NOTE: $TERM_PROGRAM is "vscode" in BOTH editors, which is why
+    //       fish/conf.d/30-prompt.fish no longer special-cases the editor
+    //       terminal: the prompt renders here exactly as it does in Ghostty.
+    "terminal.integrated.defaultProfile.osx": "fish",
+    "terminal.integrated.defaultProfile.linux": "fish",
+
+    // WHAT: Which application "Open in External Terminal" launches.
+    "terminal.external.osxExec": "Ghostty.app",
+
+    // --- Privacy ------------------------------------------------------------
+    // WHAT: Telemetry, off.
+    // WHY : Matches Zed, where both metrics and diagnostics are disabled. This
+    //       one key covers both: "off" disables crash reports and usage data,
+    //       and as a side effect opts out of A/B feature experiments, which
+    //       require "all".
+    // HOW : Levels are "all", "error", "crash", "off". Browse everything that
+    //       talks to a network with @tag:usesOnlineServices in the Settings UI.
+    "telemetry.telemetryLevel": "off",
+
+    // WHAT: Red Hat's extensions (YAML, XML) ship their own telemetry flag that
+    //       `telemetry.telemetryLevel` does not govern.
+    // WHY : Off for the same reason. This was previously TRUE in both editors.
+    "redhat.telemetry.enabled": false,
+
+    // --- Updates ------------------------------------------------------------
+    // WHAT: How the editor updates itself.
+    // NOTE: Both editors are also Homebrew casks (see the root Brewfile), so
+    //       `brew upgrade` may fight this. Harmless, but set "none" if you
+    //       prefer brew to own updates exclusively.
+    "update.mode": "default",
+    "extensions.autoUpdate": true,
+
+    // --- Explorer and git ---------------------------------------------------
+    // WHAT: Skip the confirmation dialog when deleting a file.
+    // WHY : Carried over from the existing settings. Undo still works, and the
+    //       dialog is a speed bump rather than a safety net.
+    "explorer.confirmDelete": false,
+    "explorer.confirmDragAndDrop": false,
+
+    // WHAT: Never scan parent directories for a git repository.
+    // WHY : Stops the editor from adopting an unrelated outer repo when you
+    //       open a subdirectory — a common surprise with nested checkouts.
+    "git.openRepositoryInParentFolders": "never",
+
+    // --- Icon theme ---------------------------------------------------------
+    // WHAT: File and product icons.
+    // NOTE: These come from extensions listed in extensions-vscode.txt, not
+    //       from Catppuccin. `Catppuccin.catppuccin-vsc-icons` is the
+    //       palette-matched alternative if you want the icons to follow the
+    //       theme too.
+    "workbench.iconTheme": "material-icon-theme",
+    "workbench.productIconTheme": "fluent-icons",
+
+    // --- Copilot ------------------------------------------------------------
+    // WHAT: Which languages Copilot is allowed to complete in.
+    // WHY : Markdown only. VS Code-specific; Cursor ignores it and uses its own
+    //       completion, configured below.
+    "github.copilot.enable": {
+        "markdown": true
+    },
+
+    // --- Cursor-specific ----------------------------------------------------
+    // These are inert in VS Code (see EACH EDITOR IGNORES THE OTHER'S KEYS).
+    //
+    // WHAT: Paths Cursor must never read into AI context.
+    // WHY : The single most important setting in this file. Without it,
+    //       credentials, private keys and MCP configuration can be sent to a
+    //       model as ordinary file context. Kept and version-controlled
+    //       precisely because it is a security control rather than a
+    //       preference.
+    // HOW : Glob patterns, matched against the whole path. Add to this list
+    //       rather than narrowing it.
+    "cursor.general.globalCursorIgnoreList": [
+        "**/credentials.json",
+        "**/credentials.*.json",
+        "**/secret.json",
+        "**/secrets.json",
+        "**/*.key",
+        "**/*.pem",
+        "**/*.pfx",
+        "**/*.p12",
+        "**/*.crt",
+        "**/*.cer",
+        "**/id_rsa",
+        "**/id_dsa",
+        "**/.ssh/id_*",
+        "**/.cursor/mcp.json"
+    ],
+
+    // WHAT: Play a sound when a long agent run finishes.
+    "cursor.composer.shouldChimeAfterChatFinishes": true,
+
+    // --- Objective-C --------------------------------------------------------
+    // NOTE: No `files.associations` entry here, deliberately. The Zed config
+    //       maps .m and .mm to C++ because Zed has no Objective-C support —
+    //       VS Code ships first-class `objective-c` and `objective-cpp`
+    //       languages with proper grammars, so mirroring that mapping would be
+    //       a downgrade. This is one place these editors beat Zed.
+
+    // --- Modal editing ------------------------------------------------------
+    // NOTE: No vim mode, matching the deliberate choice recorded for Zed.
+    //       VS Code has no built-in modal editing, so the decision is expressed
+    //       by NOT listing `vscodevim.vim` in the extension lists — see the
+    //       comment there.
+
+    "security.workspace.trust.untrustedFiles": "open"
+}

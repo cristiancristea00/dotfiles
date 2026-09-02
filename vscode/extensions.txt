@@ -1,0 +1,37 @@
+# ==============================================================================
+# extensions.txt — extensions both editors need
+# ==============================================================================
+#
+# WHAT: Extension ids, one per line, installed into BOTH VS Code and Cursor by
+#       install.sh. Blank lines and lines starting with # are ignored.
+#
+# WHY : Neither editor has a declarative equivalent of Zed's
+#       auto_install_extensions — nothing in settings.json can install an
+#       extension, and .vscode/extensions.json is workspace-level
+#       *recommendations* only. So the list lives here and install.sh feeds it
+#       to each editor's CLI, which is the shipped mechanism rather than a
+#       third-party manager.
+#
+# HOW : The installer runs `code --install-extension <id> --force`, and the
+#       same for `cursor`. --force makes it idempotent and upgrades in place.
+#       Regenerate a starting point with `code --list-extensions`.
+#
+# THE REGISTRY SPLIT — why this list is short and there are two more
+#       VS Code installs from Microsoft's Marketplace; Cursor installs from
+#       Open VSX. An id only resolves where it is published, and Microsoft's
+#       own extensions (ms-python.*, ms-vscode.*) are licence-restricted off
+#       the Marketplace. That is why Cursor uses anysphere.cursorpyright and
+#       anysphere.cpptools instead. Only put something here if it exists in
+#       BOTH registries; otherwise use extensions-vscode.txt or
+#       extensions-cursor.txt.
+#
+# DELIBERATELY ABSENT: vscodevim.vim. These editors are configured as normal,
+#       non-modal editors, exactly as Zed is — Neovim is where modal editing
+#       lives. This note exists so the omission reads as a decision rather than
+#       an oversight.
+# ==============================================================================
+
+# The theme. Published on both the Marketplace and Open VSX, which is what lets
+# one id serve both editors. Provides the four Catppuccin flavour themes named
+# in settings.json, and the catppuccin.* settings that configure them.
+Catppuccin.catppuccin-vsc

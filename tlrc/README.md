@@ -6,21 +6,37 @@ commands. It installs the binary as **`tldr`**.
 
 ## Install
 
+`./install.sh` handles this. By hand:
+
 ```sh
 stow --target="$HOME" --dir="$HOME/work/dotfiles" tlrc
+# macOS only — bridge the path tlrc actually reads there:
+mkdir -p "$HOME/Library/Application Support/tlrc"
+ln -sfn "$HOME/.config/tlrc/config.toml" \
+        "$HOME/Library/Application Support/tlrc/config.toml"
 ```
-
-Installs `Library/Application Support/tlrc/config.toml` →
-`~/Library/Application Support/tlrc/config.toml`.
 
 Then populate the cache once: `tldr --update`.
 
-## Why the path looks different
+## One file, two paths
 
-Every other package here lives under `.config/`. **tlrc does not honour
-`$XDG_CONFIG_HOME` on macOS** — it reads
-`~/Library/Application Support/tlrc/config.toml`, so this package mirrors that
-path instead. Confirm on any machine with `tldr --config-path`.
+tlrc resolves its config through the Rust `dirs` crate, so the location differs:
+
+| Platform | Path                                                      |
+| -------- | --------------------------------------------------------- |
+| Linux    | `~/.config/tlrc/config.toml` (honours `$XDG_CONFIG_HOME`) |
+| macOS    | `~/Library/Application Support/tlrc/config.toml`          |
+
+The package ships **only the portable XDG path**, and on macOS `install.sh`
+symlinks the Application Support location at it. One file to edit, and it works
+from any shell — unlike the `TLRC_CONFIG` environment variable, which would
+only apply to shells that export it.
+
+Confirm the location on any machine with `tldr --config-path`.
+
+The cache directory is deliberately **not** set, so tlrc picks its own
+per-platform default (`~/Library/Caches/tlrc` on macOS, `~/.cache/tlrc` on
+Linux). Hardcoding the macOS path would create a stray `~/Library` on Linux.
 
 ## What's configured
 

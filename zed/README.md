@@ -32,7 +32,7 @@ self-documenting.
 | ---------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | Editor font      | `JetBrains Mono` + fallbacks, 14pt, **ligatures on**                | Plain build: Zed has its own UI icons, so the Nerd build buys nothing in the code pane |
 | Terminal font    | `JetBrainsMono Nerd Font Mono` + fallbacks, 14pt, **ligatures off** | Neovim runs in here and draws icon glyphs; command output should show exact characters |
-| Theme            | `system` → Ayu Light / Ayu Dark                                     | Follows macOS, like the rest of the stack                                              |
+| Theme            | `system` → Catppuccin Latte / Catppuccin Macchiato                  | Follows macOS, like the rest of the stack                                              |
 | Indentation      | 4 spaces, no hard tabs                                              | Matches Neovim's `expandtab` + `shiftwidth = 4`                                        |
 | `format_on_save` | `off`                                                               | Matches Neovim, where formatting is a manual `<leader>F`                               |
 | Inlay hints      | on                                                                  | Unlike Neovim, where they sit behind a `<leader>ti` toggle                             |
@@ -41,12 +41,6 @@ self-documenting.
 | Telemetry        | off                                                                 | —                                                                                      |
 
 Not enabled, by explicit choice: `vim_mode` and `relative_line_numbers`.
-
-## Coupling worth knowing
-
-`terminal.shell.program = "fish"` is what makes `$TERM_PROGRAM` equal `zed`
-inside the shell, which `fish/.config/fish/conf.d/30-prompt.fish` uses to skip
-oh-my-posh (Zed draws its own prompt decorations). Change one, check the other.
 
 ## Known gaps
 

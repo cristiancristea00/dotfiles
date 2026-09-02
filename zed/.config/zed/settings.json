@@ -11,7 +11,7 @@
 //   This file is a symlink into the dotfiles repo. Changing a setting through
 //   Zed's settings UI rewrites the file, which may replace the symlink with a
 //   real file and strip these comments. If that happens, recover with:
-//       stow -R --no-folding --target="$HOME" --dir="$HOME/work/dotfiles" zed
+//       stow -R --no-folding --target="$HOME" --dir="$HOME/personal/dotfiles" zed
 //   Prefer editing the repo copy directly.
 //
 // THE FONT SPLIT (see the repo README for the whole matrix)
@@ -163,9 +163,11 @@
     //       icons), so a glyph the Nerd build lacks keeps the identical design
     //       instead of jumping to another family. FiraCode's Nerd build sits
     //       between them, so icons survive one more step down the chain.
-    // NOTE: Setting fish here is what makes $TERM_PROGRAM equal "zed" inside
-    //       the shell, which fish/conf.d/30-prompt.fish uses to skip
-    //       oh-my-posh. The two files are coupled — change one, check the other.
+    // NOTE: Setting fish here makes $TERM_PROGRAM equal "zed" inside the
+    //       shell. Nothing reads that any more — fish/conf.d/30-prompt.fish
+    //       used to skip oh-my-posh on it and no longer does — but it is the
+    //       hook to reach for if this terminal ever needs shell config the
+    //       others must not get.
     "terminal": {
         "shell": { "program": "fish" },
         "font_family": "JetBrainsMono Nerd Font Mono",

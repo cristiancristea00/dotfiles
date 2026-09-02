@@ -93,6 +93,14 @@ brew "xclip"        if OS.linux?
 brew "git-delta"     # diff pager             -> git/config [delta]
 brew "gnupg"         # commit/tag signing     -> git/config [gpg]
 
+# WHAT: Git Large File Storage.
+# WHY : Required to clone the private font repository install.sh pulls from on
+#       Linux — without it a clone yields text pointers where the fonts should
+#       be. It is also what makes the [filter "lfs"] block in git/config work;
+#       that block sets required = true, so a missing binary is a loud error
+#       rather than silently committing pointer files.
+brew "git-lfs"
+
 # --- Neovim --------------------------------------------------------------------------
 brew "neovim"        # the editor (config requires >= 0.12)
 

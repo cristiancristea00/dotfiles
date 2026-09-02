@@ -57,13 +57,31 @@
     "ui_font_weight": 400,
 
     // --- Theme --------------------------------------------------------------
-    // WHAT: "mode": "system" follows the macOS appearance, picking "light" or
+    // WHAT: "mode": "system" follows the OS appearance, picking "light" or
     //       "dark" from the two named themes.
-    // WHY : Matches the whole stack — Ghostty and bat also follow the system.
+    // WHY : Catppuccin Latte and Macchiato, the same flavours Ghostty, bat,
+    //       Neovim and delta use — one palette across the whole stack.
+    // NOTE: Unlike every other tool here, these themes are NOT built in: they
+    //       come from an extension, declared below. Until it installs, Zed
+    //       falls back to its default theme rather than erroring.
     "theme": {
         "mode": "system",
-        "light": "Ayu Light",
-        "dark": "Ayu Dark"
+        "light": "Catppuccin Latte",
+        "dark": "Catppuccin Macchiato"
+    },
+
+    // WHAT: Extensions Zed installs by itself on startup, as id → enabled.
+    // WHY : Makes the theme reproducible from this file alone. Without it, a
+    //       fresh machine would need the extension installed by hand before
+    //       the "theme" block above resolves to anything.
+    // HOW : Extension ids come from the Zed extension registry; `catppuccin`
+    //       provides the four flavour themes. Zed merges this map over its
+    //       defaults, so adding a key here does not disable the built-in ones.
+    // NOTE: The extension ships only the mauve accent. Other accents are
+    //       separate theme files dropped into ~/.config/zed/themes/, which is
+    //       Zed-managed state outside this repo.
+    "auto_install_extensions": {
+        "catppuccin": true
     },
 
     // --- Editing behaviour --------------------------------------------------

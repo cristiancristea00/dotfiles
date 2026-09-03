@@ -51,7 +51,7 @@ machine needs nothing done by hand. Visual Studio Code and Cursor have no
 equivalent, which is why they carry separate `.txt` lists — see
 [`../vscode/README.md`](../vscode/README.md).
 
-Nine are declared, and the ids are exactly the directory names under
+Ten are declared, and the ids are exactly the directory names under
 `~/Library/Application Support/Zed/extensions/installed`:
 
 | Extension | Provides |
@@ -61,12 +61,18 @@ Nine are declared, and the ids are exactly the directory names under
 | `dockerfile` | Dockerfile grammar + `docker-language-server` |
 | `neocmake` | CMake grammar + `neocmakelsp` |
 | `xml` | XML grammar |
+| `zig` | Zig grammar + `zls` |
 | `toml` | TOML grammar |
 | `swift` | Swift grammar + `sourcekit-lsp` |
 | `package-swift-lsp` | `Package.swift` manifests specifically |
 | `git-firefly` | `.gitconfig`, `.gitattributes`, rebase todos, commit messages |
 
-The five language extensions are the counterpart of entries in
+**Go needs no extension.** Zed's documentation states that "Go support is
+available natively in Zed", and the extension registry has no `go` entry — but
+Zed does not bundle `gopls` either, so it takes one from `$PATH`. That comes
+from the Brewfile.
+
+The six language extensions are the counterpart of entries in
 [`../nvim/.config/nvim/lua/languages.lua`](../nvim/.config/nvim/lua/languages.lua),
 which was brought to match. Zed covers C, Rust, Python and Markdown built in,
 so those need no declaration.

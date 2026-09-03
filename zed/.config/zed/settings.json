@@ -117,7 +117,12 @@
     //       disables a built-in one. Set a value to false to keep an extension
     //       declared but uninstalled.
     // NOTE: Zed ships C, Rust, Python, TOML-adjacent and Markdown support
-    //       built in; only the entries below need declaring.
+    //       built in; only the entries below need declaring. GO is one of
+    //       those — its docs say "Go support is available natively in Zed" and
+    //       the extension registry has no `go` entry at all, so there is
+    //       nothing to list here for it. Zed does NOT bundle gopls, though: it
+    //       expects one on $PATH, which the Brewfile supplies. Zig is the
+    //       opposite case and needs the extension below.
     "auto_install_extensions": {
         // Appearance. The theme extension ships only the mauve accent — other
         // accents are separate theme files dropped into ~/.config/zed/themes/,
@@ -133,6 +138,7 @@
         "neocmake": true,
         "xml": true,
         "toml": true,
+        "zig": true,
 
         // Swift. Two extensions, because they do different jobs: `swift` is
         // the language itself via sourcekit-lsp, while `package-swift-lsp`

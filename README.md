@@ -71,6 +71,7 @@ Run `./install.sh --dry-run` first if you want to see exactly what it will do.
 | [`git/`](git/README.md)         | `~/.config/git/`                             | Global Git config, with work/personal identity switching |
 | [`neovide/`](neovide/README.md) | `~/.config/neovide/`                         | Neovim's GUI: window and startup font                    |
 | [`nvim/`](nvim/README.md)       | `~/.config/nvim/`                            | The editor: LSP, treesitter, plugins, keymaps            |
+| [`ruff/`](ruff/README.md)       | `~/.config/ruff/`                            | Python lint and format rules, as a user-level fallback   |
 | [`tlrc/`](tlrc/README.md)       | `~/.config/tlrc/`                            | `tldr` client — macOS gets a bridge symlink, see below   |
 | [`vscode/`](vscode/README.md)   | `~/.config/Code/` \| `~/Library/…/Code/`     | GUI editor. Holds the settings file **Cursor also uses** |
 | [`zed/`](zed/README.md)         | `~/.config/zed/`                             | GUI editor, configured as a normal (non-modal) editor    |
@@ -93,7 +94,7 @@ Three invocations, because the packages want different linking strategies
 and because both `--no-folding` and `--ignore` are **per-run** flags rather
 than per-package ones:
 
-**Folded** — `neovide nvim tlrc`. Stow links the whole directory, so
+**Folded** — `neovide nvim ruff tlrc`. Stow links the whole directory, so
 `~/.config/nvim` *is* a symlink to this repo. New files appear live with no
 restow, and `nvim-pack-lock.json` — which `vim.pack` writes into the config
 directory — lands in the repo where it belongs.

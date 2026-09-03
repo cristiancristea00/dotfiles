@@ -6,6 +6,13 @@
   diagnostics, auto-fix code actions (gra on a diagnostic), and import
   sorting. Rule selection belongs in each project's pyproject.toml /
   ruff.toml, not in the editor.
+
+  There is a third place it can come from: ../../../../ruff/.config/ruff/ruff.toml
+  in this repo deploys to ~/.config/ruff/ruff.toml, which Ruff reads for files
+  belonging to no configured project. It is a FALLBACK and never merges — any
+  project with its own configuration ignores it completely — so it changes
+  nothing for a project that has opinions, and supplies the settings for loose
+  scripts that do not.
 ===========================================================================]]--
 
 return {

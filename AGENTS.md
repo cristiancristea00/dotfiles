@@ -77,15 +77,15 @@ under `$HOME`** — `bat/.config/bat/config` becomes `~/.config/bat/config`. Whe
 adding a file, put it where it really lives; the path is the deployment
 instruction.
 
-Packages: `bat` `cursor` `fish` `ghostty` `git` `neovide` `nvim` `tlrc`
-`vscode` `zed`. Root
+Packages: `bat` `cursor` `fish` `ghostty` `git` `neovide` `nvim` `ruff`
+`tlrc` `vscode` `zed`. Root
 files (`README.md`, `AGENTS.md` and its symlinks, `install.sh`, `Brewfile`,
 `LICENSE`, `.gitignore`) are not packages and are never stowed. Each package has its own
 `README.md`, which stow's default ignore list keeps out of `$HOME`.
 
 Three linking strategies, and the distinction is load-bearing:
 
-* **Folded** (`neovide nvim tlrc`) — the whole directory is one symlink. New
+* **Folded** (`neovide nvim ruff tlrc`) — the whole directory is one symlink. New
   files go live with no restow.
 * **`--no-folding`** (`bat fish ghostty git zed`) — per-file symlinks, so the
   directory stays real. **Adding a file to one of these requires
@@ -268,7 +268,7 @@ Rules:
 ./install.sh --yes              # required for non-interactive runs
 
 # The three stow invocations install.sh runs, if you need them by hand
-stow --target="$HOME" --dir="$PWD" neovide nvim tlrc
+stow --target="$HOME" --dir="$PWD" neovide nvim ruff tlrc
 stow --no-folding --target="$HOME" --dir="$PWD" bat fish ghostty git zed
 stow --no-folding --ignore='\.config' --target="$HOME" --dir="$PWD" vscode cursor  # macOS
 stow --no-folding --ignore='Library'  --target="$HOME" --dir="$PWD" vscode cursor  # Linux

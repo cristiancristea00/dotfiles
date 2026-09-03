@@ -60,7 +60,7 @@ DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # WHY : Correct when nothing else needs to live in that directory. `nvim` is
 #       folded deliberately: vim.pack writes nvim-pack-lock.json into the config
 #       directory, and folding is what lands it in the repo where it belongs.
-PACKAGES_FOLD="neovide nvim tlrc"
+PACKAGES_FOLD="neovide nvim ruff tlrc"
 
 # WHAT: Packages stowed with --no-folding — the directory stays real and each
 #       file is linked individually.

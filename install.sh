@@ -1175,10 +1175,15 @@ main() {
     stow_packages
     link_os_selectors
 
+    # WHY: Outside the guard below because it is the only one of these steps
+    #      that is cheap to preview — it prints the five files it would place
+    #      in $HOME and touches nothing. The rest are slow or network-heavy and
+    #      have nothing useful to say in a dry run.
+    install_catppuccin_themes
+
     if [ "$DRY_RUN" -eq 0 ]; then
         bootstrap_neovim
         install_editor_extensions
-        install_catppuccin_themes
         prime_tldr_cache
         set_login_shell
     fi

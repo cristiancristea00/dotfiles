@@ -109,9 +109,6 @@
     "workbench.preferredLightColorTheme": "Catppuccin Latte",
     "workbench.preferredDarkColorTheme": "Catppuccin Mocha",
 
-    // WHAT: Light or dark native window chrome (titlebar, scrollbars).
-    "window.systemColorTheme": "auto",
-
     // WHAT: Catppuccin's own options. The theme is an extension, so unlike
     //       every built-in theme it contributes real settings.
     // WHY : Worth noting that this closes a gap the Zed config documents: there

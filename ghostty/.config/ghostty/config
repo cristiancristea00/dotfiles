@@ -4,60 +4,49 @@
 #
 # WHAT THIS FILE IS
 #   Ghostty's configuration, read from ~/.config/ghostty/config at startup.
-#   Syntax is one `key = value` per line; `#` starts a comment. Some keys are
-#   REPEATABLE — listing them more than once appends rather than overwrites,
-#   which is how font fallbacks and keybinds work.
+#   One `key = value` per line; `#` starts a comment. Some keys are repeatable:
+#   listing them more than once appends rather than overwrites, which is how
+#   font fallbacks and keybinds work.
 #
 #   FORMAT TRAP: there are no trailing comments. Everything after `=` to the
 #   end of the line is the value, so `font-thicken = true  # default: false`
-#   makes the value the literal string "true  # default: false" and the key is
-#   rejected. Every annotation below therefore sits on its own line.
+#   sets the value to "true  # default: false" and the key is rejected. Every
+#   annotation below sits on its own line.
 #
 # RELOADING
-#   ⌘⇧, reloads this file in place. A few keys (notably `command`) only apply
-#   to newly created windows.
+#   ⌘⇧, (macOS) or Ctrl+Shift+, (Linux) reloads this file in place. A few keys,
+#   `command` and the window size among them, apply only to new windows.
 #
 # VALIDATING
 #   Ghostty ignores keys it does not recognise, so a typo fails silently.
-#   Check your work with:
-#       ghostty +validate-config
-#   List every available key and its default with:
-#       ghostty +show-config --default
+#       ghostty +validate-config          checks syntax only
+#       ghostty +show-config              prints the resolved values, which is
+#                                         how to confirm the per-OS include loaded
+#       ghostty +show-config --default    lists every key and its default
 #
 # PLATFORM-SPECIFIC SETTINGS
-#   Anything that only makes sense on one OS lives in a sibling file — the
-#   macOS-only keys and the ⌘ keybinds in os-darwin.conf, the Ctrl+Shift
-#   keybinds in os-linux.conf. install.sh symlinks ~/.config/ghostty/os.conf at
-#   whichever applies, and the `config-file = ?os.conf` line at the very bottom
-#   of this file pulls it in. The `?` prefix makes the include optional, so
-#   Ghostty starts cleanly even before the installer has run.
-#   The include sits LAST because later values win — the per-OS file is meant
-#   to be able to override anything here.
+#   The macOS-only keys and the ⌘ keybinds live in os-darwin.conf, the
+#   Ctrl+Shift keybinds in os-linux.conf. The `config-file` line at the bottom
+#   of this file includes whichever one install.sh has linked as os.conf.
 #
-# THE FONT SPLIT (see the repo README for the whole matrix)
-#   This is a TERMINAL, so it gets the Nerd Font build (Neovim draws icons in
-#   here) with ligatures OFF — in command output and diffs you want to see the
-#   exact characters, not `!=` fused into a single glyph. Editors get the
-#   opposite treatment.
+# FONTS
+#   Terminals get the Nerd Font build with ligatures off; editors get the
+#   opposite. See ../../../README.md § The font stack.
 # ==============================================================================
 
 # --- Font ---------------------------------------------------------------------
 # WHAT: The font stack. `font-family` is repeatable: the first entry is the
-#       primary font and each subsequent one is a fallback consulted when a
-#       codepoint is missing from the previous.
-# WHY : "JetBrainsMono Nerd Font Mono" — the MONO build, whose icon glyphs are
-#       squeezed into exactly one cell so the terminal grid never breaks. The
-#       plain "JetBrainsMono Nerd Font" draws icons at double width, which
-#       looks better in isolation but can misalign columns in TUIs.
-#       Without any font-family set (as this config previously had), Ghostty
-#       used its bundled default and every Nerd Font icon in Neovim's
-#       statusline, file tree and diagnostic gutter rendered as a blank box.
-#       The two Nerd builds lead the chain so that a glyph missing from the
-#       first is still served by a font that HAS icons, before the chain
-#       degrades to the icon-less faces. Plain "JetBrains Mono" then follows as
-#       the same typeface without the patched-in icons, and as the safety net
-#       if no Nerd build is installed at all.
-# HOW : Verify a family name resolves before trusting it:
+#       primary font and each later one is a fallback for codepoints the
+#       previous ones lack.
+# WHY : The Nerd Font Mono build supplies the icons Neovim draws here, at one
+#       cell each, so the grid stays aligned; the plain Nerd Font build draws
+#       icons at double width. With no font-family set, Ghostty uses its
+#       bundled font and every Nerd Font icon renders as a blank box. The two
+#       Nerd builds lead the chain so a glyph missing from the first is served
+#       by a font that still has icons; plain JetBrains Mono follows as the
+#       same typeface without icons, and as the fallback when no Nerd build is
+#       installed.
+# HOW : Check that a family name resolves:
 #           ghostty +list-fonts | grep -i "jetbrains"
 font-family = JetBrainsMono Nerd Font Mono
 font-family = FiraCode Nerd Font Mono
@@ -67,142 +56,136 @@ font-family = Source Code Pro
 font-family = IBM Plex Mono
 
 # WHAT: Point size. Fractional values are allowed (e.g. 14.5).
-# WHY : 14 matches Neovim/Neovide and Zed, so text is the same physical size
-#       wherever you read code. Changing it here means changing it in
-#       neovide/config.toml, nvim's guifont and zed/settings.json too.
+# WHY : 14 matches Neovim, Neovide, Zed, and VS Code. Changing it means
+#       changing all five files listed in ../../../README.md § The font stack.
+# default: 13
 font-size = 14
 
 # WHAT: OpenType features. Repeatable; `-tag` disables, `+tag` enables.
-# WHY : Ligatures off in the terminal — `calt` (contextual alternates) is what
-#       fuses `!=`, `->` and `===` in JetBrains Mono and Fira Code, and `liga`
-#       covers the standard ligature set. Reading exact bytes in logs, diffs
-#       and hex output matters more here than typographic polish.
+# WHY : Ligatures off in the terminal. `calt` (contextual alternates) fuses
+#       `!=`, `->`, and `===` in JetBrains Mono and Fira Code; `liga` is the
+#       standard ligature set. Logs, diffs, and hex output must show the exact
+#       characters.
 # HOW : Delete these two lines to get ligatures back.
 font-feature = -calt
 font-feature = -liga
 
 # --- Theme --------------------------------------------------------------------
-# WHAT: Colour scheme. The `light:NAME,dark:NAME` form selects per system
-#       appearance and switches live when macOS does.
-# WHY : Catppuccin Latte and Mocha, the flavours used across the whole
-#       stack — bat, Zed, Neovim and delta all name the same pair, so one
-#       palette follows you between the terminal, the editor and every diff.
-#       Ghostty bundles all four Catppuccin flavours, so nothing is installed.
-# HOW : Browse all 400+ bundled themes with `ghostty +list-themes`. Mocha is
-#       the darkest of the three dark flavours; the lighter two are
-#       `Catppuccin Frappe` and `Catppuccin Macchiato`. Note Ghostty spells
-#       Frappe without the accent.
+# WHAT: Colour scheme. The `light:NAME,dark:NAME` form selects by system
+#       appearance and switches when the system does.
+# WHY : Catppuccin Latte and Mocha, the pair every tool in the stack uses; see
+#       ../../../README.md § Light and dark. Ghostty bundles all four
+#       Catppuccin flavours, so nothing is installed.
+# HOW : `ghostty +list-themes` shows every bundled theme. The other dark
+#       flavours are `Catppuccin Frappe` (Ghostty spells it without the accent)
+#       and `Catppuccin Macchiato`.
 theme = light:Catppuccin Latte,dark:Catppuccin Mocha
 
 # --- Window -------------------------------------------------------------------
 # WHAT: Initial size, in cells (not pixels).
+# WHY : The default, 0, lets Ghostty pick a size. 100×30 sets it for new
+#       windows; the window manager may still override it.
+# default: 0
 window-width = 100
 window-height = 30
 
 # WHAT: Padding between the text grid and the window edge, in points.
-# WHY : The 2pt default leaves text almost touching the frame; 8/6 gives it
-#       room to breathe without wasting space.
+# WHY : The 2pt default puts text almost against the frame.
 # default: 2
 window-padding-x = 8
 # default: 2
 window-padding-y = 6
 
-# WHAT: Window translucency (0 = invisible, 1 = opaque) and a macOS blur
-#       behind it, so what shows through stays unreadable enough not to
-#       distract.
-# WHY : A deliberate difference from neovide/config.toml, which stays fully
-#       opaque for maximum text crispness. Set to 1 and remove the blur if you
-#       prefer that here too.
+# WHAT: Window translucency (0 = invisible, 1 = opaque) and a blur behind it,
+#       so the background stays blurred behind the text.
+# WHY : Neovide stays fully opaque for text sharpness (the Transparency block
+#       in ../../../nvim/.config/nvim/lua/core/neovide.lua); this is the one
+#       translucent surface. Set 1 and remove the blur to match it.
+# NOTE: The blur is supported on macOS and KDE Plasma. Other Linux desktops
+#       are unsupported, so under GNOME's Mutter it has no effect.
 # default: 1
 background-opacity = 0.95
 # default: false
 background-blur = true
 
-# NOTE: The macos-titlebar-style key is left at its default of "transparent",
-#       which already matches the `frame = "transparent"` chosen in
-#       neovide/config.toml — the two applications look consistent for free.
+# NOTE: macos-titlebar-style is left at its default, `transparent`, which
+#       matches `frame = "transparent"` in
+#       ../../../neovide/.config/neovide/config.toml.
 
 # --- Cursor and mouse -----------------------------------------------------------
 # WHAT: Cursor shape.
-# WHY : A block, matching every other tool in this setup — Neovim's guicursor,
-#       Zed and both VS Code editors all draw the same thing. This pairs with
-#       `no-cursor` in shell-integration-features below: shell integration
-#       would otherwise report cursor-shape changes per mode and override it.
-#       Applications can still set the shape through DECSCUSR, which is how
-#       Neovim asks for a block and gets one rather than fighting this.
+# WHY : A block, like every other tool here; see ../../../README.md § The
+#       cursor. Pairs with `no-cursor` in shell-integration-features below,
+#       which stops shell integration changing the shape per mode.
+#       Applications still set the shape through DECSCUSR, which is how Neovim
+#       gets its block.
+# default: block
 cursor-style = block
 
 # WHAT: Whether the cursor blinks.
-# WHY : Blinking, matching Zed's `cursor_blink` and VS Code's
-#       `editor.cursorBlinking`.
-# NOTE: Setting `true` is NOT the same as leaving this blank, even though both
-#       blink. Ghostty's own documentation is explicit: when unset it also
-#       honours DEC Mode 12, so a running program can turn blinking off. Any
-#       non-null value makes Ghostty ignore Mode 12, which is what makes the
-#       blink unconditional. DECSCUSR is still respected either way, so the
-#       shape above stays application-controlled.
-# default: (blank — blinks, but Mode 12 can disable it)
+# WHY : Blinking, like Zed and VS Code (see ../../../README.md § The cursor).
+# NOTE: `true` differs from leaving this unset, though both blink. Unset,
+#       Ghostty also honours DEC Mode 12, so a program can turn blinking off;
+#       any explicit value makes Ghostty ignore Mode 12. DECSCUSR is honoured
+#       either way, so the shape stays application-controlled.
+# default: (unset: blinks, but Mode 12 can disable it)
 cursor-style-blink = true
 
 # WHAT: Hide the mouse pointer while typing; it reappears on movement.
-# WHY : Matches vim.g.neovide_hide_mouse_when_typing in the Neovide config.
+# WHY : Matches vim.g.neovide_hide_mouse_when_typing in
+#       ../../../nvim/.config/nvim/lua/core/neovide.lua.
 # default: false
 mouse-hide-while-typing = true
 
 # --- Shell --------------------------------------------------------------------
-# WHAT: Which shell Ghostty starts, and how it integrates with it.
-# WHY : `command` is deliberately NOT set. It used to pin
-#       /opt/homebrew/bin/fish, which broke on Intel Macs (/usr/local) and on
-#       Linux (/usr/bin) — an absolute path in a format that has no
-#       conditionals. Leaving it unset makes Ghostty launch your LOGIN shell,
-#       which install.sh sets to fish, so the right shell starts on every
-#       platform with nothing hardcoded anywhere.
-#       Dropping `command` also restores automatic shell-integration detection.
-#       Ghostty disables its own injection when it cannot be sure what it
-#       started, which is exactly why the old config had to name `fish`
-#       explicitly; `detect` is correct now and stays correct if the login
-#       shell ever changes.
-# HOW : To pin a shell anyway, set both together — `command = /path/to/shell`
-#       AND `shell-integration = <name>` — or the integration silently stops.
+# WHAT: Which shell Ghostty starts, and how it integrates with it. `command`
+#       is unset, so Ghostty starts the login shell, which install.sh offers
+#       to set to fish. `detect` picks the integration from the shell binary's
+#       filename.
+# WHY : An absolute `command` path breaks wherever fish lives elsewhere:
+#       /opt/homebrew, /usr/local, /home/linuxbrew/.linuxbrew, or a
+#       distribution's /usr/bin. This format has no conditionals.
+# HOW : To pin a shell, set `command = /path/to/shell`; `detect` still matches
+#       it by filename, or name the shell in `shell-integration`.
 # default: detect
 shell-integration = detect
 
-# WHAT: Which integration features to enable.
-# WHY : `no-cursor` opts OUT of shell-driven cursor shape changes (see
-#       cursor-style above). `sudo` preserves the terminal environment across
-#       sudo. `title` lets the shell set the window title to the running
-#       command.
+# WHAT: Integration features to toggle; a `no-` prefix disables one. Features
+#       not listed keep their defaults.
+# WHY : `no-cursor` stops the shell changing the cursor shape per mode (see
+#       cursor-style above). `sudo` wraps sudo so it keeps the terminfo. `title`
+#       lets the shell set the window title to the running command.
+# default: cursor,no-sudo,title,no-ssh-env,no-ssh-terminfo,path
 shell-integration-features = no-cursor,sudo,title
 
 # --- Keybinds -------------------------------------------------------------------
-# Keybinds live in the per-OS include (see PLATFORM-SPECIFIC SETTINGS above),
-# because the correct modifier differs: macOS uses ⌘ (`super`), while on Linux
-# `super` is the Windows key, which desktop environments grab for themselves —
-# GNOME opens the Overview on it. Linux therefore uses Ctrl+Shift, matching
-# Ghostty's own Linux defaults.
+# Keybinds live in the per-OS include. The Linux file explains why the
+# modifier differs: ⌘ on macOS, Ctrl+Shift on Linux.
 # See every default with: ghostty +list-keybinds --default
 
 # --- Documented extension points (inactive) ----------------------------------------
-# WHAT: The copy-on-select option is already ON by default — selecting copies.
-# copy-on-select = true            # default: true
+# WHAT: Copy a selection to the clipboard as soon as it is made.
+# default: true
+# copy-on-select = true
 #
-# WHAT: Lines of scrollback kept per surface, in bytes.
-# scrollback-limit = 10000000      # default: 10000000
+# WHAT: Scrollback kept per surface, in bytes.
+# default: 10000000
+# scrollback-limit = 10000000
 #
 # WHAT: Prompt before closing a surface that is still running something.
-# confirm-close-surface = true     # default: true
+# default: true
+# confirm-close-surface = true
 #
-# WHAT: Quit Ghostty entirely when the last window closes (macOS apps
-#       normally stay running with no windows).
-# quit-after-last-window-closed = true   # default: false
+# WHAT: Quit Ghostty when the last window closes. macOS apps normally stay
+#       running with no windows.
+# default: false
+# quit-after-last-window-closed = true
 
 # --- Platform include ---------------------------------------------------------
-# WHAT: Pull in the OS-specific settings. `?` marks the include OPTIONAL, so a
-#       missing file is not an error — Ghostty still starts before install.sh
-#       has created the symlink.
-# WHY : Last line in the file because later values override earlier ones, which
-#       lets the per-OS file adjust anything above it.
+# WHAT: Include the OS-specific file. `?` makes the include optional, so
+#       Ghostty starts before install.sh has created the symlink.
+# WHY : Last line in the file because later values override earlier ones, so
+#       the per-OS file can adjust anything above it.
 # HOW : install.sh points ~/.config/ghostty/os.conf at os-darwin.conf or
-#       os-linux.conf. Check what actually resolved with:
-#           ghostty +show-config
+#       os-linux.conf. Confirm what resolved with `ghostty +show-config`.
 config-file = ?os.conf

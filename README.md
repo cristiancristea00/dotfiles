@@ -215,7 +215,7 @@ macOS the tools that can follow the system appearance do:
 | VS Code / Cursor | `window.autoDetectColorScheme` + `preferredLight`/`DarkColorTheme`        |
 | bat              | `--theme=auto:system`, Latte / Mocha                                      |
 | Neovim           | `flavour = "auto"`, reading `background`                                  |
-| Neovide          | `theme = "auto"` (window chrome only)                                     |
+| Neovide          | `vim.g.neovide_theme`, default `auto` (window chrome only); config.toml has no theme key |
 | fish             | `fish_config theme choose catppuccin-mocha`; the theme carries both variants |
 | eza              | A fish handler points `$EZA_CONFIG_DIR` at a Latte or Mocha directory     |
 | delta            | A fish handler sets `$DELTA_FEATURES` to `catppuccin-latte` or `-mocha`   |

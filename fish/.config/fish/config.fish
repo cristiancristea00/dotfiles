@@ -3,33 +3,25 @@
 # ==============================================================================
 #
 # WHAT THIS FILE IS
-#   The last file fish sources at startup. It is deliberately almost empty:
-#   configuration lives in conf.d/ and functions/ instead, so that adding or
-#   removing a piece of behaviour is a single-file operation.
+#   The last file fish sources at startup. Configuration lives in conf.d/ and
+#   functions/, one file per concern, so this file stays empty.
 #
-# LOAD ORDER (this trips people up — conf.d runs BEFORE this file)
+# LOAD ORDER
 #   1. fish's own share/config.fish
 #   2. Vendor conf.d snippets (installed by Homebrew packages)
-#   3. ~/.config/fish/conf.d/*.fish   <- sourced in ASCII sort order, hence the
-#                                        00-/10-/20-/30- numeric prefixes
-#   4. ~/.config/fish/config.fish     <- you are here
-#   Functions in functions/ are NOT sourced at startup; fish autoloads
-#   <name>.fish the first time <name> is called. That keeps startup fast and
-#   means the file name MUST match the function name inside it.
-#
-# WHERE THINGS LIVE
-#   conf.d/00-path.fish         PATH / Homebrew environment
-#   conf.d/10-environment.fish  exported environment variables
-#   conf.d/20-options.fish      shell options + shared option variables
-#   conf.d/30-prompt.fish       prompt (oh-my-posh)
-#   functions/*.fish            one autoloaded function per file
+#   3. ~/.config/fish/conf.d/*.fish, in ASCII order (hence the 00-/10-/20-/30-
+#      prefixes)
+#   4. ~/.config/fish/config.fish (this file)
+#   Functions in functions/ are not sourced at startup. fish autoloads
+#   <name>.fish the first time <name> is called, so the file name must match
+#   the function name inside it.
 #
 # MACHINE-LOCAL ADDITIONS
-#   Anything specific to one machine or employer goes in an uncommitted
-#   conf.d/99-work.fish, which fish sources like any other snippet. Because
-#   this package is stowed with --no-folding, ~/.config/fish/conf.d/ is a real
-#   directory where that file can sit beside the symlinks. See the README.
+#   Machine- or employer-specific configuration goes in an uncommitted
+#   conf.d/99-work.fish. The package is stowed with --no-folding, so
+#   ~/.config/fish/conf.d/ is a real directory that can hold it. See
+#   ../../../README.md § The stow model.
 # ==============================================================================
 
-# Nothing to do here — everything is in conf.d/ and functions/.
-# Put genuinely last-word overrides below this line if you ever need them.
+# Everything is in conf.d/ and functions/; ../../README.md maps the files.
+# Overrides that must run last go below this line.

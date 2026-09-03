@@ -1,8 +1,8 @@
-# WHAT: Wraps the `fd` binary so every invocation gets the shared default flags
-#       from conf.d/20-options.fish ($COMMON_OPTIONS_FD).
-# WHY : `command fd` is essential here — a bare `fd` would call THIS function
-#       and recurse forever.
-# HOW : Bypass the defaults entirely at any time with `command fd ...`.
+# WHAT: Wrap the fd binary so every call gets $COMMON_OPTIONS_FD from
+#       conf.d/20-options.fish.
+# NOTE: `command fd` is required. A bare `fd` would call this function and
+#       recurse.
+# HOW : Bypass the defaults with `command fd ...`.
 function fd --description 'fd with shared default options'
     command fd $COMMON_OPTIONS_FD $argv
 end

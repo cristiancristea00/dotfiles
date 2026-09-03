@@ -1,16 +1,11 @@
-# WHAT: Full Homebrew maintenance pass: refresh the formula index, upgrade
-#       everything, remove now-unused dependencies, then delete every cached
-#       download.
-# WHY : Named for how long it takes. `--prune=all` reclaims the most disk space
-#       at the cost of re-downloading if you later reinstall.
-#
-# PLATFORM: `--greedy` is added only on macOS. It tells `brew upgrade` to also
-#       upgrade casks that normally update themselves — and casks do not exist
-#       on Linux, where Homebrew installs formulae only. Passing it there is
-#       accepted but meaningless, so the flag is omitted to keep the command
-#       honest about what it does.
-# HOW : Just `coffee`. Preview first with `brew outdated` (add `--greedy` on
-#       macOS to include self-updating casks).
+# WHAT: Homebrew maintenance: refresh the index, upgrade everything, remove
+#       unused dependencies, and delete every cached download.
+# WHY : `--prune=all` reclaims the most disk space; a later reinstall
+#       re-downloads.
+# PLATFORM: `--greedy` (also upgrade casks that update themselves) is passed
+#       only on macOS. Linux Homebrew has no casks, so there the flag is
+#       accepted but does nothing.
+# HOW : `coffee`. Preview with `brew outdated` (`--greedy` on macOS).
 function coffee --description 'Update, upgrade and clean Homebrew'
     if not type --query brew
         echo "coffee: Homebrew is not installed on this machine." >&2

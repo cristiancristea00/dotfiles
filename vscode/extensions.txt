@@ -80,6 +80,14 @@ sweetpad.sweetpad
 
 # --- Other languages ----------------------------------------------------------
 rust-lang.rust-analyzer
+# Wraps gopls, which comes from the Brewfile. On first use this extension offers
+# to `go install` extra tools (dlv, staticcheck) into ~/go/bin — that works,
+# since fish/conf.d/00-path.fish puts it on PATH, but both are declared in the
+# Brewfile so a fresh machine already has them.
+golang.go
+# Wraps zls. Both it and the zig compiler come from the Brewfile, where the
+# version-locking between them is documented.
+ziglang.vscode-zig
 tamasfe.even-better-toml
 redhat.vscode-yaml
 bmalehorn.vscode-fish

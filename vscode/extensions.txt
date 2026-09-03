@@ -2,54 +2,32 @@
 # extensions.txt — extensions both editors get
 # ==============================================================================
 #
-# WHAT: Extension ids, one per line, installed into BOTH Visual Studio Code and
+# WHAT: Extension ids, one per line, installed into both Visual Studio Code and
 #       Cursor by install.sh. Blank lines and lines starting with # are ignored.
-#
 # WHY : Neither editor has a declarative equivalent of Zed's
-#       auto_install_extensions — nothing in settings.json can install an
-#       extension, and .vscode/extensions.json is workspace-level
-#       *recommendations* only. So the list lives here and install.sh feeds it
-#       to each editor's CLI, which is the shipped mechanism rather than a
-#       third-party manager.
-#
-# HOW : The installer runs `code --install-extension <id> --force`, and the
-#       same for `cursor`. The --force flag makes it idempotent and upgrades in
-#       place. Regenerate a starting point with `code --list-extensions`.
-#
-# THE REGISTRY SPLIT — why there are three lists
-#       The editors resolve ids against DIFFERENT galleries. Visual Studio Code
-#       uses Microsoft's Marketplace. Cursor uses its OWN gallery at
-#       marketplace.cursorapi.com (declared in Cursor.app's product.json), which
-#       mirrors a large slice of the Marketplace — which is why ms-python.python
-#       and ms-vscode.cmake-tools appear below rather than in the VS Code-only
-#       list. What it does NOT carry is Microsoft's licence-restricted
-#       extensions: Pylance, the C++ tools, and the ms-vscode-remote.* family.
-#       Anysphere publishes forks of those, listed in
-#       ../cursor/extensions-cursor.txt.
-#
-#       Do not guess which gallery has what — ask it:
-#         curl -s -X POST \
-#           https://marketplace.cursorapi.com/_apis/public/gallery/extensionquery \
-#           -H 'Content-Type: application/json' \
-#           -H 'Accept: application/json;api-version=7.2-preview.1' \
-#           -d '{"filters":[{"criteria":[{"filterType":7,
-#                "value":"<publisher.name>"}]}],"flags":914}'
-#       An id that comes back empty belongs in extensions-vscode.txt instead.
-#
-# DELIBERATELY ABSENT: vscodevim.vim. These editors are configured as normal,
-#       non-modal editors, exactly as Zed is — Neovim is where modal editing
-#       lives. This note exists so the omission reads as a decision rather than
-#       an oversight.
+#       auto_install_extensions: nothing in settings.json can install an
+#       extension, and .vscode/extensions.json holds workspace recommendations
+#       only. The installer feeds this list to each editor's CLI.
+# HOW : The installer reads the installed set once with `--list-extensions`
+#       and runs `code --install-extension <id> --force` (and the same for
+#       `cursor`) only for ids not yet installed. `code --list-extensions`
+#       regenerates a starting point.
+# NOTE: The editors resolve ids against different galleries, so there are
+#       three lists: this one, extensions-vscode.txt for VS Code only, and
+#       ../cursor/extensions-cursor.txt for Cursor only. README.md § Extensions
+#       (in this directory) has the gallery query that decides where an id
+#       belongs.
+# NOTE: vscodevim.vim is not listed. Both editors are configured as non-modal
+#       editors, as Zed is; Neovim is the modal editor here.
 # ==============================================================================
 
 # --- Appearance ---------------------------------------------------------------
-# The colour theme, providing the four Catppuccin flavours named in
-# settings.json, and the catppuccin.* keys that configure them.
+# The colour theme: the four Catppuccin flavours named in settings.json, and
+# the catppuccin.* keys that configure them.
 catppuccin.catppuccin-vsc
-# File icons, palette-matched to the theme above. This replaced
-# pkief.material-icon-theme, which is no longer installed.
+# File icons, palette-matched to the theme above.
 catppuccin.catppuccin-vsc-icons
-# Product icons — the toolbar and activity-bar glyphs, which the Catppuccin
+# Product icons: the toolbar and activity-bar glyphs, which the Catppuccin
 # extension does not cover.
 miguelsolorio.fluent-icons
 
@@ -57,9 +35,9 @@ miguelsolorio.fluent-icons
 anthropic.claude-code
 
 # --- Python -------------------------------------------------------------------
-# The language extension, the debugger and the environment manager. Note that
-# Cursor's gallery serves all three, but NOT Pylance — the type checker is the
-# licence-restricted piece, substituted by anysphere.cursorpyright.
+# The language extension, the debugger, and the environment manager. Cursor's
+# gallery serves all three but not Pylance, which anysphere.cursorpyright
+# substitutes.
 ms-python.python
 ms-python.debugpy
 ms-python.vscode-python-envs
@@ -69,8 +47,8 @@ charliermarsh.ruff
 astral-sh.ty
 
 # --- C, C++ and Swift ---------------------------------------------------------
-# The debug adapters. Microsoft's cpptools is absent here because Cursor's
-# gallery does not carry it — see extensions-vscode.txt.
+# The debug adapters. Microsoft's cpptools is in extensions-vscode.txt because
+# Cursor's gallery does not carry it.
 llvm-vs-code-extensions.lldb-dap
 vadimcn.vscode-lldb
 ms-vscode.cmake-tools
@@ -80,20 +58,19 @@ sweetpad.sweetpad
 
 # --- Other languages ----------------------------------------------------------
 rust-lang.rust-analyzer
-# Wraps gopls, which comes from the Brewfile. On first use this extension offers
-# to `go install` extra tools (dlv, staticcheck) into ~/go/bin — that works,
-# since fish/conf.d/00-path.fish puts it on PATH, but both are declared in the
-# Brewfile so a fresh machine already has them.
+# Wraps gopls, which comes from the Brewfile. On first use the extension offers
+# to `go install` dlv and staticcheck into ~/go/bin, which
+# fish/conf.d/00-path.fish puts on PATH; both are in the Brewfile too.
 golang.go
-# Wraps zls. Both it and the zig compiler come from the Brewfile, where the
-# version-locking between them is documented.
+# Wraps zls. It and the zig compiler come from the Brewfile, which documents
+# the version lock between them.
 ziglang.vscode-zig
 tamasfe.even-better-toml
 redhat.vscode-yaml
 bmalehorn.vscode-fish
-# Embeds lemminx, the Eclipse XML language server. Worth knowing: this is the
-# one language where Neovim is behind — lemminx has no Homebrew formula, so the
-# XML entry in ../nvim/.config/nvim/lua/languages.lua is treesitter-only.
+# Embeds lemminx, the Eclipse XML language server, which has no Homebrew
+# formula, so the XML entry in ../nvim/.config/nvim/lua/languages.lua is
+# treesitter-only.
 redhat.vscode-xml
 
 # --- Markdown -----------------------------------------------------------------

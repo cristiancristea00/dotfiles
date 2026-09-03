@@ -3,17 +3,14 @@
 # ==============================================================================
 #
 # WHAT: Extensions installed into Visual Studio Code but not Cursor.
-# WHY : Every id here was checked against Cursor's gallery and is not there.
-#       All of them are either Microsoft extensions whose licence restricts
-#       them to Microsoft's own products, or small extensions nobody has
-#       mirrored. See the registry note in extensions.txt for the query that
-#       decides which list an id belongs in.
-# HOW : Same format as extensions.txt — one id per line, # for comments.
-#
-#       The right-hand column below records what Cursor gets instead. Where an
-#       equivalent exists it is declared in ../cursor/extensions-cursor.txt, so
-#       the two files must be read together: adding a substitute here without
-#       adding it there leaves Cursor with a silent gap.
+# WHY : Each id was checked against Cursor's gallery and is not there: either
+#       a Microsoft extension whose licence restricts it to Microsoft's own
+#       products, or a small extension nobody has mirrored. README.md §
+#       Extensions (in this directory) has the gallery query.
+# HOW : One id per line; `#` starts a comment. The right-hand column records
+#       what Cursor gets instead; each substitute is declared in
+#       ../cursor/extensions-cursor.txt, so a change to one file needs a
+#       check of the other.
 # ==============================================================================
 
 # --- Licence-restricted Microsoft extensions ----------------------------------
@@ -30,9 +27,8 @@ ms-vscode.remote-explorer
 ms-vscode-remote.remote-containers
 
 # --- No Cursor equivalent exists ----------------------------------------------
-# Markdown preview extras. Not in Cursor's gallery under any publisher, so
-# these four features are simply unavailable there. The preview still works —
-# it is the checkboxes, emoji shortcodes and footnotes that do not render.
+# Markdown preview extras. Not in Cursor's gallery under any publisher, so the
+# preview there lacks checkboxes, emoji shortcodes, and footnotes.
 bierner.github-markdown-preview
 bierner.markdown-checkbox
 bierner.markdown-emoji

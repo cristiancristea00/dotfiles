@@ -3,28 +3,22 @@
 // ============================================================================
 //
 // WHAT THIS FILE IS
-//   Custom key bindings, overriding the defaults. Like settings.json, this one
-//   file serves both editors through symlinks — see that file's header for the
-//   four destinations and the rules that apply to editing it.
+//   Custom key bindings, overriding the defaults. Like settings.json, one file
+//   serves both editors through symlinks; that file's header lists the four
+//   destinations and the editing rules.
 //
 // WHY IT IS EMPTY
-//   Both editors' default bindings are good, and nothing here is currently
-//   worth overriding. The file exists so that the moment you want a binding it
-//   is already version-controlled, rather than being created outside the repo
-//   and then needing to be adopted.
-//
-//   One binding was deliberately NOT carried over: Cursor had `cmd+i` bound to
-//   `composerMode.agent`. It is a Cursor-only command, so it would be dead in
-//   VS Code, and Cursor already binds its agent to a default shortcut.
+//   Both editors' default bindings are used unchanged. The file exists so that
+//   a future binding is version-controlled from the start instead of being
+//   created outside the repo.
 //
 // HOW TO ADD ONE
 //   Objects of {"key", "command"}, optionally with "when" and "args":
 //       { "key": "cmd+k cmd+t", "command": "workbench.action.selectTheme" }
-//   Open the Keyboard Shortcuts UI (cmd+K cmd+S) to find a command's id, then
-//   write it here rather than letting the UI write it — the UI edits this file
-//   directly and its formatting will not match.
-//
-//   Bindings are platform-specific in VS Code's own sync model but not in this
-//   file: use `cmd+` for macOS and `ctrl+` for Linux, or bind both.
+//   The Keyboard Shortcuts UI (cmd+K cmd+S) shows a command's id; write the
+//   binding here rather than through the UI, which edits this file with its
+//   own formatting. Bindings are platform-specific in VS Code's sync model
+//   but not in this file: use `cmd+` for macOS and `ctrl+` for Linux, or bind
+//   both.
 // ============================================================================
 []

@@ -3,75 +3,60 @@
 # ==============================================================================
 #
 # WHAT THIS FILE IS
-#   The settings Ruff uses for Python files that belong to no configured
-#   project. It is deployed to ~/.config/ruff/ruff.toml, which is where Ruff
-#   looks for a user-level configuration.
+#   Ruff's settings for Python files that belong to no configured project,
+#   deployed to ~/.config/ruff/ruff.toml.
 #
-# WHAT "USER-LEVEL" ACTUALLY MEANS — READ THIS FIRST
-#   It is a FALLBACK, not a base. Ruff does not merge configuration files: it
-#   finds the closest one by walking up from the file being checked and ignores
-#   every parent. Only when that search finds nothing at all does it fall back
-#   here. So:
-#     * A project with its own pyproject.toml, ruff.toml or .ruff.toml ignores
-#       this file COMPLETELY — not "overrides the parts it mentions", ignores.
-#     * Loose scripts and projects with no Ruff configuration get these
-#       settings instead of Ruff's defaults.
-#   Nothing here can impose a house style on a project that has opinions of its
-#   own, and there is no Ruff setting that would.
+#   It is a fallback. Ruff does not merge configuration files: it uses the
+#   closest pyproject.toml, ruff.toml, or .ruff.toml found walking up from the
+#   file being checked, and reads this file only when that search finds
+#   nothing. No Ruff setting can impose anything on a project that has its own
+#   configuration.
 #
 # WHERE RUFF LOOKS, AND WHY THIS FILENAME
-#   From `find_user_settings_toml` in Ruff's own source
+#   From `find_user_settings_toml` in Ruff's source
 #   (crates/ruff_workspace/src/pyproject.rs):
 #
 #       let strategy = etcetera::base_strategy::choose_base_strategy()?;
 #       let config_dir = strategy.config_dir().join("ruff");
 #       for filename in [".ruff.toml", "ruff.toml", "pyproject.toml"] { ... }
 #
-#   Two things follow, both of which the published documentation gets wrong or
-#   leaves out:
-#     1. `ruff.toml` IS accepted here. The docs name only
-#        `${config_dir}/ruff/pyproject.toml`, which would have meant renaming
-#        this file and nesting everything under [tool.ruff]. The source
-#        searches three names, most specific first.
-#     2. The path is ~/.config/ruff/ on macOS AND Linux. It is the BASE
-#        strategy, which is XDG everywhere; the native strategy, which would
-#        have put this under ~/Library/Application Support on macOS, is not
-#        used anywhere in Ruff. This package therefore needs none of the per-OS
-#        machinery that tlrc does — see ../tlrc/README.md for the case that
-#        genuinely differs.
+#   The docs name only `${config_dir}/ruff/pyproject.toml`, which would have
+#   meant nesting every setting under [tool.ruff]. The source searches three
+#   names, so `ruff.toml` is accepted; a `.ruff.toml` in the same directory
+#   would win over it. The directory is ~/.config/ruff/ on macOS as well as
+#   Linux, because the base strategy is XDG on both; the native strategy,
+#   which would put the file under ~/Library/Application Support on macOS, is
+#   not used in Ruff. This package therefore needs none of the per-OS
+#   mechanism tlrc needs (see ../../../tlrc/README.md).
 #
 # WHO READS IT
-#   Everything, because they all invoke the same binary: the `ruff` CLI, the
-#   ruff language server that Neovim attaches through
-#   ../nvim/.config/nvim/after/lsp/ruff.lua, and the `charliermarsh.ruff`
-#   extension in Visual Studio Code and Cursor.
+#   The `ruff` CLI, the ruff language server Neovim attaches through
+#   ../../../nvim/.config/nvim/after/lsp/ruff.lua, and the `charliermarsh.ruff`
+#   extension in Visual Studio Code and Cursor. All run the same binary.
+#   ../../README.md has the command that verifies the file is read.
 # ==============================================================================
 
-# WHAT: Directories excluded on top of Ruff's built-in list.
-# WHY : Build output. Ruff already excludes the usual suspects (.git,
-#       .venv, __pycache__, node_modules); `extend-` adds to that list rather
-#       than replacing it, which is the difference between this and `exclude`.
-extend-exclude = ["target", "build", "out", "output"]
+# WHAT: Directories excluded in addition to Ruff's built-in list (.git, .venv,
+#       __pypackages__, node_modules, and others).
+# WHY : Build output. The `extend-exclude` key adds to the built-in list;
+#       `exclude` would replace it.
+extend-exclude = ["target", "build", "out", "output"] # default: []
 
-# WHAT: Whether `ruff check` APPLIES its fixes rather than only reporting them.
-# WHY : On, deliberately, and it is worth flagging because it cuts against the
-#       rest of this setup: every editor here has format-on-save OFF and
-#       formatting sits behind an explicit <leader>F. This is the one place
-#       where running the tool rewrites the file. Ruff's fixes are the ones it
-#       considers safe; `--unsafe-fixes` opts into the rest and is not enabled.
-# HOW : Set false to have `ruff check` report only, or pass `--no-fix` for one
-#       invocation.
-fix = true
+# WHAT: Whether `ruff check` applies its fixes instead of only reporting them.
+# WHY : On. Every editor here formats only on <leader>F, so this is the only
+#       tool that rewrites a file when run. Only fixes Ruff marks safe are
+#       applied; `--unsafe-fixes` would apply the rest and is not enabled.
+# HOW : Set false to report only, or pass `--no-fix` for one run.
+fix = true # default: false
 
-# WHAT: The maximum line length the linter enforces and the formatter targets.
-# WHY : 120 rather than Ruff's default of 88. It is also one of the four column
-#       guides every editor in this repo draws — see the root README's
-#       column-guide section — so the line that matters is on screen.
-line-length = 120
+# WHAT: The line length the linter enforces and the formatter targets.
+# WHY : 120 is one of the four column guides every editor here draws; see
+#       ../../../README.md § Column guides.
+line-length = 120 # default: 88
 
 # WHAT: Spaces per indentation level.
-# WHY : Four, matching the 4-space rule this whole repo follows.
-indent-width = 4
+# WHY : Four, the repo-wide rule.
+indent-width = 4 # default: 4
 
 # ==============================================================================
 # LINTING
@@ -79,23 +64,20 @@ indent-width = 4
 
 [lint]
 
-# WHAT: Enable Ruff's unstable rules.
-# WHY : On, deliberately. Whole families are preview-only — DOC entirely, and
-#       parts of FURB and PLR — so without this a third of the selection below
-#       would silently do nothing.
-# NOTE: The cost is that upgrades move: preview rules can change behaviour, be
-#       renamed or be withdrawn between releases, so a `brew upgrade ruff` can
-#       change what lints without anything here changing. If a new complaint
-#       appears from nowhere, this is why.
-preview = true
+# WHAT: Enable Ruff's preview (unstable) rules.
+# WHY : About a fifth of the rules selected below are preview-only: DOC
+#       entirely, and large parts of E, RUF, FURB, and PLR. Without this they
+#       would do nothing.
+# NOTE: Preview rules can change behaviour, be renamed, or be withdrawn
+#       between releases, so a `brew upgrade ruff` can change what lints with
+#       no change here.
+preview = true # default: false
 
 # WHAT: The rule families to enable, by prefix.
-# WHY : Broad by design — it is easier to silence a rule that proves annoying
-#       than to discover one that was never enabled.
-# HOW : Prefixes select whole families; a full code selects one rule. Look any
-#       of them up with `ruff rule <code>`, and list every family with
-#       `ruff linter`. Add an `ignore = [...]` list to subtract individual
-#       rules without dropping a whole family.
+# WHY : A broad selection. A rule that is wrong for a project is silenced in
+#       that project's own configuration, or here with an `ignore` list.
+# HOW : Prefixes select whole families; a full code selects one rule.
+#       `ruff rule <code>` explains one; `ruff linter` lists every family.
 select = [
     # --- Correctness and likely bugs ------------------------------------------
     "F",        # Pyflakes: undefined names, unused imports, broken f-strings
@@ -106,7 +88,7 @@ select = [
     "PIE",      # flake8-pie: assorted redundancy
     "RUF",      # Ruff's own rules, including mutable class defaults
     "SLF",      # flake8-self: reaching into another object's _private
-    "ARG",      # flake8-unused-arguments
+    "ARG",      # flake8-unused-arguments: parameters a function never uses
 
     # --- Typing ---------------------------------------------------------------
     "ANN",      # flake8-annotations: missing signature types
@@ -115,7 +97,7 @@ select = [
     # --- Style and naming -----------------------------------------------------
     "E",        # pycodestyle errors
     "W",        # pycodestyle warnings
-    "N",        # pep8-naming
+    "N",        # pep8-naming: class, function, and variable naming
     "C",        # flake8-comprehensions and mccabe complexity
     "FURB",     # refurb: dated idioms with a modern replacement
 
@@ -138,48 +120,45 @@ select = [
     "PD",       # pandas-vet
 
     # --- Pylint ---------------------------------------------------------------
-    "PLC",      # convention
-    "PLE",      # error
-    "PLR",      # refactor
-    "PLW",      # warning
+    "PLC",      # Pylint conventions
+    "PLE",      # Pylint errors
+    "PLR",      # Pylint refactoring suggestions
+    "PLW",      # Pylint warnings
 
     # --- Housekeeping ---------------------------------------------------------
     "FIX",      # flake8-fixme: flags TODO and FIXME so they are not forgotten
 ]
 
 # WHAT: How `if TYPE_CHECKING:` imports are handled.
-# WHY : Strict mode moves every import used only in annotations into the
-#       type-checking block, and quote-annotations then quotes the references
-#       so they stay valid at runtime without `from __future__ import
-#       annotations`. Together they keep import time down in modules that are
-#       heavily typed.
+# WHY : The `strict` setting moves every import used only in annotations into
+#       the type-checking block; `quote-annotations` quotes the references so
+#       they stay valid at runtime without `from __future__ import
+#       annotations`. Both are off by default. Together they cut import time
+#       in heavily typed modules.
 [lint.flake8-type-checking]
-
-quote-annotations = true
-strict = true
+quote-annotations = true # default: false
+strict = true # default: false
 
 # WHAT: Import sorting.
-# WHY : from-first puts `from x import y` above plain `import x`, which is the
-#       inverse of isort's default and groups the names actually used at the
-#       top. The blank-line settings are cosmetic and consistent.
-# HOW : `ruff check --select I --fix` sorts imports; the settings only decide
-#       the shape.
+# WHY : With `from-first`, `from x import y` goes above plain `import x`, the
+#       inverse of isort's default. With `combine-as-imports`, `from x import a
+#       as b` lines merge into one statement. Two blank lines after the imports
+#       and one between the import types are layout choices.
+# HOW : `ruff check --select I --fix` sorts imports; these settings decide the
+#       shape.
 [lint.isort]
-
-combine-as-imports = true
-from-first = true
-lines-after-imports = 2
-lines-between-types = 1
+combine-as-imports = true # default: false
+from-first = true # default: false
+lines-after-imports = 2 # default: -1 (Ruff decides)
+lines-between-types = 1 # default: 0
 
 # WHAT: The line-length limits pycodestyle enforces.
-# WHY : Both set to match `line-length` above. max-doc-length is separate and
-#       has NO default — without it, long lines inside docstrings and comments
-#       go unreported while code is checked, which reads as an inconsistency
-#       rather than a decision.
+# WHY : Both equal `line-length` above. The `max-doc-length` key has no
+#       default, so without it long lines in docstrings and comments go
+#       unreported while code lines are checked.
 [lint.pycodestyle]
-
-max-doc-length = 120
-max-line-length = 120
+max-doc-length = 120 # default: none
+max-line-length = 120 # default: line-length
 
 # ==============================================================================
 # FORMATTING
@@ -188,30 +167,29 @@ max-line-length = 120
 [format]
 
 # WHAT: Quote character for strings the formatter rewrites.
-# WHY : Single, against Ruff's default of double. The formatter still uses
+# WHY : Single quotes, the house style here. The formatter still uses
 #       whichever quote avoids escaping in a given string.
-quote-style = "single"
+quote-style = "single" # default: "double"
 
-# WHAT: Indent with spaces rather than tabs.
-indent-style = "space"
+# WHAT: Indent with spaces or tabs.
+# WHY : Spaces, the default and the repo-wide rule.
+indent-style = "space" # default: "space"
 
-# WHAT: Whether a trailing comma forces a collection to stay expanded.
-# WHY : False here means the magic trailing comma is RESPECTED — the option
-#       asks whether to skip it. Leaving a comma after the last element keeps
-#       that call or literal one-per-line, which is the usual way to pin a
-#       layout the formatter would otherwise collapse.
-skip-magic-trailing-comma = false
+# WHAT: Whether a trailing comma forces a collection to stay one element per
+#       line.
+# WHY : False means the magic trailing comma is respected; the option asks
+#       whether to skip it. A comma after the last element then pins a layout
+#       the formatter would otherwise collapse.
+skip-magic-trailing-comma = false # default: false
 
 # WHAT: Line endings written by the formatter.
-# WHY : Always LF, never CRLF, regardless of platform. The alternative,
-#       "auto", infers from the file's first line ending and would let a file
-#       edited on Windows keep CRLF.
-line-ending = "lf"
+# WHY : Always LF. The default, "auto", infers the ending from the first line
+#       ending in the file, so a file edited on Windows would keep CRLF.
+line-ending = "lf" # default: "auto"
 
-# WHAT: Also format Python code found inside docstrings.
-# WHY : On, so a doctest or an example block is formatted like real code
-#       instead of drifting. The separate length limit applies to those blocks;
-#       "dynamic" would instead fit them to the remaining width after the
-#       docstring's indentation.
-docstring-code-format = true
-docstring-code-line-length = 120
+# WHAT: Also format Python code inside docstrings, at the given line length.
+# WHY : On, so doctests and example blocks are formatted like code. The length
+#       is fixed at 120; the default, "dynamic", fits the code to the width
+#       left after the docstring's indentation.
+docstring-code-format = true # default: false
+docstring-code-line-length = 120 # default: "dynamic"

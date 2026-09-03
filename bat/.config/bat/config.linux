@@ -75,9 +75,9 @@
 #       render as plain text. INI is the closest match for both formats.
 # HOW : `--map-syntax='<glob>:<syntax name>'`. List syntax names with
 #       `bat --list-languages`. The glob matches the whole path.
---map-syntax=*/ghostty/config:INI
---map-syntax=*/git/config:INI
---map-syntax=*/git/config.work:INI
+--map-syntax=**/ghostty/config:INI
+--map-syntax="**/git/config:Git Config"
+--map-syntax="**/git/config.work:Git Config"
 
 # --- Documented extension points (inactive) --------------------------------------------
 # WHAT: When to page output. `auto` (the default) pages only when the content

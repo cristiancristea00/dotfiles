@@ -61,6 +61,37 @@ vim.api.nvim_create_autocmd("VimResized", {
 -- WHY : These buffers are throwaway; `q` matches what plugin UIs (fzf-lua,
 --       neo-tree, gitsigns previews) already do. `q` keeps its normal meaning
 --       (record macro) in real file buffers.
+-- WHAT: Restrict the column guides set in core/options.lua to real files.
+-- WHY : The 'colorcolumn' option is window-local, so the global value lands in
+--       every window — including `:help`, `:terminal`, quickfix and the
+--       neo-tree sidebar. Four vertical bars over a help page or a running
+--       shell say nothing about line length.
+--       Testing 'buftype' rather than listing filetypes is what makes one
+--       check cover all of them: every scratch, help, terminal and plugin
+--       buffer sets a non-empty buftype, while a real file's is always "".
+-- NOTE: The branch assigns in BOTH directions on purpose. Only clearing would
+--       be a one-way trip — a window that had shown `:help` would keep its
+--       guides empty when a real file was opened in it again.
+-- NOTE: It reads vim.go.colorcolumn (the global default) rather than repeating
+--       the column list, so core/options.lua stays the only place the columns
+--       are written. Change them there and this follows.
+-- NOTE: The write MUST go through nvim_set_option_value with scope = "local".
+--       The obvious `vim.wo[0].colorcolumn = ""` looks equivalent and is not:
+--       for this option it behaves like `:set` rather than `:setlocal` and
+--       clears the GLOBAL value too, which would destroy the very thing the
+--       line above reads back. The first version of this autocmd did exactly
+--       that and quietly stopped restoring the guides after the first help
+--       page. Verified: vim.wo[0] leaves vim.go empty, scope = "local" does
+--       not.
+vim.api.nvim_create_autocmd({ "BufWinEnter", "TermOpen" }, {
+    group = augroup("colorcolumn_files_only"),
+    desc = "Show the column guides in real files only",
+    callback = function(ev)
+        local guides = vim.bo[ev.buf].buftype == "" and vim.go.colorcolumn or ""
+        vim.api.nvim_set_option_value("colorcolumn", guides, { scope = "local", win = 0 })
+    end,
+})
+
 vim.api.nvim_create_autocmd("FileType", {
     group = augroup("close_with_q"),
     desc = "Close utility windows with q",

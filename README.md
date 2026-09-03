@@ -317,6 +317,38 @@ Three details are easy to get wrong:
 
 ---
 
+## Column guides
+
+Vertical lines at **80, 120, 150 and 200**, in all three editors:
+
+| Editor           | Setting                            |
+| ---------------- | ---------------------------------- |
+| Neovim / Neovide | `colorcolumn = "80,120,150,200"`   |
+| Zed              | `wrap_guides` + `show_wrap_guides` |
+| VS Code / Cursor | `editor.rulers`                    |
+
+They are reference marks, not an enforced limit — nothing wraps or reformats at
+any of them, and no file type is exempt. Four columns is what makes the fixed
+list workable: with one number you would have to pick between Rust's 100,
+ruff's 88 and C's 80, and with four the one a given project cares about is
+already on screen.
+
+Two asymmetries are worth knowing:
+
+* **Neovim needs an autocmd, the others do not.** `colorcolumn` is a *window*
+  option, so the global value lands in `:help`, `:terminal`, quickfix and the
+  neo-tree sidebar as well. `nvim/.config/nvim/lua/core/autocmds.lua` narrows
+  it to buffers whose `buftype` is empty — that one test covers every kind of
+  non-file buffer at once. Zed and VS Code have no equivalent problem, their
+  terminals not being editors.
+* **Only VS Code can colour rulers individually**, via `{ "column": N,
+  "color": … }`. It deliberately does not. Neovim paints every column with the
+  single `ColorColumn` highlight group and Zed with the single
+  `editor.wrap_guide` colour, so a coloured ruler in one editor would only make
+  the three disagree.
+
+---
+
 ## Conventions
 
 Every configuration file opens with a header block naming the file, saying

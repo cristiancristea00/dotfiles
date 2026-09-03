@@ -183,6 +183,28 @@
     //       and the line background).
     "current_line_highlight": "all",
 
+    // WHAT: Vertical guides at the given character columns.
+    // WHY : The same four columns Neovim and both VS Code editors draw, so a
+    //       file looks identical wherever it is opened. They are reference
+    //       marks rather than one enforced limit — nothing here wraps or
+    //       reformats at any of them.
+    // NOTE: Zed draws exactly these four, not five. A further guide appears at
+    //       `preferred_line_length` (default 80) ONLY when `soft_wrap` is set
+    //       to "preferred_line_length"; this config leaves `soft_wrap` unset
+    //       and its default is "none". Setting soft_wrap that way later would
+    //       add a duplicate line at 80.
+    // NOTE: One colour for all four — the theme's `editor.wrap_guide`, which
+    //       Catppuccin sets to #585b70. Zed cannot colour them individually,
+    //       and neither can Neovim, so VS Code does not either even though it
+    //       could. See the root README's column-guide section.
+    // HOW : Absolute column numbers, in any order. An empty list turns them
+    //       off, as does `show_wrap_guides: false`. Both keys can also be set
+    //       per language inside the `languages` block, which is deliberately
+    //       not done here — the guides are the same for every file type.
+    // default: [] and true
+    "wrap_guides": [80, 120, 150, 200],
+    "show_wrap_guides": true,
+
     // WHAT: The shape of the editor's cursor and whether it blinks.
     // WHY : A blinking block, which is the stack-wide choice — Ghostty's
     //       `cursor-style`, Neovim's `guicursor` and VS Code's

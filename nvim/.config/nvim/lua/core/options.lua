@@ -209,9 +209,27 @@ vim.o.foldlevelstart = 99
 --       it); set explicitly for predictability on odd $TERM values.
 vim.o.termguicolors = true
 
--- Column guide (disabled) --------------------------------------------------------
--- WHAT: `colorcolumn` draws a vertical line at a given column, e.g. "80".
--- WHY : Left OFF here because line-length conventions differ per project
---       (Rust 100, Python/ruff 88, kernel C 80, ...) and formatters enforce
---       them anyway. Uncomment to get a fixed guide:
--- vim.o.colorcolumn = "100"
+-- Column guides -----------------------------------------------------------------
+-- WHAT: Vertical lines at the given columns, drawn with the ColorColumn
+--       highlight group.
+-- WHY : Four reference marks rather than one enforced limit. This REVERSES an
+--       earlier decision to leave the option off, whose reasoning was that
+--       line-length conventions differ per project (Rust 100, Python/ruff 88,
+--       kernel C 80) and formatters enforce them anyway. That was an argument
+--       against picking a SINGLE number, and it does not carry over: at four
+--       columns none of them claims to be the limit, so whichever one a given
+--       project cares about is already on screen.
+--       The same four are set in Zed and in both VS Code editors, so a file
+--       looks the same wherever it is opened.
+-- NOTE: This option is WINDOW-local, and setting it here only supplies the
+--       default that new windows inherit. On its own that puts all four lines
+--       across `:help` pages, `:terminal` buffers and the file tree, which is
+--       noise — core/autocmds.lua narrows it to real files. The two belong
+--       together: changing the columns here is enough, because that autocmd
+--       reads this value back rather than repeating it.
+-- HOW : A comma-separated list of columns. Values may also be relative to
+--       'textwidth' (`+1`, `-2`), which is unused here since these are
+--       absolute. Set to "" to turn the guides off.
+--       Every column shares ONE highlight group, so they cannot be coloured
+--       individually — `:hi ColorColumn` restyles all four at once.
+vim.o.colorcolumn = "80,120,150,200"

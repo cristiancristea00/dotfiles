@@ -186,10 +186,31 @@
     "editor.minimap.enabled": true,
     "editor.minimap.autohide": "scroll",
 
-    // WHAT: A vertical guide at 80 columns.
+    // WHAT: Vertical guides at the given character columns.
+    // WHY : The same four columns Neovim's `colorcolumn` and Zed's
+    //       `wrap_guides` draw, so a file looks identical wherever it is
+    //       opened. They are reference marks rather than one enforced limit —
+    //       nothing here wraps or reformats at any of them.
     // NOTE: The object form is the newer schema and works in both editors; the
-    //       bare-number form `[80]` also works but is the older spelling.
-    "editor.rulers": [{ "column": 80 }],
+    //       bare-number form `[80, 120, …]` also works but is the older
+    //       spelling.
+    // NOTE: This form also accepts a `color` per entry, so VS Code alone could
+    //       make 80 louder than 200. It deliberately does not: Neovim paints
+    //       every column with the single ColorColumn highlight group and Zed
+    //       with the single `editor.wrap_guide` colour, so a coloured ruler
+    //       here would only make the editors disagree. The default colour is
+    //       the theme's `editorRuler.foreground`.
+    // HOW : Add or remove entries. An empty list turns the guides off. A
+    //       per-language override looks like
+    //       `"[markdown]": { "editor.rulers": [{ "column": 80 }] }`, which is
+    //       deliberately not used — the guides are the same for every file
+    //       type.
+    "editor.rulers": [
+        { "column": 80 },
+        { "column": 120 },
+        { "column": 150 },
+        { "column": 200 }
+    ],
 
     // WHAT: Inline type and parameter-name annotations from the language server.
     // WHY : On, matching Zed, where they are the main reason to have a language

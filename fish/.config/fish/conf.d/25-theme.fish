@@ -72,8 +72,8 @@ if status is-interactive
 
     # --- delta ---------------------------------------------------------------
     # WHAT: Name delta's Catppuccin flavour through $DELTA_FEATURES.
-    # WHY : delta takes one value for its feature set, with no light/dark form,
-    #       so the shell chooses. The variable replaces any `features` line in
+    # WHY : The delta pager takes one value for its feature set, with no
+    #       light/dark form, so the shell chooses. The variable replaces any `features` line in
     #       the git config, so ../../../../git/.config/git/config sets none; the
     #       `[delta]` block there documents the mechanism and delta's fallback.
     #       The flavour names come from ~/.config/git/catppuccin.gitconfig,

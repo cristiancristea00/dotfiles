@@ -136,11 +136,39 @@ brew "bash-language-server"  # sh/bash
 brew "fish-lsp"              # fish
 brew "neocmakelsp"           # CMake — the same server Zed's `neocmake` extension uses
 brew "docker-language-server" # Dockerfile + Compose (Docker's own, not the npm one)
+brew "gopls"                 # Go
+
+# WHAT: The Zig language server.
+# WHY : Listed apart because of a trap that bites on upgrade rather than on
+#       install: zls and the zig compiler are VERSION-LOCKED. Its README says
+#       plainly "When upgrading Zig, make sure to update ZLS to keep them in
+#       sync." A `brew upgrade` that moves one and not the other leaves zls
+#       refusing to start, and the symptom is a language server that silently
+#       stops attaching rather than an error naming the cause.
+#       Homebrew makes zig a hard dependency of zls, so they install together
+#       and are matched today. Check with `zig version` and `zls --version`.
+brew "zls"                   # Zig
 
 # NOTE: XML has no line here on purpose. Its server, lemminx, has no Homebrew
 #       formula, so the Neovim entry for XML is treesitter-only. Zed and VS
 #       Code both bundle lemminx inside their own extensions and are unaffected
 #       — see the XML entry in nvim/.config/nvim/lua/languages.lua.
+
+# --- Language toolchains -------------------------------------------------------------------
+# WHAT: The Go and Zig compilers themselves.
+# WHY : These break the pattern in the NOT LISTED HERE note above, where Rust
+#       comes from rustup and Swift from Xcode, so the difference is worth
+#       stating: neither Go nor Zig has an equivalent version manager that this
+#       setup already uses, and Homebrew carries both. They are real
+#       dependencies rather than conveniences — gopls shells out to the `go`
+#       command to resolve modules, and zls reads the Zig standard library from
+#       the compiler's installation.
+# NOTE: The zig line is redundant in the sense that installing zls pulls zig
+#       anyway. It is written out so the compiler is a declared dependency in
+#       its own right rather than an accident of zls's dependency graph — and
+#       so `brew bundle` reinstalls it if zls is ever removed.
+brew "go"
+brew "zig"
 
 # --- Formatters and linters ---------------------------------------------------------------
 # Used by <leader>F in Neovim via conform.nvim. If one is missing, formatting
@@ -149,6 +177,21 @@ brew "clang-format"  # C/C++/ObjC — reads each project's .clang-format
 brew "shfmt"         # shell scripts
 brew "yamlfmt"       # YAML
 brew "shellcheck"    # not a formatter: bash-language-server surfaces its lints
+brew "goimports"     # Go — gofmt's rules PLUS adding and removing imports
+brew "staticcheck"   # not a formatter: extra Go lints, which gopls can surface
+# NOTE: Zig needs no formatter line. The zigfmt entry in languages.lua runs
+#       `zig fmt`, which ships inside the compiler declared above.
+
+# --- Debuggers -----------------------------------------------------------------------------
+# WHAT: The Go debugger.
+# WHY : Declared so a fresh machine has it before it is wanted. The `golang.go`
+#       extension in VS Code and Cursor otherwise offers to fetch it with
+#       `go install` on the first debug session, which does work here —
+#       ~/go/bin is on PATH via fish/conf.d/00-path.fish — but leaves the
+#       machine holding a tool the repo never declared.
+# NOTE: Nothing in this repo CONFIGURES a debugger; Neovim has no DAP setup.
+#       This only makes the binary present for the editors that do.
+brew "delve"
 
 # WHAT: Apple's official Swift formatter.
 # WHY : macOS-only here. It also ships inside Xcode, and on Linux Swift comes

@@ -23,7 +23,7 @@
 //   UI font larger than the code font (see UI FONT below).
 //
 //   If comments are lost, restore from git and re-link:
-//       stow -R --no-folding --ignore='\.config' --target="$HOME" --dir="$HOME/personal/dotfiles" vscode cursor
+//       stow -R --no-folding --ignore='\.config' --target="$HOME" --dir="$PWD" vscode cursor  # from the repo root
 //
 // SETTINGS SYNC MUST STAY OFF
 //   Settings Sync is a second writer to this file, driven by remote state, and

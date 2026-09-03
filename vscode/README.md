@@ -11,11 +11,11 @@ Like Zed, and unlike Neovim, both are configured as non-modal editors;
 ## Install
 
 ```sh
-# macOS: deploys the Library/ tree, ignores .config/
-stow --no-folding --ignore='\.config' --target="$HOME" --dir="$HOME/personal/dotfiles" vscode cursor
+# From the repo root. macOS: deploys the Library/ tree, ignores .config/
+stow --no-folding --ignore='\.config' --target="$HOME" --dir="$PWD" vscode cursor
 
 # Linux: the reverse
-stow --no-folding --ignore='Library' --target="$HOME" --dir="$HOME/personal/dotfiles" vscode cursor
+stow --no-folding --ignore='Library' --target="$HOME" --dir="$PWD" vscode cursor
 ```
 
 `install.sh` picks the right form. Stow's `--no-folding` keeps `User/` a real
@@ -54,10 +54,10 @@ UI. Two rules follow:
 * **Settings Sync must stay off.** It is a second writer to this file whose
   merge is not documented to keep comments. The repo is the source of truth.
 
-If the UI replaces the symlink with a real file, re-link:
+If the UI replaces the symlink with a real file, re-link from the repo root:
 
 ```sh
-stow -R --no-folding --ignore='\.config' --target="$HOME" --dir="$HOME/personal/dotfiles" vscode cursor
+stow -R --no-folding --ignore='\.config' --target="$HOME" --dir="$PWD" vscode cursor
 ```
 
 ## What's configured

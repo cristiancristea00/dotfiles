@@ -3,37 +3,34 @@
 # ==============================================================================
 #
 # WHAT THIS FILE IS
-#   Git's user-level ("global") configuration. It lives at
-#   ~/.config/git/config, Git's XDG location, rather than the older
-#   ~/.gitconfig. Both are read; ~/.gitconfig wins if it exists, so it must be
-#   removed for this file to take effect (the repo README covers that step).
+#   Git's user-level configuration, at its XDG location ~/.config/git/config
+#   rather than ~/.gitconfig. Git reads both; ~/.gitconfig is read later and
+#   wins, so it must be removed for this file to take effect (see
+#   ../../README.md). Precedence, lowest to highest:
+#     /etc/gitconfig  ->  this file  ->  ~/.gitconfig  ->  <repo>/.git/config
 #
-#   Precedence, lowest to highest:
-#     /etc/gitconfig  ->  THIS FILE  ->  ~/.gitconfig  ->  <repo>/.git/config
+# IDENTITY
+#   The [user] block is the personal identity and applies by default. The
+#   [includeIf] near the bottom loads config.work for repositories under
+#   ~/work/.
 #
-# IDENTITY: PERSONAL BY DEFAULT, WORK UNDER ~/work/
-#   The [user] block below is the PERSONAL identity and applies everywhere by
-#   default. The WORK identity lives in config.work next to this file and is
-#   pulled in by the [includeIf] at the bottom for any repository under
-#   ~/work/, overriding the personal values. Both files are committed — see
-#   the note in config.work about what that means for a public repo.
+# SIGNING
+#   commit.gpgSign and tag.gpgSign sign every commit and tag, so a missing
+#   secret key fails the commit or tag. gpg.minTrustLevel = fully makes verification
+#   reject keys that are not fully trusted. On a fresh machine, import the key
+#   before the first commit, or bypass once with
+#   `git -c commit.gpgSign=false commit`.
 #
-# THE ONE GOTCHA
-#   commit.gpgSign + tag.gpgSign + gpg.minTrustLevel = fully means EVERY commit
-#   and tag is signed, and Git HARD-FAILS if the matching secret key is missing
-#   or not ultimately trusted. On a fresh machine, import your key before your
-#   first commit, or temporarily `git -c commit.gpgSign=false commit`.
-#
-#   Reference for every key below: `git help config`.
+#   Reference for every key: `git help config`.
 # ==============================================================================
 
 # --- Identity -----------------------------------------------------------------
-# WHAT: Author/committer name and email, and the OpenPGP key used for signing.
-# WHY : Personal identity is the default because most repositories on this
-#       machine are personal; work repos live under ~/work/ and are switched
-#       automatically by the [includeIf] at the end of this file.
-# HOW : Publishing a *public* key fingerprint is harmless — that is what makes
-#       signatures verifiable. Never put a work email here in a public repo.
+# WHAT: Author and committer name and email, and the OpenPGP key that signs.
+# WHY : Most repositories on this machine are personal, so this is the
+#       default; the [includeIf] below switches to the work identity under
+#       ~/work/.
+# NOTE: A public key fingerprint is safe to publish; signatures are verified
+#       against it. Never put a work email here in a public repo.
 [user]
     name = Cristian Cristea
     email = cristiancristea00@gmail.com
@@ -41,188 +38,256 @@
 
 # --- Core behaviour -----------------------------------------------------------
 [core]
-    # WHAT: Editor launched for commit messages, interactive rebase, etc.
+    # WHAT: Editor for commit messages, interactive rebase, and similar.
+    # WHY : Matches $EDITOR in ../../../fish/.config/fish/conf.d/10-environment.fish.
+    #       Unset, Git falls back to $VISUAL, then $EDITOR, then vi.
     editor = nvim
 
-    # WHAT: Pager for diff/log/show output — delta renders side-by-side,
-    #       syntax-highlighted diffs (configured in [delta] below).
+    # WHAT: Pager for diff, log, and show output.
+    # WHY : The delta pager renders side-by-side, syntax-highlighted diffs (see
+    #       [delta] below). The default pager, less, shows Git's plain output.
     # HOW : Set to `less` to fall back to Git's plain output.
     pager = delta
 
-    # WHAT: Line-ending policy. `eol = native` checks files out with the
-    #       platform's endings; autocrlf/safecrlf off means Git stores and
-    #       returns bytes unchanged.
-    # WHY : With .gitattributes doing the real work per-repo, blanket CRLF
-    #       translation only causes surprises on a Unix-only machine.
+    # WHAT: Line-ending policy. `eol = native` checks out files marked as text
+    #       with the platform's endings; `autocrlf = false` converts nothing
+    #       else; `safecrlf` would only check that a conversion is reversible.
+    # WHY : Per-repository .gitattributes decides which files are text. All
+    #       three are Git's built-in defaults, stated because Git for Windows'
+    #       installer writes `autocrlf = true` into a global config.
     eol = native
     autocrlf = false
     safecrlf = false
 
-    # WHAT: Which whitespace errors `git diff --check` and `git apply` flag.
-    # WHY : trailing-space is Git's shorthand for blank-at-eol + blank-at-eof,
-    #       so listing those separately (as this config used to) is redundant.
-    #       The remaining three cover the genuinely distinct cases.
+    # WHAT: Whitespace errors that `git diff --check` and `git apply` flag.
+    # WHY : The value `trailing-space` is Git's shorthand for blank-at-eol plus
+    #       blank-at-eof. The default set is blank-at-eol, space-before-tab,
+    #       and blank-at-eof; `tab-in-indent` is added because the files here
+    #       are space-indented.
     whitespace = trailing-space,space-before-tab,tab-in-indent
 
-    # WHAT: Allow path components longer than 260 chars (a Windows limit).
-    # WHY : Harmless on macOS; kept so the file is portable.
+    # WHAT: Allow paths longer than 260 characters.
+    # WHY : A Git for Windows key; other builds ignore it. Kept so the file is
+    #       portable to a Windows machine.
     longpaths = true
 
-    # WHAT: Transport used for ssh:// remotes.
+    # WHAT: Command used to connect to a remote over SSH.
+    # WHY : Equal to the default, and outranked by $GIT_SSH_COMMAND. Stated so
+    #       the per-repository override that pins one repository to one of
+    #       several keys (`git config core.sshCommand 'ssh -i <key>'`) has a
+    #       documented global counterpart.
     sshCommand = ssh
 
 # --- delta (diff renderer) ------------------------------------------------------
-# WHAT: The delta pager reformats Git's diff output.
-# HOW : `n` / `N` jump between files when navigate is on. Run
-#       `delta --show-syntax-themes` to preview alternatives.
-# WHAT: Pull in the Catppuccin theme definitions for delta.
-# WHY : These define the named features — `catppuccin-latte`,
-#       `catppuccin-frappe`, `catppuccin-macchiato`, `catppuccin-mocha` — that
-#       $DELTA_FEATURES selects between. Each one sets the syntax theme, the
-#       chrome (line-number columns, hunk headers, file headers, and the
-#       backgrounds behind added and removed lines), and the matching `light`
-#       or `dark` flag.
-# NOTE: The path is NOT in this repo. `install.sh` fetches it from
-#       github.com/catppuccin/delta into the deployed config directory, which
-#       is why this include sits beside a real path rather than a relative one.
-#       Git IGNORES an `include.path` that does not exist — verified, no error
-#       and no warning — and delta ignores a feature name it cannot resolve, so
-#       a machine that has never run the installer falls through to the
-#       behaviour described under [delta] below rather than breaking.
+# WHAT: Load the Catppuccin theme definitions for delta.
+# WHY : The file defines the features `catppuccin-latte`, `catppuccin-frappe`,
+#       `catppuccin-macchiato`, and `catppuccin-mocha` that $DELTA_FEATURES
+#       selects between. Each sets the syntax theme, the chrome (line-number
+#       columns, hunk and file headers, added and removed backgrounds), and
+#       the matching `light` or `dark` flag.
+# NOTE: The file is not in this repo; install.sh fetches it into
+#       ~/.config/git/ (see ../../../README.md § Fetched themes). Git resolves
+#       a relative `include.path` against the directory of the file being
+#       read, the deployed ~/.config/git/, not the repo, which is why a bare
+#       filename works beside the symlink. Git ignores an `include.path` that
+#       does not exist, so a machine that has not run the installer falls
+#       through to delta's own defaults.
 # HOW : Re-run `./install.sh` to refresh it.
 [include]
     path = catppuccin.gitconfig
 
 [delta]
+    # WHAT: Three display options: `navigate` binds n and N to jump between
+    #       files; `side-by-side` shows old and new in two columns;
+    #       `line-numbers` adds a number column to each side.
+    # WHY : All three are off by default. Two columns with line numbers is the
+    #       layout the GUI editors here use for diffs, and the numbers make a
+    #       hunk citable.
     navigate = true
     side-by-side = true
     line-numbers = true
 
-    # --- Theme: chosen elsewhere, on purpose ---------------------------------
-    # WHAT: Neither `features` nor `syntax-theme` is set here, and that is the
-    #       whole mechanism rather than an omission.
-    # WHY : The delta pager takes ONE value for each, with no `light:…,dark:…`
-    #       form the way bat has. So the flavour is chosen outside this file,
-    #       by $DELTA_FEATURES, which
+    # --- Theme: chosen by the shell -----------------------------------------
+    # WHAT: Neither `features` nor `syntax-theme` is set here.
+    # WHY : The delta pager takes one value for each, with no light/dark form. The
+    #       flavour is chosen by $DELTA_FEATURES, which
     #       ../../../fish/.config/fish/conf.d/25-theme.fish sets from the
-    #       terminal's background — `catppuccin-latte` in a light terminal,
-    #       `catppuccin-mocha` in a dark one. That variable REPLACES a
-    #       `features` written here, so leaving it unset is what lets the shell
-    #       decide.
-    #       Where nothing sets it — a bash or zsh script, a GUI tool, any shell
-    #       that cannot report its background — delta detects the terminal
-    #       itself (`--detect-dark-light`, default `auto`) and uses its own
-    #       defaults: `Monokai Extended` when dark, `GitHub` when light. Not
-    #       Catppuccin, but correct for the appearance, which is the better
-    #       failure than a flavour pinned to the wrong one.
-    # NOTE: DO NOT ADD `syntax-theme` BACK HERE. Options written directly in
-    #       [delta] outrank ones inherited from a feature, so a value here
-    #       silently half-breaks the switching: the chrome would keep following
-    #       the terminal while the code colours stayed frozen. That was the bug
-    #       this arrangement fixes, and it looks like nothing is wrong.
-    # HOW : To pin one flavour regardless of appearance, add
-    #       `features = catppuccin-mocha` here — $DELTA_FEATURES still wins
-    #       wherever the shell sets it, so also delete the delta handler in
-    #       25-theme.fish. List the syntax themes delta knows with
-    #       `delta --list-syntax-themes`.
+    #       terminal's background: `catppuccin-latte` in a light terminal,
+    #       `catppuccin-mocha` in a dark one. The variable replaces a
+    #       `features` line written here. Where nothing sets it (a bash or
+    #       zsh script, a GUI tool, an unknown background), delta detects the
+    #       terminal itself (`--detect-dark-light`, default `auto`) and uses
+    #       its own defaults: `Monokai Extended` when dark, `GitHub` when
+    #       light.
+    # NOTE: Do not add `syntax-theme` here. Options set directly in [delta]
+    #       outrank ones inherited from a feature, so the chrome would follow
+    #       the terminal while the code colours stayed fixed.
+    # HOW : To pin one flavour, add `features = catppuccin-mocha` here and
+    #       delete the delta handler in 25-theme.fish, since $DELTA_FEATURES
+    #       still wins where the shell sets it. List the syntax themes with
+    #       `delta --list-syntax-themes`; preview them on a real diff with
+    #       `git show | delta --show-syntax-themes`.
 
 [interactive]
-    # WHAT: Also route `git add -p` hunks through delta.
+    # WHAT: Filter the hunks `git add -p` shows through delta.
+    # WHY : Without it, interactive staging shows Git's plain diff while every
+    #       other diff is rendered by delta. The `--color-only` flag keeps the
+    #       hunk lines one-to-one with the original, which `add -p` requires.
     diffFilter = delta --color-only
 
 # --- Diff, merge, rebase ---------------------------------------------------------
 [diff]
     # WHAT: Diff algorithm; histogram is patience plus occurrence counting.
-    # WHY : Produces markedly more readable diffs than the default `myers`
-    #       when code is moved or indentation changes.
+    # WHY : Produces more readable diffs than the default `myers` when code is
+    #       moved or indentation changes.
     algorithm = histogram
 
-    # WHAT: Detect copies as well as renames.
+    # WHAT: Detect copies as well as renames, among files changed in the same
+    #       commit (`--find-copies-harder` widens the search).
+    # WHY : The default, `true`, detects renames only; a copied file then
+    #       shows as a whole new file instead of a copy with a small diff.
     renames = copies
 
 [merge]
-    # WHAT: Conflict marker style. zdiff3 shows the common ancestor alongside
-    #       both sides, with common lines trimmed.
-    # WHY : Strictly more informative than the default two-sided `merge` style
-    #       — you can see what the original text was.
+    # WHAT: Conflict marker style. zdiff3 shows the common ancestor between
+    #       the two sides, with lines both sides share at the start or end of
+    #       the conflict moved outside the markers.
+    # WHY : The default `merge` style shows only the two sides, so the
+    #       original text has to be looked up separately.
     conflictStyle = zdiff3
 
-    # WHAT: Re-normalize line endings before merging.
+    # WHAT: Convert both sides to the repository's canonical line endings
+    #       before a three-way merge.
+    # WHY : Avoids conflicts caused only by a change in a file's eol
+    #       attributes between the merge base and the branches. Off by
+    #       default.
     renormalize = true
 
 [rerere]
-    # WHAT: "Reuse recorded resolution" — remembers how you resolved a
-    #       conflict and replays it if the same conflict reappears.
-    # WHY : Pays for itself on any long-running rebase or repeated merge.
+    # WHAT: Record how each conflict was resolved and replay the resolution
+    #       when the same conflict reappears; `autoUpdate` also stages the
+    #       replayed result.
+    # WHY : Saves re-resolving the same hunks on a long rebase or a repeated
+    #       merge. By default rerere is on only in a repository that already
+    #       has an rr-cache directory, and autoUpdate is off.
     enabled = true
     autoUpdate = true
 
 [pull]
-    # WHAT: `git pull` rebases instead of creating a merge commit.
+    # WHAT: `git pull` rebases the local branch onto the fetched branch
+    #       instead of merging.
+    # WHY : Keeps history linear. The default merges, adding a merge commit
+    #       whenever there are local commits.
     rebase = true
 
 # --- Fetch, push ---------------------------------------------------------------
 [fetch]
-    # WHAT: Delete local remote-tracking refs whose upstream branch is gone.
+    # WHAT: Delete remote-tracking refs whose upstream branch is gone.
+    # WHY : Without it, deleted remote branches linger locally. Off by default.
     prune = true
+
+    # WHAT: Fetch up to eight remotes at once under `git fetch --all` or
+    #       `--multiple`; submodules follow submodule.fetchJobs below.
+    # WHY : The default is 1, one remote after another.
     parallel = 8
 
-    # WHAT: Verify object integrity on receipt.
-    # WHY : Cheap protection against a corrupt or malicious remote.
+    # WHAT: Check every fetched object.
+    # WHY : Rejects corrupt objects and the known malicious ones (a `.GIT`
+    #       directory, a crafted `.gitmodules`). Off by default; the cost is
+    #       fetch time.
     fsckObjects = true
 
 [push]
-    # WHAT: Push only the current branch to its upstream of the same name.
+    # WHAT: Push only the current branch, to an upstream of the same name.
+    # WHY : The `simple` mode has been Git's default since 2.0; stated so the
+    #       behaviour does not depend on the Git version.
     default = simple
 
     # WHAT: Push annotated tags reachable from the pushed commits.
+    # WHY : Off by default, so tags are otherwise pushed only with
+    #       `git push --tags`.
     followTags = true
 
-    # WHAT: Refuse the push if a submodule commit isn't pushed yet.
+    # WHAT: Refuse the push if it references a submodule commit that has not
+    #       been pushed.
+    # WHY : Prevents a superproject pointing at a commit nobody else can
+    #       fetch. The default, `no`, does not check.
     recurseSubmodules = check
 
-    # WHAT: First push of a new branch creates its upstream automatically,
-    #       instead of erroring with "no upstream branch".
+    # WHAT: The first push of a new branch sets its upstream.
+    # WHY : Replaces `git push -u origin <branch>`. Off by default, so the
+    #       first push fails with "no upstream branch".
     autoSetupRemote = true
 
 [transfer]
+    # WHAT: Check objects in every transfer.
+    # WHY : This key is the fallback for fetch.fsckObjects and
+    #       receive.fsckObjects when those are unset. All three are set so the
+    #       check holds whichever key Git consults. Off by default.
     fsckObjects = true
 
 [receive]
+    # WHAT: Check objects pushed into a repository on this machine.
+    # WHY : See [transfer].
     fsckObjects = true
 
 # --- Branches, tags, logs ---------------------------------------------------------
 [init]
+    # WHAT: Name of the first branch in a new repository.
+    # WHY : Git's built-in default is `master`, and `git init` prints a hint
+    #       suggesting this setting until it is set.
     defaultBranch = main
 
 [branch]
-    # WHAT: Sort `git branch` by most recent commit instead of alphabetically.
-    # WHY : What you worked on last is what you want at the top.
+    # WHAT: Sort `git branch` by most recent commit, newest first.
+    # WHY : The default sorts alphabetically by ref name.
     sort = -committerdate
 
 [tag]
-    # WHAT: Sort tags by version number, so v10 comes after v9, not before it.
+    # WHAT: Sort tags by version number, so v10 comes after v9.
+    # WHY : The default sorts by name as a string, which puts v10 before v2.
     sort = version:refname
+
+    # WHAT: Sign every tag.
+    # WHY : Off by default. See SIGNING in the header.
+    # NOTE: `forceSignAnnotated` signs tags made annotated implicitly (with `-m`
+    #       or `-F`) and is overridden by an explicit `-a`; with `gpgSign` on it
+    #       adds nothing, and it is kept for a config that turns `gpgSign` off.
     gpgSign = true
     forceSignAnnotated = true
 
 [commit]
+    # WHAT: Sign every commit.
+    # WHY : Off by default. See SIGNING in the header for what happens when
+    #       the key is missing.
     gpgSign = true
 
 [log]
+    # WHAT: Show branch and tag names beside commits in `git log`, without
+    #       the `refs/heads/` and `refs/tags/` prefixes.
+    # WHY : The default, `auto`, decorates only when output is a terminal;
+    #       `short` also decorates piped output.
     decorate = short
 
 [blame]
-    # WHAT: Tint blame output by commit age.
+    # WHAT: Colour blame lines by commit age.
+    # WHY : Recent changes stand out from old ones. The default, `none`, does
+    #       not colour by age.
     coloring = highlightRecent
 
 [column]
-    # WHAT: Print branch/tag/status listings in columns when the terminal is
-    #       wide enough.
+    # WHAT: Print branch, tag, and status listings in columns when output is a
+    #       terminal.
+    # WHY : Long listings fit on one screen. The default, `never`, prints one
+    #       item per line.
     ui = auto
 
-# --- Colors ---------------------------------------------------------------------
+# --- Colours ---------------------------------------------------------------------
 [color]
+    # WHAT: Colour output when it goes to a terminal. `ui = true` means `auto`.
+    # WHY : Automatic colour has been the default since Git 1.8.4. The
+    #       per-command keys inherit from `ui` and are redundant; they are
+    #       listed so each family's switch is visible.
     ui = true
     diff = auto
     status = auto
@@ -231,93 +296,116 @@
 
 # --- Signing --------------------------------------------------------------------
 [gpg]
+    # WHAT: The signing program and signature format.
+    # WHY : OpenPGP with `gpg` is Git's default, stated beside minTrustLevel so
+    #       the signing setup is in one place. The alternatives are `ssh`
+    #       (signs with an SSH key) and `x509` (gpgsm).
     program = gpg
     format = openpgp
 
-    # WHAT: Minimum trust level a key needs before Git accepts its signature.
-    # WHY : `fully` rejects signatures from keys you have not personally
-    #       validated. See THE ONE GOTCHA in this file's header — this is the
-    #       setting that makes a missing/untrusted key a hard error.
-    # HOW : Loosen to `marginal` or `undefined` if verifying others' commits
-    #       is more useful to you than strictness.
+    # WHAT: Minimum trust level a key needs before Git accepts its signature
+    #       when verifying.
+    # WHY : `fully` rejects signatures from keys not fully trusted in the
+    #       local keyring. Unset, Git requires `marginal` for merges and
+    #       `undefined` (any key) elsewhere.
+    # HOW : Loosen to `marginal` or `undefined` to verify others' commits
+    #       without trusting their keys first.
     minTrustLevel = fully
 
 # --- Submodules -------------------------------------------------------------------
 [submodule]
+    # WHAT: Clone and fetch up to eight submodules at once.
+    # WHY : The default for `fetchJobs` is 1.
+    # NOTE: The key `recursive` is not a Git key; the documented one is
+    #       `submodule.recurse`, so this line has no effect. Rename it to make
+    #       checkout, pull, and the other commands that support
+    #       `--recurse-submodules` recurse by default.
     recursive = true
     fetchJobs = 8
 
 [grep]
+    # WHAT: Worker threads for `git grep`.
+    # WHY : Unset, Git uses one thread per logical core; 8 caps the count on a
+    #       machine with more cores.
     threads = 8
 
 # --- Custom log formats ------------------------------------------------------------
-# WHAT: Named --pretty formats, used by the `history` and `logs` aliases below.
+# WHAT: Named --pretty formats used by the `history` and `logs` aliases below.
+#       `history` is one line per commit: hash, human-style date (`%ah`),
+#       subject, author, refs. `logs` is a multi-line form with absolute and
+#       relative dates and the body.
 # HOW : `git log --pretty=history` works anywhere once defined here.
 [pretty]
     history = [%C(yellow)%h%C(reset)] [%C(cyan)%ah%C(reset)] %C(bold white)%s%C(reset) (%C(dim white)%an%C(reset))%C(auto)%d%C(reset)
     logs = Commit %C(yellow)%h%C(reset) by %C(dim white)%an%C(reset) (%C(dim white)%ae%C(reset))%C(auto)%d%C(reset)%nOn %C(cyan)%ai%C(reset) (%C(green)%ar%C(reset)) %n%n%w(0,4,4)%C(bold white)%s%C(reset)%n%n%C(white)%b%C(reset)
 
 # --- Aliases -----------------------------------------------------------------------
-# Safe, everyday shortcuts.
 [alias]
+    # Graph of one-line commits, in the `history` format above.
     history = log --graph --color=always --pretty=history
+    # Graph of full commits, in the `logs` format above.
     logs = log --graph --color=always --pretty=logs
+    # Stage everything, including deletions.
     all = add --all
+    # Fold the staged changes into the last commit, keeping its message.
     amend = commit --amend --no-edit
+    # As `amend`, but open the editor to change the message.
     eamend = commit --amend
+    # Pull with rebase and prune deleted remote branches. The `+` in the
+    # fetch refspec already forces branch tracking refs; `--force` also lets
+    # tags that moved upstream update.
     fpull = pull --force --rebase --prune
 
-    # WHAT: Force-push that REFUSES to overwrite commits you have not seen.
-    # WHY : Prefer this over `fpush`. If a colleague pushed since your last
-    #       fetch, this aborts instead of destroying their work.
+    # WHAT: Force-push that refuses to overwrite commits not yet fetched.
+    # WHY : If someone pushed since the last fetch, this aborts instead of
+    #       discarding their work. Prefer it over `fpush`.
     spush = push --force-with-lease
 
     # ---------------------------------------------------------------------------
-    # DESTRUCTIVE — these discard work irreversibly. Read before using.
+    # DESTRUCTIVE: these discard work irreversibly.
     # ---------------------------------------------------------------------------
-    # fpush      Overwrites the remote branch unconditionally. Any commits on
-    #            the remote you don't have locally are GONE. Prefer `spush`.
+    # fpush      Overwrites the remote branch unconditionally; remote commits
+    #            not held locally are lost. Prefer `spush`.
     fpush = push --force
 
-    # fpushall   The same, for EVERY branch at once. There is no undo.
+    # fpushall   The same, for every branch at once.
     fpushall = push --force --all
 
-    # purge      Deletes all untracked files and directories in the worktree
-    #            (ignored files are kept). Run `git clean -nd` first to preview.
+    # purge      Deletes all untracked files and directories; ignored files are
+    #            kept. Preview with `git clean -nd`.
     purge = clean --quiet --force -d
 
-    # obliterate Throws away every uncommitted change, staged or not.
+    # obliterate Discards every uncommitted change, staged or not.
     obliterate = reset --hard
 
-# --- Work identity (uncommitted, machine-local) --------------------------------------
-# WHAT: For any repository under ~/work/, load extra config that overrides the
-#       personal [user] block above with the work name/email/signing key.
-# WHY : Makes the switch automatic — no per-repo `git config user.email` to
-#       remember, and no commits accidentally authored under the wrong name.
-# HOW : config.work sits next to this file and is stowed into place with it,
-#       so this works on a fresh clone with no extra setup. If the file is ever
-#       missing Git silently skips the include and the personal identity
-#       applies everywhere. Verify with:
+# --- Work identity ---------------------------------------------------------------
+# WHAT: For any repository under ~/work/, load config.work, whose [user] block
+#       overrides the personal name, email, and signing key above.
+# WHY : The identity depends on the directory, so no per-repository
+#       `git config user.email` and no commits under the wrong identity.
+# HOW : config.work sits next to this file and is stowed with it. If it is
+#       missing, Git skips the include and the personal identity applies.
+#       Verify with:
 #           cd ~/work/anything && git config --get user.email
-# NOTE: The trailing slash matters — it makes this match the directory's
-#       contents. The path is absolute so it resolves correctly even though
-#       this file is a symlink into the dotfiles repo.
+# NOTE: The trailing slash makes `gitdir:` match the directory's contents. The
+#       path is absolute so it resolves although this file is a symlink into
+#       the dotfiles repo.
 [includeIf "gitdir:~/work/"]
     path = ~/.config/git/config.work
+
 # --- Git LFS ---------------------------------------------------------------------
-# WHAT: The clean/smudge filters that route large files through Git LFS.
-# WHY : Written here by `git lfs install`, which edits the GLOBAL config — and
-#       this file is the global config. Kept rather than reverted, because LFS
-#       has to be armed before any repository commits a tracked file: without
-#       these filters a .gitattributes rule is silently ignored and the raw
-#       binaries go into git history with no error. The fonts repository
-#       (git@github.com:cristiancristea00/fonts.git) depends on it, and
-#       git-lfs is in the Brewfile.
+# WHAT: The clean and smudge filters that route large files through Git LFS.
+# WHY : `git lfs install` writes this block into the global config, which is
+#       this file. It stays because LFS must be set up before any repository
+#       commits a tracked file: without the filters a .gitattributes rule is
+#       ignored and the binaries enter history with no error. The fonts
+#       repository install.sh fetches from depends on it; git-lfs is in the
+#       Brewfile.
 # HOW : `required = true` makes a missing git-lfs binary a hard error rather
-#       than a silent pass-through of pointer files. Verify on a new machine:
+#       than a silent checkout of pointer files. Verify on a new machine:
 #           git config --get filter.lfs.process   # must be non-empty
-# NOTE: Reformatted from the tabs git-lfs wrote to this file's 4-space style.
-#       Re-running `git lfs install` will rewrite it with tabs again.
+# NOTE: `git lfs install` rewrites this block with tabs; this file uses four
+#       spaces.
 [filter "lfs"]
     clean = git-lfs clean -- %f
     smudge = git-lfs smudge -- %f

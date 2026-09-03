@@ -2,26 +2,18 @@
 # git/config.work — work identity
 # ==============================================================================
 #
-# WHAT: The Git identity used for every repository under ~/work/. Pulled in by
-#       the [includeIf "gitdir:~/work/"] directive at the bottom of `config`,
-#       which is evaluated last and therefore overrides the personal [user]
-#       block defined there.
-# WHY : Kept in its own file rather than inline so the switch is declarative
-#       and visible: one file is "who I am by default", this one is "who I am
-#       at work", and the directory decides.
-# HOW : Verify which identity applies where:
-#           cd ~/work/<any-repo> && git config --get user.email   # this file
-#           cd ~                 && git config --get user.email   # personal
-#       To extend the rule to another directory, add a second [includeIf] in
-#       `config` pointing here (or at a third file).
-#
-# NOTE: This file is COMMITTED, so the work email and public key fingerprint
-#       are part of the repository. A key fingerprint is public by design —
-#       that is what makes signatures verifiable — but the email address is
-#       harvestable if this repo is ever published. To make it local-only
-#       again: `git rm --cached git/.config/git/config.work`, add it to
-#       .gitignore, and keep the working copy in place — the includeIf keeps
-#       working either way, because a missing include is silently skipped.
+# WHAT: The Git identity for every repository under ~/work/. The
+#       [includeIf "gitdir:~/work/"] block in `config` loads it after the
+#       personal [user] block, so these values win there.
+# WHY : A separate file can be made local-only (see NOTE) without editing
+#       `config`, and the [includeIf] block in `config` documents the
+#       mechanism and the verification command.
+# HOW : To apply the identity to another directory, add a second [includeIf]
+#       in `config` pointing here or at a third file.
+# NOTE: This file is committed, so the work email and public key fingerprint
+#       are in the repository. To make it local-only: `git rm --cached
+#       git/.config/git/config.work`, add it to .gitignore, and keep the
+#       working copy in place; Git skips a missing include.
 # ==============================================================================
 
 [user]

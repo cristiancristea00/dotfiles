@@ -17,8 +17,8 @@ require("ibl").setup({
     scope = { enabled = false },
 
     -- WHAT: Filetypes that get no guides.
-    -- WHY : The list merges with the plugin's defaults (:h ibl.setup: "List
-    --       values get merged with the default list value"), which already
+    -- WHY : The list merges with the plugin's defaults (indent_blankline.txt:
+    --       "List values get merged with the default list value"), which already
     --       cover help, man, checkhealth, gitcommit, lspinfo, and the empty
     --       filetype; neo-tree is the one addition, and the rest are repeats.
     exclude = { filetypes = { "help", "man", "checkhealth", "neo-tree" } },

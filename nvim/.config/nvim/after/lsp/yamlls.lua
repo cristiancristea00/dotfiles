@@ -33,8 +33,8 @@ return {
             -- },
 
             -- WHAT: The server's built-in formatter.
-            -- WHY : Off. nvim-lspconfig turns the server's formatter on (the
-            --       server's own default is off); <leader>F uses yamlfmt
+            -- WHY : Off. Both nvim-lspconfig's yamlls config and the server's
+            --       README default it to on; <leader>F uses yamlfmt
             --       (lua/languages.lua, Brewfile) instead.
             format = { enable = false },
         },

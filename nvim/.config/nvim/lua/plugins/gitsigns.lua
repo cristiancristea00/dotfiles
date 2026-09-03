@@ -2,19 +2,17 @@
   plugins/gitsigns.lua — gitsigns (git integration)
   ============================================================================
 
-  Shows changed/added/removed lines in the sign column, and provides hunk-
-  level actions (stage, reset, preview, blame). This is the whole git story
-  of this config by choice — commits/rebases happen in the terminal.
-
-  The statusline branch component (plugins/statusline.lua) reads git data
-  independently; gitsigns covers the buffer-level view.
+  Shows added, changed, and removed lines in the sign column and provides
+  hunk-level actions (stage, reset, preview, blame). It is the only git
+  plugin here; commits and rebases happen in the terminal. The statusline's
+  branch component (plugins/statusline.lua) reads git data on its own.
 ===========================================================================]]--
 
 local gitsigns = require("gitsigns")
 
 gitsigns.setup({
-    -- WHAT: The gutter glyphs. Defaults are subtle bars; kept explicit here so
-    --       they're easy to restyle.
+    -- WHAT: The gutter glyphs per change type.
+    -- WHY : These are gitsigns's defaults, stated so they can be restyled here.
     signs = {
         add = { text = "┃" },
         change = { text = "┃" },
@@ -24,19 +22,23 @@ gitsigns.setup({
         untracked = { text = "┆" },
     },
 
-    -- WHAT: Ghost-text blame ("author, time • message") at the end of the
-    --       current line. OFF by default — toggle with <leader>gB below.
+    -- WHAT: Blame text ("author, time - message") at the end of the current
+    --       line, after `delay` ms.
+    -- WHY : Off (the default); <leader>gB below toggles it. 500 ms is half the
+    --       default delay of 1000.
     current_line_blame = false,
     current_line_blame_opts = { delay = 500 },
 
-    -- WHAT: Buffer-local keymaps, created only when gitsigns actually attaches
-    --       (i.e. the file is inside a git repo) — the idiomatic gitsigns setup.
+    -- WHAT: Buffer-local keymaps, created when gitsigns attaches (the file is
+    --       in a git repository).
+    -- WHY : The maps exist only where they work; outside a repository
+    --       <leader>g* stays free.
     on_attach = function(bufnr)
         local function bufmap(mode, lhs, rhs, desc)
             vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, desc = desc })
         end
 
-        -- Navigation between hunks (falls back to normal ]c/[c in diff mode).
+        -- Hunk navigation; in diff mode the built-in ]c and [c are used instead.
         bufmap("n", "]h", function()
             if vim.wo.diff then
                 vim.cmd.normal({ "]c", bang = true })
@@ -52,7 +54,7 @@ gitsigns.setup({
             end
         end, "Previous git hunk")
 
-        -- Hunk actions: the <leader>g "git" family.
+        -- Hunk actions, the <leader>g "git" family; the desc names each one.
         bufmap("n", "<leader>gs", gitsigns.stage_hunk, "Stage hunk (again to unstage)")
         bufmap("n", "<leader>gr", gitsigns.reset_hunk, "Reset hunk")
         bufmap("v", "<leader>gs", function()

@@ -1,47 +1,45 @@
 --[[===========================================================================
-  plugins/init.lua — plugin declarations (vim.pack) + module loading
+  plugins/init.lua — plugin declarations (vim.pack) and module loading
   ============================================================================
 
-  This config uses Neovim 0.12's BUILT-IN plugin manager, vim.pack (:h vim.pack).
-  No bootstrap code is needed: the first `vim.pack.add()` call clones anything
-  missing (confirmation prompt on first install), records exact versions in
-  nvim-pack-lock.json next to init.lua (commit that file!), and loads the
-  plugins immediately.
+  Plugins are managed by Neovim 0.12's built-in vim.pack (:h vim.pack). The
+  first `vim.pack.add()` call clones anything missing (with a confirmation
+  prompt), records exact versions in nvim-pack-lock.json next to init.lua
+  (committed), and loads the plugins.
 
-  Daily driving:
-    :lua vim.pack.update()          -- fetch updates, review them in a buffer,
-                                       :write to apply, :quit to reject
+  Commands:
+    :lua vim.pack.update()          -- fetch updates and review them in a
+                                       buffer; :write applies, :quit rejects
     :lua vim.pack.update(nil, { target = "lockfile" })
                                     -- roll everything back to the lockfile
-    :lua vim.pack.del({ "name" })   -- remove a plugin's files (after deleting
-                                       its spec below, or it reinstalls)
-    :checkhealth vim.pack           -- diagnose install/lockfile issues
+    :lua vim.pack.del({ "name" })   -- remove a plugin's files, after deleting
+                                       its spec below (or it reinstalls)
+    :checkhealth vim.pack           -- diagnose install and lockfile issues
 
   ── ADD A PLUGIN ────────────────────────────────────────────────────────────
-    1. Append a spec to the vim.pack.add() list below.
-         "https://github.com/user/repo"                     -- simplest form
+    1. Append a spec to the vim.pack.add() list below:
+         "https://github.com/user/repo"                     -- default branch
          { src = "…", version = "branch-or-tag" }           -- pinned
          { src = "…", version = vim.version.range("*") }    -- latest release tag
-    2. Create lua/plugins/<name>.lua with its setup()/keymaps, documented.
+    2. Create lua/plugins/<name>.lua with its setup() and keymaps.
     3. require() it at the bottom of this file.
-    Deleting a plugin is the same three places in reverse, then :lua
-    vim.pack.del({ "<name>" }).
+    Removing a plugin is the same three places in reverse, then
+    :lua vim.pack.del({ "<name>" }).
 
-  DESIGN NOTE — no lazy loading: everything loads eagerly at startup. With
-  this plugin count, startup stays well under ~100ms, and eager loading
-  removes an entire class of "plugin X wasn't loaded yet" bugs. vim.pack's
-  author recommends lazy-loading only sparingly. If startup ever feels slow,
-  measure first: `nvim --startuptime /tmp/st.log`.
+  Everything loads at startup; there is no lazy loading. A headless start
+  with every plugin measures about 80 ms (`nvim --startuptime /tmp/st.log`),
+  and eager loading avoids load-order bugs.
 ===========================================================================]]--
 
--- Hooks must exist BEFORE vim.pack.add() so they also fire for first-time
--- installs happening inside that very call.
+-- WHAT: Recompile treesitter parsers whenever nvim-treesitter is installed or
+--       updated.
+-- WHY : Parsers are compiled artefacts tied to the plugin version, and stale
+--       ones break highlighting. The hook is registered before vim.pack.add()
+--       so it also fires for a first-time install inside that call.
 vim.api.nvim_create_autocmd("PackChanged", {
     group = vim.api.nvim_create_augroup("cfg_pack_hooks", { clear = true }),
     desc = "Recompile treesitter parsers when nvim-treesitter is installed/updated",
     callback = function(ev)
-        -- Parsers are compiled artifacts tied to the plugin version; stale ones
-        -- break highlighting, so resync them on every install/update.
         if ev.data.spec.name == "nvim-treesitter" and ev.data.kind ~= "delete" then
             if not ev.data.active then
                 vim.cmd.packadd("nvim-treesitter")
@@ -54,47 +52,40 @@ vim.api.nvim_create_autocmd("PackChanged", {
 })
 
 vim.pack.add({
-    -- ── LSP ──────────────────────────────────────────────────────────────────
-    -- Data-only on 0.11+: provides default configs (cmd/filetypes/root markers)
-    -- for ~400 servers, consumed by the NATIVE vim.lsp.enable() API. Our
-    -- overrides live in this config's lsp/*.lua. See plugins/lsp.lua.
+    -- LSP server configs (cmd, filetypes, root markers) for about 400 servers,
+    -- consumed by the native vim.lsp.enable(); see plugins/lsp.lua.
     "https://github.com/neovim/nvim-lspconfig",
 
-    -- ── Treesitter (syntax highlighting / indent / folds) ────────────────────
-    -- The rewritten "main" branch (requires Neovim 0.12; old "master" is
-    -- frozen). Provides parser management; activation is manual and lives in
-    -- plugins/treesitter.lua, driven by lua/languages.lua.
+    -- Treesitter parser management. The rewritten `main` branch (needs Neovim
+    -- 0.12; `master` is frozen). Activation is in plugins/treesitter.lua.
     { src = "https://github.com/nvim-treesitter/nvim-treesitter", version = "main" },
 
-    -- ── Fuzzy finder ─────────────────────────────────────────────────────────
-    -- fzf-lua: files/grep/buffers/LSP pickers on the fzf binary (Brewfile).
+    -- Fuzzy finder on the fzf binary (Brewfile); see plugins/fzf.lua.
     "https://github.com/ibhagwan/fzf-lua",
 
-    -- ── File explorer (neo-tree) and its libraries ───────────────────────────
-    -- plenary (utility functions) and nui (UI widgets) are required by
-    -- neo-tree; nvim-web-devicons supplies Nerd Font file icons (also used by
-    -- fzf-lua and lualine). Listed before neo-tree: vim.pack loads in order.
+    -- neo-tree's libraries, listed first because vim.pack loads in order:
+    -- plenary (utility functions), nui (UI widgets), and nvim-web-devicons
+    -- (Nerd Font file icons, also used by fzf-lua and lualine).
     "https://github.com/nvim-lua/plenary.nvim",
     "https://github.com/MunifTanjim/nui.nvim",
     "https://github.com/nvim-tree/nvim-web-devicons",
+    -- File explorer; see plugins/neotree.lua.
     "https://github.com/nvim-neo-tree/neo-tree.nvim",
 
-    -- ── Completion ───────────────────────────────────────────────────────────
-    -- blink.cmp, pinned to its latest RELEASE TAG (not the main branch): each
+    -- Completion, pinned to the latest release tag rather than `main`: each
     -- tagged release ships a prebuilt Rust fuzzy-matcher binary that blink
-    -- downloads for exactly that tag. Tracking main would require a Rust
-    -- nightly toolchain to build the matcher. See plugins/completion.lua.
+    -- downloads for that tag, and `main` would need a Rust nightly toolchain
+    -- to build it. See plugins/completion.lua.
     { src = "https://github.com/saghen/blink.cmp", version = vim.version.range("*") },
 
-    -- ── UI / editing ─────────────────────────────────────────────────────────
     "https://github.com/nvim-lualine/lualine.nvim", -- statusline (plugins/statusline.lua)
-    "https://github.com/lewis6991/gitsigns.nvim", -- git gutter + hunk actions (plugins/gitsigns.lua)
+    "https://github.com/lewis6991/gitsigns.nvim", -- git gutter and hunk actions (plugins/gitsigns.lua)
     "https://github.com/stevearc/conform.nvim", -- manual formatting (plugins/conform.lua)
     "https://github.com/lukas-reineke/indent-blankline.nvim", -- indent guides (plugins/indent.lua)
 })
 
--- Per-plugin configuration. Order: completion first so it can register its
--- LSP capabilities before plugins/lsp.lua enables the servers.
+-- Per-plugin configuration. The completion module loads before lsp so its
+-- LSP capabilities are registered before the servers are enabled.
 require("plugins.treesitter")
 require("plugins.completion")
 require("plugins.lsp")

@@ -1,30 +1,31 @@
 --[[===========================================================================
-  plugins/fzf.lua — fzf-lua (fuzzy finding & searching)
+  plugins/fzf.lua — fzf-lua (fuzzy finding and searching)
   ============================================================================
 
-  fzf-lua drives everything through the fzf binary (Brewfile), using your
-  installed ripgrep for grepping and fd for file listing — so results honour
-  .gitignore automatically.
+  fzf-lua runs the fzf binary (Brewfile), with ripgrep for grepping and fd
+  for file listing, so results follow .gitignore.
 
-  All pickers share the same keys inside the picker window:
+  Keys inside every picker:
     <CR> open   <C-v> vsplit   <C-s> split   <C-t> tab
     <C-q> send results to quickfix   <Tab> multi-select
-  Every picker not mapped below is reachable via :FzfLua <Tab>.
+  Pickers not mapped below are reachable through :FzfLua <Tab>.
 ===========================================================================]]--
 
 local fzf = require("fzf-lua")
 
--- WHAT: Empty setup = fzf-lua's defaults, which are excellent (previews via
---       treesitter, icons via nvim-web-devicons). Add overrides here later,
---       e.g. `winopts = { height = 0.9 }` — see :h fzf-lua-setup-options.
+-- WHAT: Set up fzf-lua with its defaults.
+-- WHY : The defaults already preview through treesitter and show icons from
+--       nvim-web-devicons. Overrides go here, e.g. `winopts = { height = 0.9 }`
+--       (:h fzf-lua-setup-options).
 fzf.setup({})
 
--- WHAT: Use the fzf picker for vim.ui.select(), so anything that asks you to
---       pick from a list (code actions via gra, etc.) gets fuzzy search too.
+-- WHAT: Use the fzf picker for vim.ui.select().
+-- WHY : Anything that asks for a choice from a list (e.g. code actions on gra)
+--       then gets fuzzy search instead of the built-in numbered prompt.
 fzf.register_ui_select()
 
--- Keymaps: the <leader>f "find" family ----------------------------------------
--- Reorder/extend freely — each entry is independent.
+-- Keymaps: the <leader>f "find" family. Each entry is independent; the desc
+-- names what it opens.
 local map = vim.keymap.set
 map("n", "<leader>ff", fzf.files, { desc = "Find files" })
 map("n", "<leader>fg", fzf.live_grep, { desc = "Grep project (live)" })

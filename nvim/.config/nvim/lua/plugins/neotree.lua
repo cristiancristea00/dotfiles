@@ -2,30 +2,35 @@
   plugins/neotree.lua — neo-tree (file explorer sidebar)
   ============================================================================
 
-  IDE-style file tree with git status and Nerd Font icons. Depends on
-  plenary.nvim + nui.nvim + nvim-web-devicons (declared in plugins/init.lua).
+  File tree with git status and Nerd Font icons. Depends on plenary.nvim,
+  nui.nvim, and nvim-web-devicons (declared in plugins/init.lua).
 
-  Inside the tree (defaults worth knowing — press ? in the tree for all):
+  Keys inside the tree (? lists all):
     <CR> open        a  add file (trailing / = dir)   d  delete
     r    rename      x/c/p cut/copy/paste             H  toggle hidden files
     P    preview     /  filter                        R  refresh
 ===========================================================================]]--
 
 require("neo-tree").setup({
-    -- WHAT: If the tree is the last window left (e.g. after :q in the only file
-    --       window), close it too instead of leaving a stranded sidebar.
+    -- WHAT: Close the tree when it is the last window left.
+    -- WHY : After :q in the only file window, Neovim would otherwise stay open
+    --       showing only the sidebar. Off by default.
     close_if_last_window = true,
 
     filesystem = {
-        -- WHAT: Keep the tree in sync with the buffer you're editing.
+        -- WHAT: Select the current buffer's file in the tree as buffers change.
+        -- WHY : Off by default. On, the tree keeps up when a file is opened
+        --       through fzf or a jump rather than from the tree.
         follow_current_file = { enabled = true },
-        -- WHAT: Watch the filesystem (libuv) and refresh automatically when files
-        --       change outside Neovim (git checkout, build output, ...).
+        -- WHAT: Watch the filesystem with libuv and refresh when files change
+        --       outside Neovim (git checkout, build output).
+        -- WHY : Off by default, so the tree would show stale entries until a
+        --       manual refresh.
         use_libuv_file_watcher = true,
         filtered_items = {
-            -- WHAT: Show dotfiles/gitignored entries greyed-out rather than hiding
-            --       them completely — this IS a dotfiles repo, after all. `H`
-            --       still toggles full visibility.
+            -- WHAT: Show dotfiles and gitignored entries, dimmed, instead of
+            --       hiding them; H toggles full visibility.
+            -- WHY : This is a dotfiles repository. The defaults hide both.
             visible = true,
             hide_dotfiles = false,
             hide_gitignored = false,
@@ -33,11 +38,15 @@ require("neo-tree").setup({
     },
 
     window = {
-        -- WHAT: Sidebar position and width. `position = "right"` / `"float"` also work.
+        -- WHAT: Sidebar position and width in columns.
+        -- WHY : Left is the default; 34 is narrower than the default 40 and
+        --       still fits the repo's longest file names. "right" and "float"
+        --       also work.
         position = "left",
         width = 34,
     },
 })
 
 -- WHAT: Toggle the sidebar; `reveal` selects the current file in the tree.
+-- WHY : The plugin maps no key of its own; <leader>e is the only map it needs.
 vim.keymap.set("n", "<leader>e", "<cmd>Neotree toggle reveal<CR>", { desc = "Toggle file explorer" })

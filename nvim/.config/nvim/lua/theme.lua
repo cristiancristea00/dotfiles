@@ -2,65 +2,55 @@
   theme.lua — colorscheme selection
   ============================================================================
 
-  Current choice: Catppuccin, in the Latte (light) and Mocha (dark)
-  flavours used by every other tool in this repo — Ghostty, bat, Zed and
-  delta all name the same pair, so one palette follows you from the terminal
-  to the editor to a git diff.
+  Catppuccin, in the Latte (light) and Mocha (dark) flavours the rest of the
+  stack uses; see ../../../../README.md § Light and dark.
 
   WHY THIS FILE DECLARES ITS OWN PLUGIN
-    init.lua loads this module BEFORE lua/plugins/, so a plain
-    require("catppuccin") here would fail on a cold clone — the plugin would
-    not be on the runtimepath yet. Rather than reorder the config and make
-    every other module's loading depend on the colorscheme, this file calls
-    vim.pack.add() itself. Adding a plugin twice is a no-op (the first call
-    wins), so listing it here and in lua/plugins/init.lua would be harmless —
-    but it is declared only here, next to the code that needs it.
+    The init.lua entry point loads this module before lua/plugins/, so a plain
+    require("catppuccin") would fail on a fresh clone: the plugin is not on
+    the runtimepath yet. This file therefore calls vim.pack.add() itself.
+    Adding a plugin twice is a no-op, the first call winning, so it could
+    also be listed in lua/plugins/init.lua; it is declared only here, next
+    to the code that needs it.
 
   THE `name` KEY IS REQUIRED
-    vim.pack derives a plugin's directory from the last segment of its URL.
-    For catppuccin/nvim that segment is literally "nvim", which would install
-    it as a plugin called "nvim". `name = "catppuccin"` fixes that, and is
-    what makes require("catppuccin") resolve.
+    The vim.pack manager names a plugin's directory after the last segment
+    of its URL, which for catppuccin/nvim is "nvim". `name = "catppuccin"`
+    gives the directory the name require("catppuccin") looks for.
 
-  HOW TO SWITCH THEMES — three steps:
+  HOW TO SWITCH THEMES
+    Change `src` and `name` in vim.pack.add() (e.g.
+    { src = "https://github.com/rebelot/kanagawa.nvim", name = "kanagawa" }),
+    replace or delete the setup() block, and change the `colorscheme`
+    variable. For a built-in scheme ("default", "habamax", "retrobox",
+    "sorbet", "slate") delete the vim.pack.add() and setup() blocks and set the
+    variable; `:colorscheme <Tab>` lists them.
 
-    1. Change the `src` and `name` in the vim.pack.add() call below, e.g.:
-         { src = "https://github.com/rebelot/kanagawa.nvim", name = "kanagawa" }
-
-    2. Replace the setup() block with whatever that theme needs, or delete it
-       if it needs none.
-
-    3. Change the single variable below, e.g.:
-         local colorscheme = "kanagawa"
-
-    To go back to a built-in that needs no plugin at all — "default",
-    "habamax", "retrobox", "sorbet", "slate" — delete the vim.pack.add() and
-    setup() blocks entirely and just set the variable. (:h colorscheme, then
-    :colorscheme <Tab> to browse.)
-
-  Light/dark: `flavour = "auto"` makes Catppuccin read vim.o.background, so it
-  flips between Latte and Mocha exactly as the built-in default scheme did.
-  Neovim under Neovide and modern terminals detects the OS appearance; force it
-  with `vim.o.background = "light"` (or "dark") above the colorscheme line.
-  lualine (plugins/statusline.lua) uses theme = "auto" and follows along.
+  Light and dark: `flavour = "auto"` reads vim.o.background, which Neovide and
+  modern terminals set from the OS appearance. Force one with
+  `vim.o.background = "light"` (or "dark") above the colorscheme line. lualine
+  (plugins/statusline.lua) uses theme = "auto" and follows.
 ===========================================================================]]--
 
+-- WHAT: The colorscheme name passed to :colorscheme below.
+-- WHY : One variable, so switching themes changes one line plus the plugin
+--       spec.
 local colorscheme = "catppuccin"
 
--- WHAT: Install and load the colorscheme plugin.
--- WHY : Wrapped in pcall so a network failure or a missing plugin degrades to
---       the built-in default with a warning, rather than aborting the whole
---       config before options, keymaps and LSP have loaded.
+-- WHAT: Install and configure the colorscheme plugin.
+-- WHY : Wrapped in pcall so a network failure or a missing plugin leaves the
+--       built-in default with a warning instead of aborting the rest of the
+--       config (options, keymaps, LSP) before it loads.
 pcall(function()
     vim.pack.add({
         { src = "https://github.com/catppuccin/nvim", name = "catppuccin" },
     })
 
     require("catppuccin").setup({
-        -- WHAT: Which flavour to use. "auto" picks from `background`.
-        -- WHY : Keeps the light/dark following the rest of the stack has.
-        -- HOW : Pin one of "latte", "frappe", "macchiato", "mocha" instead if
-        --       you never switch appearance.
+        -- WHAT: Which flavour to use; "auto" picks from `background`.
+        -- WHY : Follows the appearance with the rest of the stack.
+        -- HOW : Pin one of "latte", "frappe", "macchiato", "mocha" to ignore
+        --       the appearance.
         flavour = "auto",
         background = {
             light = "latte",
@@ -69,8 +59,9 @@ pcall(function()
     })
 end)
 
--- pcall so a typo or a not-yet-installed theme plugin degrades to a warning
--- instead of aborting the rest of the config load.
+-- WHAT: Apply the colorscheme.
+-- WHY : Wrapped in pcall for the same reason as above: a misspelt or
+--       uninstalled theme warns instead of aborting the load.
 local ok = pcall(vim.cmd.colorscheme, colorscheme)
 if not ok then
     vim.notify(("theme.lua: colorscheme %q not found, using default"):format(colorscheme), vim.log.levels.WARN)

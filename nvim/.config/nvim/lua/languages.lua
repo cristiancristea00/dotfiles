@@ -1,156 +1,145 @@
 --[[===========================================================================
-  languages.lua — THE language table
+  languages.lua — the language table
   ============================================================================
 
-  Single source of truth for language support. Every entry here drives:
+  One entry per language drives:
 
-    * treesitter parser installation + syntax highlighting, indentation and
-      folding                        (consumed by lua/plugins/treesitter.lua)
+    * treesitter parser installation, highlighting, indentation, and folding
+                                     (consumed by lua/plugins/treesitter.lua)
     * LSP server activation          (consumed by lua/plugins/lsp.lua)
     * manual formatting (<leader>F)  (consumed by lua/plugins/conform.lua)
+    * filetype detection             (consumed by lua/core/filetypes.lua)
 
   ── ADD A LANGUAGE ──────────────────────────────────────────────────────────
-    1. Append an entry below (all fields except `name`/`filetypes` optional).
-    2. Install its LSP server binary (add it to the Brewfile and `brew bundle`,
-       or any way you like — it just has to be on $PATH).
-    3. If nvim-lspconfig has no config for the server (it has ~400, check
+    1. Append an entry below; every field except `name` and `filetypes` is
+       optional.
+    2. Install its LSP server binary (add it to the Brewfile and run
+       `brew bundle`); it has to be on $PATH.
+    3. If nvim-lspconfig has no config for the server (it has about 400; see
        https://github.com/neovim/nvim-lspconfig/tree/master/lsp), define one
-       in this config's own after/lsp/<server>.lua.
-    4. Restart Neovim. The treesitter parser compiles automatically on first
-       start (needs the tree-sitter CLI + a C compiler — both in the Brewfile).
+       in after/lsp/<server>.lua.
+    4. Restart Neovim. The treesitter parser compiles on first start, which
+       needs the tree-sitter CLI and a C compiler (both in the Brewfile).
 
   ── REMOVE A LANGUAGE ───────────────────────────────────────────────────────
-    Delete (or comment out) its entry. Optionally uninstall the server binary
-    and `:lua require("nvim-treesitter").uninstall({"<parser>"})`.
+    Delete the entry. Optionally uninstall the server binary and run
+    `:lua require("nvim-treesitter").uninstall({"<parser>"})`.
 
   ── ENTRY FIELDS ────────────────────────────────────────────────────────────
     name           A label for humans; not used programmatically.
     filetypes      Neovim filetypes this entry covers (:h filetype). Used to
-                   attach treesitter highlighting/indent/folds and to route
-                   formatters. Find a file's filetype with :set ft?
-    parsers        Treesitter parser names to install. Usually — but not
-                   always — equal to the filetype (see git below). Available
-                   parsers: :lua =require("nvim-treesitter").get_available()
-    parser_aliases Map of filetype -> parser for filetypes that should reuse
-                   another language's parser (e.g. zsh -> bash).
-    servers        LSP servers to enable, by nvim-lspconfig config name (file
-                   name in its lsp/ dir). Which filetypes a server attaches to
-                   is defined by the server's own config, not by this entry.
+                   attach treesitter and to route formatters. `:set ft?`
+                   shows a buffer's filetype.
+    parsers        Treesitter parsers to install. Usually equal to the
+                   filetype, not always (see Git files below). Available:
+                   :lua =require("nvim-treesitter").get_available()
+    parser_aliases Map of filetype -> parser for filetypes that reuse another
+                   language's parser (zsh -> bash).
+    servers        LSP servers to enable, by nvim-lspconfig config name (the
+                   file name in its lsp/ directory). Which filetypes a server
+                   attaches to comes from the server's config, not this entry.
     formatters     conform.nvim formatter names, run in order by <leader>F
-                   (names: https://github.com/stevearc/conform.nvim#formatters
-                   or :h conform-formatters). The binaries are optional —
-                   missing ones fall back to LSP formatting.
+                   (:h conform-formatters). A missing binary falls back to LSP
+                   formatting.
     extensions     Optional map of file extension -> filetype, for files
-                   Neovim does not already recognise. Consumed by
-                   lua/core/filetypes.lua via vim.filetype.add().
+                   Neovim does not recognise. Consumed by lua/core/filetypes.lua.
     filenames      Optional map of exact file name -> filetype, same consumer.
     patterns       Optional map of Lua pattern (matched against the full path)
-                   -> filetype, same consumer. Use for rotated or
-                   directory-scoped files.
+                   -> filetype, same consumer. For rotated or directory-scoped
+                   files.
 ===========================================================================]]--
 
 return {
+    -- C-family: clangd for all four filetypes, clang-format for formatting.
     {
         name = "C / C++ / Objective-C / Objective-C++",
         filetypes = { "c", "cpp", "objc", "objcpp" },
-        parsers = { "c", "cpp", "objc" }, -- objcpp highlights fine via the cpp/objc parsers
-        servers = { "clangd" }, -- Apple's clangd from Xcode; see after/lsp/clangd.lua
+        parsers = { "c", "cpp", "objc" }, -- objcpp is highlighted by the cpp and objc parsers
+        servers = { "clangd" }, -- Apple's clangd from Xcode on macOS; see after/lsp/clangd.lua
         formatters = { "clang_format" }, -- reads the project's .clang-format
     },
+    -- CMake, the C-family build system.
     {
         name = "CMake",
-        -- Sits next to C/C++ because it is that stack's build system: the
-        -- CMakeLists.txt beside the sources above.
         filetypes = { "cmake" },
         parsers = { "cmake" },
-        -- neocmakelsp, not cmake-language-server. Both exist as formulae and
-        -- both have nvim-lspconfig entries, but Zed's `neocmake` extension
-        -- drives the same binary, so the two editors report identical
-        -- diagnostics on the same file. It is also a single Rust binary rather
-        -- than a Python package.
+        -- Preferred to cmake-language-server: both have formulae and
+        -- nvim-lspconfig entries, but Zed's `neocmake` extension drives the
+        -- same binary, so the two editors report identical diagnostics. It is
+        -- a single Rust binary rather than a Python package.
         servers = { "neocmake" }, -- brew install neocmakelsp
-        -- neocmakelsp formats through the LSP (textDocument/formatting), so
-        -- <leader>F works without a separate conform formatter.
+        -- The server formats through the LSP, so <leader>F works without a
+        -- conform formatter.
         formatters = {},
     },
+    -- Swift: sourcekit-lsp from Xcode, restricted to Swift buffers.
     {
         name = "Swift",
         filetypes = { "swift" },
         parsers = { "swift" },
-        servers = { "sourcekit" }, -- ships with Xcode; restricted to Swift in after/lsp/sourcekit.lua
-        formatters = { "swift_format" }, -- Apple's swift-format: in the Brewfile, and
-                                                                          -- also bundled with the Xcode toolchain
+        servers = { "sourcekit" }, -- ships with Xcode; see after/lsp/sourcekit.lua
+        -- Apple's swift-format, in the Brewfile and bundled with Xcode.
+        formatters = { "swift_format" },
     },
+    -- Rust: rust-analyzer and rustfmt, both installed by rustup.
     {
         name = "Rust",
         filetypes = { "rust" },
         parsers = { "rust" },
-        servers = { "rust_analyzer" }, -- installed via rustup
+        servers = { "rust_analyzer" }, -- installed by rustup
         formatters = { "rustfmt" },
     },
+    -- Go source files. Module files are a separate entry; see below.
     {
         name = "Go",
-        -- Only the `go` filetype belongs here, NOT gomod/gosum/gowork. See the
-        -- entry below for why splitting them apart is load-bearing.
         filetypes = { "go" },
         parsers = { "go" },
-        servers = { "gopls" }, -- brew install gopls; also needs the `go` toolchain at runtime
-        -- The goimports tool applies gofmt's layout rules AND adds or removes
-        -- import lines to match what the file actually uses, which is the half
-        -- of Go formatting that is tedious by hand. Plain "gofmt" and the
-        -- stricter "gofumpt" are the alternatives; neither touches imports.
+        servers = { "gopls" }, -- brew install gopls; needs the `go` toolchain at runtime
+        -- The goimports tool applies gofmt's layout and adds or removes import
+        -- lines to match the file. Plain gofmt and the stricter gofumpt leave
+        -- imports alone.
         formatters = { "goimports" },
     },
+    -- Go module and workspace files: highlighting only.
     {
         name = "Go module and workspace files",
-        -- SPLIT FROM THE ENTRY ABOVE ON PURPOSE — do not merge them.
-        -- plugins/conform.lua maps a formatter onto EVERY filetype in an entry:
-        --     for _, ft in ipairs(lang.filetypes) do
-        --         formatters_by_ft[ft] = lang.formatters
-        --     end
-        -- so listing these filetypes beside `go` would route goimports at
-        -- go.mod and go.sum, which are not Go source and would be mangled or
-        -- rejected. Two entries is what keeps the formatter on .go files only.
+        -- Kept apart from the Go entry: plugins/conform.lua maps an entry's
+        -- formatters onto every filetype in it, and goimports would mangle
+        -- go.mod and go.sum.
         filetypes = { "gomod", "gosum", "gowork", "gotmpl" },
         parsers = { "gomod", "gosum", "gowork", "gotmpl" },
-        -- Empty is correct and not an oversight: gopls attaches to gomod,
-        -- gowork and gotmpl through ITS OWN filetype list, so declaring it once
-        -- in the Go entry above is what turns it on everywhere. Note gopls does
-        -- not claim gosum — go.sum gets highlighting only, which is all a
-        -- checksum file needs.
+        -- The gopls server attaches to gomod, gowork, and gotmpl through its own
+        -- filetype list, so enabling it in the Go entry covers them. It does not
+        -- claim gosum.
         servers = {},
         formatters = {},
     },
+    -- Zig: zls and `zig fmt`.
     {
         name = "Zig",
-        -- The zls server also claims the `zir` filetype (Zig IR), which is
-        -- deliberately not listed: no `zir` treesitter parser exists and
-        -- `zig fmt` cannot format it, so naming it here would attach a missing
-        -- parser and route a formatter that would fail. Leaving it out costs
-        -- nothing — zls still attaches to .zir through its own config.
+        -- The zls server also claims the `zir` filetype (Zig IR). It is not
+        -- listed here because no `zir` treesitter parser exists and `zig fmt`
+        -- cannot format it; zls attaches to .zir through its own config.
         filetypes = { "zig" },
         parsers = { "zig" },
-        -- NOTE: The zls server and the zig compiler are VERSION-LOCKED. Its
-        --       README is explicit: "When upgrading Zig, make sure to update
-        --       ZLS to keep them in sync." A `brew upgrade` that moves one
-        --       without the other leaves zls failing to start, with no obvious
-        --       cause. Check with `zig version` and `zls --version`.
-        servers = { "zls" }, -- brew install zls (which pulls zig as a dependency)
-        -- The zigfmt formatter runs `zig fmt`, which ships with the compiler
-        -- that zls already requires, so this adds no dependency. Running it
-        -- through conform rather than leaving it to zls means <leader>F still
-        -- formats when the server has not attached.
+        -- The zls server and the zig compiler are version-locked; the Brewfile's
+        -- zls entry documents the trap.
+        servers = { "zls" }, -- brew install zls (pulls zig as a dependency)
+        -- The zigfmt formatter runs `zig fmt`, which ships with the compiler zls
+        -- requires. Through conform it works when the server has not attached.
         formatters = { "zigfmt" },
     },
+    -- Python: ty for types, completion, hover, and rename; ruff for lints.
     {
         name = "Python",
         filetypes = { "python" },
         parsers = { "python" },
-        -- ty: type checking + completion/hover/rename (Astral, see after/lsp/ty.lua).
-        -- ruff: linting + import organization, hover disabled (see after/lsp/ruff.lua).
+        -- The ty server (Astral) and ruff run together; after/lsp/ruff.lua
+        -- disables ruff's hover so K is answered by ty.
         servers = { "ty", "ruff" },
-        formatters = { "ruff_format" }, -- add "ruff_organize_imports" before it to also sort imports
+        formatters = { "ruff_format" }, -- add "ruff_organize_imports" before it to sort imports too
     },
+    -- TOML: taplo as server and formatter.
     {
         name = "TOML",
         filetypes = { "toml" },
@@ -158,6 +147,7 @@ return {
         servers = { "taplo" },
         formatters = { "taplo" },
     },
+    -- YAML: yaml-language-server with schemastore schemas, yamlfmt to format.
     {
         name = "YAML",
         filetypes = { "yaml" },
@@ -165,107 +155,98 @@ return {
         servers = { "yamlls" }, -- schemastore.org schemas enabled in after/lsp/yamlls.lua
         formatters = { "yamlfmt" },
     },
+    -- XML family: treesitter only, no server.
     {
         name = "XML",
         filetypes = { "xml", "xsd", "xsl", "xslt", "svg" },
         parsers = { "xml" }, -- one parser covers all five filetypes
-        -- EMPTY, and this is the one place Neovim is behind the GUI editors.
-        -- The only XML server nvim-lspconfig knows is lemminx, and lemminx has
-        -- NO Homebrew formula — `brew search lemminx` finds nothing. Every
-        -- other dependency in this repo comes from the Brewfile, and a
-        -- hand-downloaded Java binary would be the only exception.
-        -- Consequence: highlighting, indent, and folds work; completion,
-        -- validation against a schema and formatting do not. Zed (the `xml`
-        -- extension) and VS Code (redhat.vscode-xml, which embeds lemminx)
-        -- both have the full experience.
-        -- To close the gap yourself: install lemminx from
-        -- https://github.com/eclipse-lemminx/lemminx/releases onto $PATH, then
-        -- change this to { "lemminx" }. Nothing else needs touching.
+        -- The only XML server nvim-lspconfig knows is lemminx, a Java program
+        -- with no Homebrew formula (`brew search lemminx` finds nothing); every
+        -- other dependency here comes from the Brewfile. Highlighting, indent, and folds work; completion, schema
+        -- validation, and formatting do not. To add it, install lemminx from
+        -- https://github.com/eclipse-lemminx/lemminx/releases onto $PATH and
+        -- set servers = { "lemminx" }.
         servers = {},
         formatters = {},
     },
+    -- Dockerfile: Docker's own language server.
     {
         name = "Dockerfile",
         filetypes = { "dockerfile" },
         parsers = { "dockerfile" },
-        -- docker-language-server (Docker's own Go binary), not the older
-        -- dockerls, which needs docker-langserver from an npm package.
-        -- Worth knowing: this server's filetypes are `dockerfile` and
-        -- `yaml.docker-compose` — it deliberately does NOT claim plain `yaml`,
-        -- so it cannot fight yamlls over an ordinary YAML file. Compose files
-        -- only get it once Neovim resolves them to the compound filetype.
+        -- Docker's docker-language-server (a Go binary), not dockerls, which
+        -- needs docker-langserver from npm. Its filetypes are `dockerfile` and
+        -- `yaml.docker-compose`, not plain `yaml`, so it does not overlap
+        -- yamlls; compose files get it once Neovim resolves the compound
+        -- filetype.
         servers = { "docker_language_server" }, -- brew install docker-language-server
-        -- The server formats through the LSP, and there is no separate
-        -- Dockerfile formatter worth installing.
-        formatters = {},
+        formatters = {}, -- the server formats through the LSP
     },
+    -- Markdown: marksman for links and references.
     {
         name = "Markdown",
         filetypes = { "markdown" },
-        parsers = { "markdown", "markdown_inline" }, -- inline parser handles emphasis/links/code spans
-        servers = { "marksman" }, -- link/reference completion, rename across files
-        formatters = {}, -- markdown is usually formatted by hand; add "prettier" if you install it
+        parsers = { "markdown", "markdown_inline" }, -- the inline parser handles emphasis, links, code spans
+        servers = { "marksman" }, -- link and reference completion, rename across files
+        formatters = {}, -- add "prettier" if installed
     },
+    -- Git files: treesitter highlighting only.
     {
         name = "Git files",
         filetypes = { "gitcommit", "gitconfig", "gitrebase", "gitattributes", "gitignore" },
         parsers = { "gitcommit", "git_config", "git_rebase", "gitattributes", "gitignore", "diff" },
-        servers = {}, -- no mainstream git LSP exists; treesitter highlighting only
+        servers = {}, -- nvim-lspconfig has no git server; no mainstream one exists
         formatters = {},
     },
+    -- Shell: bash parser for sh, bash, and zsh; bash-language-server for sh and bash.
     {
         name = "Shell (sh / bash / zsh)",
         filetypes = { "sh", "bash", "zsh" },
         parsers = { "bash" },
-        -- No treesitter grammar or LSP exists for zsh. The alias below reuses the
-        -- bash parser for zsh buffers — highlighting is ~95% right, the odd
-        -- zsh-ism may render oddly. bash-language-server intentionally attaches
-        -- only to sh/bash (its diagnostics would be wrong for zsh).
+        -- No treesitter grammar or server exists for zsh. The alias reuses the
+        -- bash parser, so zsh-only syntax may highlight wrongly.
+        -- The bash-language-server attaches only to sh and bash; its diagnostics
+        -- would be wrong for zsh.
         parser_aliases = { zsh = "bash" },
-        servers = { "bashls" }, -- + shellcheck/shfmt integration if installed (Brewfile)
+        servers = { "bashls" }, -- integrates shellcheck and shfmt when installed (Brewfile)
         formatters = { "shfmt" },
     },
+    -- Fish: fish-lsp and fish's own formatter.
     {
         name = "Fish",
         filetypes = { "fish" },
         parsers = { "fish" },
-        servers = { "fish_lsp" },
-        formatters = { "fish_indent" }, -- ships with fish itself
+        servers = { "fish_lsp" }, -- brew install fish-lsp
+        formatters = { "fish_indent" }, -- ships with fish
     },
+    -- Log files: Vim's syntax/log.vim, once the filetype is detected.
     {
         name = "Log files",
         filetypes = { "log" },
-        -- Neovim ships syntax/log.vim, which highlights timestamps, log levels
-        -- (ERROR/WARN/INFO), quoted strings and IP addresses — but it never gets
-        -- a chance to run, because Neovim gives a plain *.log file NO filetype at
-        -- all. Its built-in `detect.log` only recognises Vim's own upstream*.log
-        -- development files. The three rules below fix that.
+        -- Neovim ships syntax/log.vim but gives a plain *.log file no filetype;
+        -- its built-in detection (detect.log) covers only Vim's own upstream*.log
+        -- files.
+        -- These rules supply the filetype.
         extensions = { log = "log", LOG = "log", Log = "log" },
-        -- Rotated logs: app.log.1, app.log.20260902 …
         patterns = {
-            [".*%.log%.%d+"] = "log",
-            -- Anything under a log directory, which is usually extensionless
-            -- (system.log, install.log, wifi.log …).
-            [".*/[Ll]ogs?/.*"] = "log",
+            [".*%.log%.%d+"] = "log", -- rotated logs: app.log.1, app.log.20260902
+            [".*/[Ll]ogs?/.*"] = "log", -- anything under a log directory, usually extensionless
             ["/var/log/.*"] = "log",
         },
-        -- No treesitter grammar: nvim-treesitter's registry has no generic `log`
-        -- parser (only `sflog`, for Salesforce). Vim's regex syntax file is the
-        -- whole highlighting story here, and it needs no installation.
+        -- No generic `log` parser exists in nvim-treesitter (only `sflog`, for
+        -- Salesforce); the regex syntax file does the highlighting. No server
+        -- or formatter exists for the format.
         parsers = {},
-        -- No language server exists for a format this loose, and nothing to
-        -- format either — logs are read, not written.
         servers = {},
         formatters = {},
     },
+    -- Neovim's own languages, for editing this config and reading :help.
     {
         name = "Neovim config support (Lua, Vimscript, :help)",
-        -- Not requested as a "language", but keeps editing THIS config and
-        -- reading :help pleasant. Remove if you never touch Lua.
         filetypes = { "lua", "vim", "help", "query" },
         parsers = { "lua", "vim", "vimdoc", "query" },
         parser_aliases = { help = "vimdoc" },
-        servers = {}, -- add "lua_ls" (brew install lua-language-server) for full Lua IDE support
-        formatters = {}, -- add "stylua" if you install it
+        servers = {}, -- add "lua_ls" (brew install lua-language-server) for Lua completion
+        formatters = {}, -- add "stylua" if installed
     },
 }

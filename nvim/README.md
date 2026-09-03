@@ -1,46 +1,41 @@
 # Neovim + Neovide configuration
 
-A modern Neovim (≥ 0.12) configuration built on **built-in machinery first**:
-plugins are managed by Neovim's native [`vim.pack`](https://neovim.io/doc/user/pack.html)
-(no plugin-manager plugin), language servers run through the native
-`vim.lsp.config()` / `vim.lsp.enable()` API, and syntax comes from the
-rewritten nvim-treesitter `main` branch. Tightly integrated with
-[Neovide](https://neovide.dev), rendered in JetBrains Mono Nerd Font Mono.
+A Neovim (0.12 or later) configuration on built-in mechanisms: plugins
+through the native [`vim.pack`](https://neovim.io/doc/user/pack.html) rather
+than a plugin manager, language servers through the native `vim.lsp.config()`
+and `vim.lsp.enable()` API, and syntax from the nvim-treesitter `main` branch.
+It runs in the terminal and under [Neovide](https://neovide.dev), in
+`JetBrainsMono Nerd Font Mono`.
 
-Every option in every file is documented in place — *what it does, why this
-value, how to change it*. This README covers installation, the map of the
-config, and the common "how do I…" recipes.
+Every option is documented in its file. This README covers installation, the
+map of the config, recipes, the keymap reference, and known limitations.
 
 ---
 
 ## Installation
 
 ```sh
-# The repo installer does all of this — dependencies, backups, symlinks, and a
-# headless first run that installs plugins and compiles every parser.
+# The repo installer does all of this: dependencies, backups, symlinks, and a
+# headless first run that installs the plugins and compiles every parser.
 cd ~/personal/dotfiles && ./install.sh
 
-# Or just this package, by hand:
+# Or this package alone, by hand:
 stow --target="$HOME" --dir="$HOME/personal/dotfiles" nvim neovide
-nvim   # first launch: vim.pack asks to install the plugins — answer y
+nvim   # first launch: vim.pack asks to install the plugins; answer y
 
-# Sanity check.
+# Check:
 nvim "+checkhealth vim.pack vim.lsp nvim-treesitter"
 ```
 
-Then launch **Neovide** normally — it picks up this config and its
-`vim.g.neovide_*` tuning automatically.
+Neovide reads this config and its `vim.g.neovide_*` settings when launched.
+The Neovide setup has two halves: `../neovide/.config/neovide/config.toml`
+handles process and window creation, `lua/core/neovide.lua` runtime behaviour;
+the config.toml header describes the split. Font family and size must match
+across both, and across the other tools listed in
+[The font stack](../README.md#the-font-stack).
 
-The Neovide integration has two halves:
-`../neovide/.config/neovide/config.toml` handles process/window creation
-(frame style, the font used before Neovim loads, vsync/sRGB), while
-`lua/core/neovide.lua` handles runtime behaviour (animations, ⌘ keymaps,
-zoom). Font family and size must be kept in sync across **both** — and, if you
-change the font stack, across `../ghostty/` and `../zed/` too. The root
-[README](../README.md) has the whole matrix.
-
-> **Commit `nvim-pack-lock.json`** when it appears next to `init.lua`: it pins
-> exact plugin versions, making this setup reproducible on a fresh machine.
+`nvim-pack-lock.json`, committed next to `init.lua`, pins the plugin versions
+a fresh machine installs.
 
 ---
 
@@ -48,71 +43,61 @@ change the font stack, across `../ghostty/` and `../zed/` too. The root
 
 | Path                                    | Purpose                                                                      |
 | --------------------------------------- | ---------------------------------------------------------------------------- |
-| `.config/nvim/init.lua`                 | Entry point: leader keys + module load order                                 |
-| `.config/nvim/lua/core/options.lua`     | Editor options (every one documented)                                        |
+| `.config/nvim/init.lua`                 | Entry point: leader keys and module load order                               |
+| `.config/nvim/lua/core/options.lua`     | Editor options                                                               |
 | `.config/nvim/lua/core/keymaps.lua`     | Plugin-independent keymaps                                                   |
-| `.config/nvim/lua/core/autocmds.lua`    | Yank highlight, cursor restore, etc.                                         |
-| `.config/nvim/lua/core/diagnostics.lua` | How errors/warnings are displayed                                            |
-| `.config/nvim/lua/core/neovide.lua`     | Font + Neovide runtime settings + ⌘ keymaps                                  |
-| `../neovide/`                           | Neovide process/window settings — see its own [README](../neovide/README.md) |
-| `.config/nvim/lua/theme.lua`            | Colorscheme (single-variable switch)                                         |
-| `.config/nvim/lua/languages.lua`        | **The language table — add/remove languages here**                           |
-| `.config/nvim/lua/plugins/init.lua`     | Plugin declarations (`vim.pack`) + load order                                |
-| `.config/nvim/lua/plugins/<name>.lua`   | One documented config module per plugin                                      |
-| `.config/nvim/after/lsp/<server>.lua`   | Per-server LSP overrides (native `:h lsp-config-merge`)                      |
-| `../Brewfile`                           | All external dependencies, for every tool in the repo                        |
+| `.config/nvim/lua/core/autocmds.lua`    | Yank highlight, cursor restore, column guides, `q` to close utility windows  |
+| `.config/nvim/lua/core/diagnostics.lua` | How errors and warnings are displayed                                        |
+| `.config/nvim/lua/core/filetypes.lua`   | Filetype detection rules, from the language table                            |
+| `.config/nvim/lua/core/neovide.lua`     | Font, Neovide runtime settings, ⌘ keymaps                                    |
+| `../neovide/`                           | Neovide process and window settings; see its [README](../neovide/README.md) |
+| `.config/nvim/lua/theme.lua`            | Colorscheme                                                                  |
+| `.config/nvim/lua/languages.lua`        | The language table: add or remove languages here                             |
+| `.config/nvim/lua/plugins/init.lua`     | Plugin declarations (`vim.pack`) and load order                              |
+| `.config/nvim/lua/plugins/<name>.lua`   | One configuration module per plugin                                          |
+| `.config/nvim/after/lsp/<server>.lua`   | Per-server LSP overrides (`:h lsp-config-merge`)                             |
+| `../Brewfile`                           | External dependencies for every tool in the repo                             |
 
-**Plugins** (10): nvim-lspconfig (server config data), nvim-treesitter,
-fzf-lua, neo-tree (+ plenary, nui, nvim-web-devicons), blink.cmp, lualine,
-gitsigns, conform, indent-blankline.
+Plugins (10): catppuccin (declared in `lua/theme.lua`), nvim-lspconfig
+(server config data), nvim-treesitter, fzf-lua, neo-tree (with plenary, nui,
+nvim-web-devicons), blink.cmp, lualine, gitsigns, conform, indent-blankline.
 
 ---
 
 ## Recipes
 
-### Add a language
-1. Add an entry to `lua/languages.lua` (filetypes, parsers, servers,
-   formatters — the file header documents each field).
-2. Add its LSP server to the root `../Brewfile`, re-run `brew bundle`.
-3. Restart Neovim. Done — parser installation, highlighting, LSP activation
-   and formatting routing all derive from the table.
-
-### Remove a language
-Delete its entry from `lua/languages.lua`. Optionally
-`:lua require("nvim-treesitter").uninstall({"<parser>"})` and remove the
-server from the root `../Brewfile`.
-
-### Add / remove a plugin
-Three places, all in `lua/plugins/`: the spec in `init.lua`'s
-`vim.pack.add()` list, a `<name>.lua` config module, and its `require` line.
-Remove in reverse, then `:lua vim.pack.del({"<name>"})`. Update everything
-with `:lua vim.pack.update()` (review buffer: `:write` applies, `:quit`
-rejects).
-
-### Change the theme
-See `lua/theme.lua` — add the theme plugin spec, flip one variable. The
-statusline follows automatically.
-
-### Change font or font size
-Four places across the repo, kept in sync — see the font matrix in the root
-[README](../README.md). Within this package it is the `vim.o.guifont` line in
-`.config/nvim/lua/core/neovide.lua`; its companion is the `[font]` section of
-`../neovide/.config/neovide/config.toml`, which covers Neovide's first frames
-before `init.lua` runs. Live zoom: `⌘=` / `⌘-` / `⌘0`.
-
-### Reorder / extend the statusline
-`lua/plugins/statusline.lua` — the six `lualine_a`–`z` lists *are* the layout.
-
-### Per-project / per-filetype settings
-Neovim honors `.editorconfig` natively. For editor-side overrides create
-`.config/nvim/after/ftplugin/<filetype>.lua` (e.g. `vim.bo.shiftwidth = 2`
-for YAML).
+* **Add a language.** Add an entry to `lua/languages.lua` (the header
+  documents each field), add its server to `../Brewfile` and run
+  `brew bundle`, then restart Neovim. Parser installation, highlighting, LSP
+  activation, and formatter routing all come from the table.
+* **Remove a language.** Delete its entry. Optionally run
+  `:lua require("nvim-treesitter").uninstall({"<parser>"})` and remove the
+  server from `../Brewfile`.
+* **Add or remove a plugin.** Three places in `lua/plugins/`: the spec in
+  `init.lua`'s `vim.pack.add()` list, a `<name>.lua` module, and its `require`
+  line. Remove in reverse, then `:lua vim.pack.del({"<name>"})`. Update with
+  `:lua vim.pack.update()`; in the review buffer `:write` applies and `:quit`
+  rejects.
+* **Change the theme.** `lua/theme.lua`: swap the plugin spec and change one
+  variable. The statusline follows.
+* **Change the font or size.** Five files across the repo, listed in
+  [The font stack](../README.md#the-font-stack). In this package it is the
+  `vim.o.guifont` line in `.config/nvim/lua/core/neovide.lua`; its companion
+  is the `[font]` section of `../neovide/.config/neovide/config.toml`, which
+  covers Neovide's first frames before `init.lua` runs. Live zoom: `⌘=`, `⌘-`,
+  `⌘0`.
+* **Reorder or extend the statusline.** The six `lualine_a` to `lualine_z`
+  lists in `lua/plugins/statusline.lua` are the layout.
+* **Per-project or per-filetype settings.** Neovim honours `.editorconfig`
+  natively. For editor-side overrides create
+  `.config/nvim/after/ftplugin/<filetype>.lua` (e.g. `vim.bo.shiftwidth = 2`
+  for YAML).
 
 ---
 
 ## Keymap reference
 
-Leader = **Space**. `<leader>fk` fuzzy-searches this whole list at runtime.
+Leader is Space. `<leader>fk` fuzzy-searches this list at runtime.
 
 ### Find (fzf-lua)
 | Key                 | Action                          |
@@ -138,7 +123,7 @@ Leader = **Space**. `<leader>fk` fuzzy-searches this whole list at runtime.
 | `<leader>ti`          | toggle inlay hints                                  |
 | `<leader>ch`          | clangd: switch source/header                        |
 
-### Git (gitsigns, buffer-local in repos)
+### Git (gitsigns, buffer-local in repositories)
 | Key                 | Action                                   |
 | ------------------- | ---------------------------------------- |
 | `]h` / `[h`         | next / previous hunk                     |
@@ -148,7 +133,7 @@ Leader = **Space**. `<leader>fk` fuzzy-searches this whole list at runtime.
 | `<leader>gb` / `gB` | blame line / toggle inline blame         |
 | `<leader>gd`        | diff buffer against index                |
 
-### Editing & UI
+### Editing and UI
 | Key                        | Action                                         |
 | -------------------------- | ---------------------------------------------- |
 | `<leader>e`                | toggle file explorer (neo-tree)                |
@@ -166,58 +151,54 @@ Leader = **Space**. `<leader>fk` fuzzy-searches this whole list at runtime.
 `<C-space>` open menu/docs · `<C-e>` cancel
 
 ### Neovide (⌘)
-`⌘C/⌘V` copy/paste · `⌘S` save · `⌘A` select all · `⌘=`/`⌘-`/`⌘0` zoom
-(plain `y`/`p` also use the system clipboard — `clipboard=unnamedplus`)
+`⌘C/⌘V` copy/paste · `⌘S` save · `⌘A` select all · `⌘=`/`⌘-`/`⌘0` zoom.
+Plain `y`/`p` also use the system clipboard (`clipboard=unnamedplus`). On
+Linux the same actions are on Ctrl+Shift.
 
 ---
 
 ## Known limitations
 
-* **zsh** — no treesitter grammar or LSP exists for zsh anywhere; zsh buffers
-  reuse the bash parser (~95% correct) and get no language server.
-* **git filetypes** — treesitter highlighting only; there is no git LSP.
-* **First launch** — files opened before their parser finishes compiling
-  aren't highlighted until reopened (`:e`).
+* **zsh.** No treesitter grammar or language server exists for zsh; zsh
+  buffers reuse the bash parser and get no server.
+* **git filetypes.** Treesitter highlighting only; there is no git server.
+* **First launch.** Files opened before their parser finishes compiling are
+  not highlighted until reopened (`:e`).
 * **clangd** needs a `compile_commands.json` in the project for full accuracy
   (CMake: `-DCMAKE_EXPORT_COMPILE_COMMANDS=ON`).
-* **Swift in Xcode projects** — sourcekit-lsp works out of the box for SwiftPM;
-  Xcode projects need a build-server shim such as
+* **Swift in Xcode projects.** sourcekit-lsp works for SwiftPM packages; Xcode
+  projects need a build-server shim such as
   [xcode-build-server](https://github.com/SolaWing/xcode-build-server).
 * **Linux needs a clipboard provider.** `clipboard=unnamedplus` relies on an
   external tool: macOS has pbcopy built in, Linux needs `wl-clipboard`
   (Wayland) or `xclip` (X11). Both are in the Brewfile under `OS.linux?`.
   Check with `:checkhealth vim.provider`.
-* **clangd resolves per platform** — Apple's `/usr/bin/clangd` on macOS, plain
+* **clangd resolves per platform.** Apple's `/usr/bin/clangd` on macOS, plain
   `clangd` from `$PATH` elsewhere. Debian and Ubuntu ship it versioned
-  (`clangd-18`) with the bare name via update-alternatives, so install
+  (`clangd-18`) with the bare name through update-alternatives; install
   `clangd` or name the version in `after/lsp/clangd.lua`.
-* **Swift and Objective-C on Linux** — the entries stay, but sourcekit-lsp only
-  exists if you install the swift.org toolchain. If it is absent the server
-  simply never starts; nothing else is affected.
-* **zls and the zig compiler are version-locked.** The zls README is explicit:
-  "When upgrading Zig, make sure to update ZLS to keep them in sync." A
-  `brew upgrade` that moves one and not the other leaves zls refusing to start,
-  and the symptom is a server that silently stops attaching rather than an
-  error naming the cause. Compare `zig version` with `zls --version`; Homebrew
-  makes zig a hard dependency of zls, so a normal install keeps them matched.
-* **Go's language table entry is split in two on purpose.** `Go` covers the
-  `go` filetype and carries `goimports`; `Go module and workspace files` covers
-  `gomod`/`gosum`/`gowork`/`gotmpl` and carries no formatter, because
-  `plugins/conform.lua` maps a formatter onto *every* filetype in an entry and
-  running goimports over a `go.mod` would mangle it. Merging them re-introduces
-  that bug silently.
+* **Swift and Objective-C on Linux.** The entries stay, but sourcekit-lsp
+  exists only with the swift.org toolchain installed; without it the server
+  does not start and nothing else is affected.
+* **zls and the zig compiler are version-locked.** A `brew upgrade` that moves
+  one and not the other leaves zls unable to start, and the symptom is a
+  server that stops attaching with no error naming the cause. Compare
+  `zig version` with `zls --version`. The Brewfile's zls entry has the
+  details.
+* **Go's language table entry is split in two.** `Go` covers the `go`
+  filetype and carries `goimports`; `Go module and workspace files` covers
+  `gomod`, `gosum`, `gowork`, and `gotmpl` with no formatter, because
+  `plugins/conform.lua` maps a formatter onto every filetype in an entry and
+  goimports would mangle a `go.mod`.
 * **XML has no language server here.** The entry gives treesitter
-  highlighting, indent, and folds, but no completion, no schema validation, and
-  no formatting. The only XML server `nvim-lspconfig` knows is `lemminx`, and
-  it has **no Homebrew formula** — every other dependency in this repo comes
-  from the Brewfile, and a hand-downloaded Java binary would be the sole
-  exception. This is the one language where Zed and VS Code are ahead: both
-  bundle lemminx inside their own extensions. To close the gap, put a lemminx
-  binary on `$PATH` and set `servers = { "lemminx" }` in `lua/languages.lua`.
+  highlighting, indent, and folds, but no completion, schema validation, or
+  formatting. The only XML server nvim-lspconfig knows is lemminx, which has
+  no Homebrew formula; Zed and VS Code bundle it in their XML extensions. The
+  XML entry in `lua/languages.lua` says how to add it.
 
 ## Troubleshooting
 
 `:checkhealth vim.pack` (plugins) · `:checkhealth vim.lsp` (servers) ·
 `:checkhealth nvim-treesitter` (parsers) · `:ConformInfo` (formatters) ·
-`:lua =vim.lsp.get_clients()` (what's attached) · logs at
+`:lua =vim.lsp.get_clients()` (attached clients) · logs at
 `~/.local/state/nvim/lsp.log`.

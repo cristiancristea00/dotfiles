@@ -1,0 +1,217 @@
+# ==============================================================================
+# ruff.toml — Ruff's user-level configuration (Python linting and formatting)
+# ==============================================================================
+#
+# WHAT THIS FILE IS
+#   The settings Ruff uses for Python files that belong to no configured
+#   project. It is deployed to ~/.config/ruff/ruff.toml, which is where Ruff
+#   looks for a user-level configuration.
+#
+# WHAT "USER-LEVEL" ACTUALLY MEANS — READ THIS FIRST
+#   It is a FALLBACK, not a base. Ruff does not merge configuration files: it
+#   finds the closest one by walking up from the file being checked and ignores
+#   every parent. Only when that search finds nothing at all does it fall back
+#   here. So:
+#     * A project with its own pyproject.toml, ruff.toml or .ruff.toml ignores
+#       this file COMPLETELY — not "overrides the parts it mentions", ignores.
+#     * Loose scripts and projects with no Ruff configuration get these
+#       settings instead of Ruff's defaults.
+#   Nothing here can impose a house style on a project that has opinions of its
+#   own, and there is no Ruff setting that would.
+#
+# WHERE RUFF LOOKS, AND WHY THIS FILENAME
+#   From `find_user_settings_toml` in Ruff's own source
+#   (crates/ruff_workspace/src/pyproject.rs):
+#
+#       let strategy = etcetera::base_strategy::choose_base_strategy()?;
+#       let config_dir = strategy.config_dir().join("ruff");
+#       for filename in [".ruff.toml", "ruff.toml", "pyproject.toml"] { ... }
+#
+#   Two things follow, both of which the published documentation gets wrong or
+#   leaves out:
+#     1. `ruff.toml` IS accepted here. The docs name only
+#        `${config_dir}/ruff/pyproject.toml`, which would have meant renaming
+#        this file and nesting everything under [tool.ruff]. The source
+#        searches three names, most specific first.
+#     2. The path is ~/.config/ruff/ on macOS AND Linux. It is the BASE
+#        strategy, which is XDG everywhere; the native strategy, which would
+#        have put this under ~/Library/Application Support on macOS, is not
+#        used anywhere in Ruff. This package therefore needs none of the per-OS
+#        machinery that tlrc does — see ../tlrc/README.md for the case that
+#        genuinely differs.
+#
+# WHO READS IT
+#   Everything, because they all invoke the same binary: the `ruff` CLI, the
+#   ruff language server that Neovim attaches through
+#   ../nvim/.config/nvim/after/lsp/ruff.lua, and the `charliermarsh.ruff`
+#   extension in Visual Studio Code and Cursor.
+# ==============================================================================
+
+# WHAT: Directories excluded on top of Ruff's built-in list.
+# WHY : Build output. Ruff already excludes the usual suspects (.git,
+#       .venv, __pycache__, node_modules); `extend-` adds to that list rather
+#       than replacing it, which is the difference between this and `exclude`.
+extend-exclude = ["target", "build", "out", "output"]
+
+# WHAT: Whether `ruff check` APPLIES its fixes rather than only reporting them.
+# WHY : On, deliberately, and it is worth flagging because it cuts against the
+#       rest of this setup: every editor here has format-on-save OFF and
+#       formatting sits behind an explicit <leader>F. This is the one place
+#       where running the tool rewrites the file. Ruff's fixes are the ones it
+#       considers safe; `--unsafe-fixes` opts into the rest and is not enabled.
+# HOW : Set false to have `ruff check` report only, or pass `--no-fix` for one
+#       invocation.
+fix = true
+
+# WHAT: The maximum line length the linter enforces and the formatter targets.
+# WHY : 120 rather than Ruff's default of 88. It is also one of the four column
+#       guides every editor in this repo draws — see the root README's
+#       column-guide section — so the line that matters is on screen.
+line-length = 120
+
+# WHAT: Spaces per indentation level.
+# WHY : Four, matching the 4-space rule this whole repo follows.
+indent-width = 4
+
+# ==============================================================================
+# LINTING
+# ==============================================================================
+
+[lint]
+
+# WHAT: Enable Ruff's unstable rules.
+# WHY : On, deliberately. Whole families are preview-only — DOC entirely, and
+#       parts of FURB and PLR — so without this a third of the selection below
+#       would silently do nothing.
+# NOTE: The cost is that upgrades move: preview rules can change behaviour, be
+#       renamed or be withdrawn between releases, so a `brew upgrade ruff` can
+#       change what lints without anything here changing. If a new complaint
+#       appears from nowhere, this is why.
+preview = true
+
+# WHAT: The rule families to enable, by prefix.
+# WHY : Broad by design — it is easier to silence a rule that proves annoying
+#       than to discover one that was never enabled.
+# HOW : Prefixes select whole families; a full code selects one rule. Look any
+#       of them up with `ruff rule <code>`, and list every family with
+#       `ruff linter`. Add an `ignore = [...]` list to subtract individual
+#       rules without dropping a whole family.
+select = [
+    # --- Correctness and likely bugs ------------------------------------------
+    "F",        # Pyflakes: undefined names, unused imports, broken f-strings
+    "B",        # flake8-bugbear: mutable defaults, loop-variable capture
+    "A",        # flake8-builtins: shadowing `list`, `id`, `type`
+    "SIM",      # flake8-simplify: collapsible ifs, redundant bool conversion
+    "RET",      # flake8-return: unnecessary else-after-return
+    "PIE",      # flake8-pie: assorted redundancy
+    "RUF",      # Ruff's own rules, including mutable class defaults
+    "SLF",      # flake8-self: reaching into another object's _private
+    "ARG",      # flake8-unused-arguments
+
+    # --- Typing ---------------------------------------------------------------
+    "ANN",      # flake8-annotations: missing signature types
+    "FA",       # flake8-future-annotations: `from __future__ import annotations`
+
+    # --- Style and naming -----------------------------------------------------
+    "E",        # pycodestyle errors
+    "W",        # pycodestyle warnings
+    "N",        # pep8-naming
+    "C",        # flake8-comprehensions and mccabe complexity
+    "FURB",     # refurb: dated idioms with a modern replacement
+
+    # --- Documentation --------------------------------------------------------
+    "D",        # pydocstyle: docstring presence and formatting
+    "DOC",      # pydoclint: docstrings that disagree with the signature
+    "CPY",      # flake8-copyright: every file carries a copyright notice
+
+    # --- Errors, logging, and messages ----------------------------------------
+    "EM",       # flake8-errmsg: string literals passed straight to an exception
+    "LOG",      # flake8-logging
+    "G",        # flake8-logging-format: no f-strings in log calls
+
+    # --- Paths and performance ------------------------------------------------
+    "PTH",      # flake8-use-pathlib: pathlib over os.path
+    "PERF",     # perflint: avoidable work in loops
+
+    # --- Scientific stack -----------------------------------------------------
+    "NPY",      # NumPy-specific rules, including deprecated APIs
+    "PD",       # pandas-vet
+
+    # --- Pylint ---------------------------------------------------------------
+    "PLC",      # convention
+    "PLE",      # error
+    "PLR",      # refactor
+    "PLW",      # warning
+
+    # --- Housekeeping ---------------------------------------------------------
+    "FIX",      # flake8-fixme: flags TODO and FIXME so they are not forgotten
+]
+
+# WHAT: How `if TYPE_CHECKING:` imports are handled.
+# WHY : Strict mode moves every import used only in annotations into the
+#       type-checking block, and quote-annotations then quotes the references
+#       so they stay valid at runtime without `from __future__ import
+#       annotations`. Together they keep import time down in modules that are
+#       heavily typed.
+[lint.flake8-type-checking]
+
+quote-annotations = true
+strict = true
+
+# WHAT: Import sorting.
+# WHY : from-first puts `from x import y` above plain `import x`, which is the
+#       inverse of isort's default and groups the names actually used at the
+#       top. The blank-line settings are cosmetic and consistent.
+# HOW : `ruff check --select I --fix` sorts imports; the settings only decide
+#       the shape.
+[lint.isort]
+
+combine-as-imports = true
+from-first = true
+lines-after-imports = 2
+lines-between-types = 1
+
+# WHAT: The line-length limits pycodestyle enforces.
+# WHY : Both set to match `line-length` above. max-doc-length is separate and
+#       has NO default — without it, long lines inside docstrings and comments
+#       go unreported while code is checked, which reads as an inconsistency
+#       rather than a decision.
+[lint.pycodestyle]
+
+max-doc-length = 120
+max-line-length = 120
+
+# ==============================================================================
+# FORMATTING
+# ==============================================================================
+
+[format]
+
+# WHAT: Quote character for strings the formatter rewrites.
+# WHY : Single, against Ruff's default of double. The formatter still uses
+#       whichever quote avoids escaping in a given string.
+quote-style = "single"
+
+# WHAT: Indent with spaces rather than tabs.
+indent-style = "space"
+
+# WHAT: Whether a trailing comma forces a collection to stay expanded.
+# WHY : False here means the magic trailing comma is RESPECTED — the option
+#       asks whether to skip it. Leaving a comma after the last element keeps
+#       that call or literal one-per-line, which is the usual way to pin a
+#       layout the formatter would otherwise collapse.
+skip-magic-trailing-comma = false
+
+# WHAT: Line endings written by the formatter.
+# WHY : Always LF, never CRLF, regardless of platform. The alternative,
+#       "auto", infers from the file's first line ending and would let a file
+#       edited on Windows keep CRLF.
+line-ending = "lf"
+
+# WHAT: Also format Python code found inside docstrings.
+# WHY : On, so a doctest or an example block is formatted like real code
+#       instead of drifting. The separate length limit applies to those blocks;
+#       "dynamic" would instead fit them to the remaining width after the
+#       docstring's indentation.
+docstring-code-format = true
+docstring-code-line-length = 120

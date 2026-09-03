@@ -1,23 +1,21 @@
 # Cursor
 
-[Cursor](https://cursor.com) is an AI-first fork of Visual Studio Code. It is
-**not configured here** — this package contains nothing but symlinks.
+[Cursor](https://cursor.com) is a fork of Visual Studio Code. This package
+holds symlinks into [`vscode/`](../vscode/README.md), where the shared
+configuration is documented, plus this README and the Cursor extension list.
+This file covers what is specific to Cursor.
 
-## Where the configuration actually lives
+## Where the configuration lives
 
-Every file in this package points at
-[`../vscode/.config/Code/User/`](../vscode/README.md). One physical
-`settings.json` serves both editors on both platforms, so there is no second
-copy to drift. Read the [VS Code package README](../vscode/README.md) for what
-is configured and why; this file only covers what is specific to Cursor.
-
-The symlinks are committed as symlinks (git mode `120000`). Edit the real file
-in `vscode/`, never a link.
+Every file here points at `../vscode/.config/Code/User/`, so one
+`settings.json` serves both editors on both platforms. The symlinks are
+committed as symlinks (git mode `120000`). Edit the real file in `vscode/`,
+never a link. See [One file, four paths](../vscode/README.md#one-file-four-paths).
 
 ## Install
 
-Cursor is stowed **together with `vscode`**, in the same invocation, because
-both need the same per-OS `--ignore`:
+`./install.sh` handles this. Cursor is stowed together with `vscode`, in one
+invocation, because both need the same per-OS `--ignore`:
 
 ```sh
 # macOS
@@ -26,38 +24,32 @@ stow --no-folding --ignore='\.config' --target="$HOME" --dir="$HOME/personal/dot
 stow --no-folding --ignore='Library'  --target="$HOME" --dir="$HOME/personal/dotfiles" vscode cursor
 ```
 
-## Cursor-specific things in the shared file
+[The stow model](../README.md#the-stow-model) in the root README explains why
+this invocation stays separate from the others.
 
-| Key | Note |
-| --- | ---- |
-| `cursor.general.globalCursorIgnoreList` | A denylist of paths Cursor must never send to a model — keys, PEM files, `.ssh/id_*`, credential JSON. Worth keeping accurate |
-| `workbench.experimental.modernUI` | A **VS Code** key. Cursor forked before VS Code 1.129 and does not register it, so it is inert here |
+## Cursor-specific keys in the shared file
 
-Keys either editor does not recognise are simply ignored, which is what makes
-the shared file work in both directions.
+| Key                                          | Note                                                                                       |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `cursor.general.globalCursorIgnoreList`      | Paths Cursor must never send to a model: keys, PEM files, `.ssh/id_*`, and credential JSON |
+| `cursor.composer.shouldChimeAfterChatFinishes` | Play a sound when a long agent run finishes                                              |
+| `workbench.experimental.modernUI`            | A VS Code key. Cursor forked before VS Code 1.129 and does not register it                 |
+
+Each editor ignores keys it does not recognise.
 
 ## Extensions
 
-[`extensions-cursor.txt`](extensions-cursor.txt) holds Cursor-only ids;
-[`../vscode/extensions.txt`](../vscode/extensions.txt) holds the shared ones.
-
-The split exists because **Cursor resolves ids against its own gallery at
-`marketplace.cursorapi.com`**, declared in
-`Cursor.app/Contents/Resources/app/product.json`. It is *not* Open VSX — a
-common assumption, and wrong. The gallery mirrors a large slice of Microsoft's
-Marketplace, so most ids resolve unchanged; what it lacks is Microsoft's
-licence-restricted extensions, and Anysphere publishes forks of those under its
-own namespace.
-
-Every id in `extensions-cursor.txt` is one of those substitutes, and
+[`extensions-cursor.txt`](extensions-cursor.txt) lists the Cursor-only ids;
+[`../vscode/extensions.txt`](../vscode/extensions.txt) lists the shared ones.
+Cursor resolves ids against its own gallery, `marketplace.cursorapi.com`.
+That gallery does not serve Microsoft's licence-restricted extensions, so
+those have substitutes published under the `anysphere.` namespace.
 [`../vscode/extensions-vscode.txt`](../vscode/extensions-vscode.txt) records
-which Visual Studio Code extension each one stands in for. Read the two
-together.
+which VS Code extension each substitute replaces. The gallery and the query
+that checks it are documented under
+[Extensions](../vscode/README.md#extensions) in the VS Code README.
 
 ## Known gaps
 
-* Cursor's `cmd+i` → `composerMode.agent` binding from the previous live
-  configuration was **not** carried over. It is a Cursor-only command, so it
-  would be dead in VS Code, and Cursor already binds its agent by default.
-* On Linux, Cursor ships only an AppImage and `install.sh` does not install it
-  — see the VS Code README's *Known gaps*.
+On Linux, Cursor ships only an AppImage and `install.sh` does not install it.
+See [Known gaps](../vscode/README.md#known-gaps) in the VS Code README.

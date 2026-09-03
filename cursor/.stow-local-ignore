@@ -1,8 +1,7 @@
-# Files stow must NOT symlink out of this package.
-#
-# IMPORTANT: this file REPLACES stow's built-in ignore list rather than adding
-# to it, so every default worth keeping has to be restated here. The entries
-# are anchored regexes; a leading ^/ anchors to the top of the package.
+# Files stow must not link out of this package. This file replaces stow's
+# built-in ignore list, so the defaults this repo needs are restated below;
+# the RCS, CVS, Subversion, darcs, and Mercurial patterns are left out.
+# Entries are anchored regexes; a leading ^/ anchors to the top of the package.
 
 # --- stow's defaults, restated -------------------------------------------------
 ^/README.*
@@ -17,5 +16,6 @@
 # --- this package's additions ---------------------------------------------------
 # The extension lists are inputs to install.sh, not files that belong in $HOME.
 ^/extensions.*\.txt
-# macOS drops these into any directory Finder visits.
+# macOS creates .DS_Store in any directory Finder opens. Stow's defaults do not
+# cover it, so without this line it would be linked into $HOME.
 \.DS_Store

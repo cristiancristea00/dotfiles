@@ -2,20 +2,18 @@
 # extensions-cursor.txt — Cursor only
 # ==============================================================================
 #
-# WHAT: Extensions installed into Cursor but not Visual Studio Code.
-# WHY : Each one SUBSTITUTES for a Microsoft extension that Cursor's gallery
-#       cannot serve. Cursor resolves ids against its own gallery at
-#       marketplace.cursorapi.com, which mirrors much of Microsoft's
-#       Marketplace but not the licence-restricted extensions — Pylance, the
-#       C++ tools, and the ms-vscode-remote.* family. Anysphere publishes forks
-#       of exactly those under its own namespace, and they are what this file
-#       declares.
-# HOW : Same format — one id per line, # for comments.
-#
-#       This file is the other half of ../vscode/extensions-vscode.txt, which
-#       lists what each of these stands in for. Change one, check the other.
-#       The registry note in ../vscode/extensions.txt has the gallery query
-#       that settles whether an id needs substituting at all.
+# WHAT: Extensions installed into Cursor but not Visual Studio Code. Each is
+#       Anysphere's substitute for a Microsoft extension that Cursor's gallery
+#       (marketplace.cursorapi.com) does not serve: Pylance, the C++ tools,
+#       and the ms-vscode-remote.* family.
+# WHY : The gallery mirrors most of Microsoft's Marketplace but not its
+#       licence-restricted extensions. The gallery query in
+#       ../vscode/README.md § Extensions shows whether an id needs a
+#       substitute.
+# HOW : One id per line; `#` starts a comment. The shared ids are in
+#       ../vscode/extensions.txt.
+# NOTE: The file ../vscode/extensions-vscode.txt lists the VS Code extension
+#       each entry here replaces. Change one file, check the other.
 # ==============================================================================
 
 # Python type checking.        Substitutes for: ms-python.vscode-pylance
@@ -23,9 +21,8 @@ anysphere.cursorpyright
 
 # C and C++ IntelliSense.      Substitutes for: ms-vscode.cpptools,
 #                                               ms-vscode.cpp-devtools
-# NOTE: Cursor ships this one bundled and refuses to uninstall it. Listing it
-#       is still correct — a fresh machine needs it declared, and --force makes
-#       reinstalling it a no-op.
+# NOTE: Cursor bundles this one and refuses to uninstall it. It stays listed so
+#       a fresh machine declares it; install.sh skips ids already installed.
 anysphere.cpptools
 
 # Remote development.          Substitutes for: ms-vscode-remote.remote-ssh,

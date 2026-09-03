@@ -18,7 +18,7 @@
 #     --help, -h           This message.
 #
 # WHAT IT DOES, IN ORDER
-#     1. Detect OS, distribution and package manager.
+#     1. Detect OS, distribution, and package manager.
 #     2. Install Homebrew's prerequisites (Linux only).
 #     3. Install Homebrew if missing, and put it on PATH for this run.
 #     4. `brew bundle` the repo's Brewfile.
@@ -26,21 +26,33 @@
 #     6. Back up anything in the way, then stow every package.
 #     7. Create the per-OS selector symlinks that stow cannot express.
 #     8. Bootstrap Neovim, install the editors' extensions, prime the tldr
-#        cache, and set fish as the login shell.
+#        cache, and offer to set fish as the login shell.
 #     9. Print what happened and what needs restarting.
+# ==============================================================================
 #
-# WHY BASH 3.2
-#     macOS still ships bash 3.2 from 2007 and that is what `#!/usr/bin/env
-#     bash` finds there. This script therefore avoids everything from bash 4+:
-#     no associative arrays, no `mapfile`, no `${var,,}`. If you extend it,
-#     keep to that — `bash --version` on macOS is the constraint, not your
-#     Linux box.
+# DESIGN
+#   Bash 3.2. macOS ships bash 3.2, and `#!/usr/bin/env bash` finds it there,
+#   so nothing from bash 4 or later is used: no associative arrays, no
+#   `mapfile`, no `${var,,}`. Check with `/bin/bash -n install.sh` on macOS.
 #
-# IDEMPOTENCY
-#     Re-running is safe and is the intended way to apply repo changes. The
-#     rule that makes it work: *a symlink pointing into this repo is ours*, so
-#     it is replaced without ceremony. Only real files are ever backed up, and
-#     they are only ever moved, never deleted.
+#   Idempotency. Re-running applies repo changes. A symlink that resolves into
+#   this repo is the script's own and is replaced without a prompt; anything
+#   else is the user's and is only ever moved to a backup, never deleted.
+#   `is_ours` is the test.
+#
+#   Best effort after linking. Every step after the configuration is linked
+#   (themes, extensions, the Neovim bootstrap, the tldr cache, the login shell)
+#   warns on failure and continues, because the linked configuration is the
+#   part only this script provides.
+#
+#   Prompts. `confirm` takes a per-call default and, without a terminal,
+#   refuses; `--yes` answers yes without a keyboard. `chsh` and `sudo` prompt
+#   on their own and cannot be fed an answer, so they are gated on `[ -t 0 ]`
+#   and `--yes` does not override that.
+#
+#   The stow model, the per-OS mechanisms, and the font stack are documented
+#   in README.md; this file points at those sections rather than repeating
+#   them.
 # ==============================================================================
 
 set -euo pipefail
@@ -50,47 +62,44 @@ set -euo pipefail
 # ==============================================================================
 
 # WHAT: The repository root, resolved from this script's own location.
-# WHY : Makes the script runnable from anywhere (`~/personal/dotfiles/install.sh`
-#       works as well as `./install.sh`) without depending on the caller's
-#       working directory.
+# WHY : The script runs from any working directory
+#       (`~/personal/dotfiles/install.sh` works as well as `./install.sh`).
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# WHAT: Packages stowed with directory folding — the whole directory becomes one
+# WHAT: Packages stowed with directory folding: the whole directory becomes one
 #       symlink into the repo.
 # WHY : Correct when nothing else needs to live in that directory. `nvim` is
-#       folded deliberately: vim.pack writes nvim-pack-lock.json into the config
-#       directory, and folding is what lands it in the repo where it belongs.
+#       folded so that nvim-pack-lock.json, which vim.pack writes into the
+#       config directory, lands in the repo. See README.md § The stow model.
 PACKAGES_FOLD="neovide nvim ruff tlrc"
 
-# WHAT: Packages stowed with --no-folding — the directory stays real and each
+# WHAT: Packages stowed with --no-folding: the directory stays real and each
 #       file is linked individually.
-# WHY : Required whenever a directory must hold machine-local state alongside
-#       the symlinks. Two kinds qualify: apps that write next to their config
-#       (fish's fish_variables, Zed's conversations/, whatever `git config
-#       --global` appends), and directories that must hold one of the OS
-#       selector symlinks created in step 7 (bat, ghostty).
+# WHY : Required when a directory must hold machine-local state beside the
+#       symlinks: runtime state the application writes (fish's fish_variables,
+#       Zed's conversations/, the theme file install.sh fetches for delta), or
+#       one of the OS selector symlinks created in step 7 (bat, ghostty).
 PACKAGES_NOFOLD="bat fish ghostty git zed"
 
-# WHAT: Packages stowed with --no-folding AND a per-OS --ignore, in a third
+# WHAT: Packages stowed with --no-folding and a per-OS --ignore, in a third
 #       invocation of their own.
 # WHY : Visual Studio Code and Cursor read their settings from an XDG path on
-#       Linux but from ~/Library/Application Support on macOS, and neither
-#       format has a conditional. Each package therefore ships BOTH trees and
-#       the wrong one is filtered out at link time by EDITOR_IGNORE below.
-#       The separate invocation is not stylistic: --ignore is a per-run flag,
-#       so folding these into PACKAGES_NOFOLD would apply --ignore='\.config'
-#       to fish, ghostty, git and zed as well and erase their entire trees.
-#       --no-folding is required for the usual reason — User/ also holds
-#       globalStorage/, History/ and workspaceStorage/, all machine-local.
+#       Linux and from ~/Library/Application Support on macOS, and neither
+#       format has a conditional, so each package ships both trees and
+#       EDITOR_IGNORE filters out the wrong one at link time. --no-folding
+#       because User/ also holds globalStorage/, History/, and
+#       workspaceStorage/, all machine-local. The invocation is separate
+#       because --ignore is a per-run flag; applied to PACKAGES_NOFOLD it would
+#       remove the fish, ghostty, git, and zed trees.
 PACKAGES_EDITOR="vscode cursor"
 
-# WHAT: The regex that selects one of the two trees each editor package ships.
+# WHAT: The regex that selects one of the two trees each editor package ships,
+#       and the matching path prefix backup_conflicts skips.
 # WHY : Stow's --ignore drops matching path elements, so ignoring the tree the
-#       platform does NOT use is what leaves exactly one deployed. The value is
-#       set by detect_platform, which is the only place that knows the OS.
-# NOTE: This is also the skip-prefix backup_conflicts uses, so that the walker
-#       does not check the undeployed tree for conflicts. The two uses must
-#       agree — see backup_conflicts and stow_packages.
+#       platform does not use leaves one deployed. The function
+#       detect_platform sets both, because it is the only one that knows the
+#       OS, and the two must agree: the walker must not check the undeployed
+#       tree for conflicts.
 EDITOR_IGNORE=""
 EDITOR_SKIP_PREFIX=""
 
@@ -101,22 +110,22 @@ FONTS_NEEDED="JetBrainsMono Nerd Font, FiraCode Nerd Font, JetBrains Mono, Fira 
 # WHAT: A private repository mirroring the fonts this setup uses, stored with
 #       Git LFS.
 # WHY : Homebrew installs fonts through casks, which are macOS-only, and Linux
-#       distribution font packaging is too inconsistent to script reliably. On
-#       Linux this repository is the answer; macOS gets the casks instead.
+#       distribution font packaging varies too much to script. On Linux the
+#       fonts come from this repository; macOS gets the casks. README.md § The
+#       font stack lists the families and where each is used.
 # HOW : Access needs an SSH key belonging to the account that owns it. If the
-#       probe fails for any reason — no key, no access, offline — the fonts
-#       step is skipped with a message and the install continues.
+#       probe fails (no key, no access, offline) the fonts step is skipped with
+#       a message and the install continues.
 FONTS_REPO="git@github.com:cristiancristea00/fonts.git"
 FONTS_CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/dotfiles-fonts"
 
 # WHAT: Which directories to install, and which files from each.
-# WHY : The repository is ~317 MB because the Nerd families ship every width
-#       build, but the configs reference only the single-width "Mono" ones.
-#       Fetching per FILE rather than per directory is the difference between
-#       ~70 MB and the whole repository — the four small families are taken
-#       whole because filtering them would save nothing.
-# HOW : One "directory|glob" pair per line. The glob is matched by Git LFS,
-#       which is what decides which binaries are downloaded at all.
+# WHY : The repository is about 317 MB because the Nerd families ship every
+#       width build, but the configs reference only the single-width "Mono"
+#       ones. Fetching per file rather than per directory downloads about
+#       70 MB. The four small families are taken whole.
+# HOW : One "directory|glob" pair per line. Git LFS matches the glob and
+#       downloads only the matching binaries.
 FONT_SELECTION=$(cat <<'SELECTION'
 JetBrains Mono Nerd|JetBrainsMonoNerdFontMono-*
 Fira Code Nerd|FiraCodeNerdFontMono-*
@@ -146,8 +155,7 @@ BACKUP_DIR=""
 # Output helpers
 # ==============================================================================
 # WHAT: Colour codes, emitted only when stdout is a terminal.
-# WHY : Keeps the output readable interactively without polluting a log file or
-#       CI transcript with escape sequences.
+# WHY : A log file or CI transcript then holds no escape sequences.
 if [ -t 1 ]; then
     C_RESET=$'\033[0m'; C_BOLD=$'\033[1m'; C_DIM=$'\033[2m'
     C_BLUE=$'\033[34m'; C_GREEN=$'\033[32m'; C_YELLOW=$'\033[33m'; C_RED=$'\033[31m'
@@ -162,8 +170,8 @@ warn()  { printf '    %s!%s %s\n' "$C_YELLOW" "$C_RESET" "$*" >&2; }
 die()   { printf '\n%serror:%s %s\n' "$C_RED" "$C_RESET" "$*" >&2; exit 1; }
 
 # WHAT: Echo a command in dry-run mode, otherwise run it.
-# WHY : One wrapper means --dry-run cannot drift out of sync with what the
-#       script really does — there is no second code path to keep correct.
+# WHY : One wrapper keeps --dry-run in step with what the script does; there is
+#       no second code path.
 run() {
     if [ "$DRY_RUN" -eq 1 ]; then
         printf '    %s[dry-run]%s %s\n' "$C_DIM" "$C_RESET" "$*"
@@ -172,17 +180,15 @@ run() {
     fi
 }
 
-# WHAT: Ask a yes/no question. First argument is the default — `yes` or `no` —
-#       which is what pressing Enter selects and what the [Y/n] / [y/N] hint
-#       shows. The rest is the prompt.
-# WHY : The default has to differ per question. Backing files up destroys
-#       nothing and is the expected path, so Enter should accept it; enabling a
-#       third-party package repository or changing your login shell should not
-#       happen because you tapped Enter.
-# NOTE: When stdin is not a terminal this REFUSES rather than assuming yes.
-#       An earlier version returned yes, which meant piping the script into a
-#       shell silently moved your existing configs aside — consent inferred
-#       from the absence of a keyboard. `--yes` is how you say yes without one.
+# WHAT: Ask a yes/no question. The first argument is the default, `yes` or
+#       `no`, which Enter selects and the [Y/n] / [y/N] hint shows. The rest
+#       is the prompt.
+# WHY : The default differs per question: backing files up destroys nothing,
+#       so Enter accepts it; enabling a package repository or changing the
+#       login shell does not happen on Enter.
+# NOTE: Without a terminal on stdin this refuses rather than assuming yes. A
+#       non-tty default of yes would let a piped run move the user's configs
+#       aside unasked; `--yes` is the way to consent without a keyboard.
 confirm() {
     local default="$1"
     shift
@@ -211,25 +217,25 @@ confirm() {
 }
 
 # WHAT: True if $1 is already provided by this repository.
-# WHY : The ownership test the whole idempotency story rests on. Anything that
-#       resolves into the repo was created by a previous run (or by stow), so it
-#       can be replaced silently. Anything else is the user's real file and is
-#       treated as precious.
-# HOW : Two cases, and missing the second one is a real trap. A file can belong
-#       to the repo either because it IS a symlink into it (a --no-folding
-#       package, e.g. ~/.config/bat/config.darwin), or because a PARENT
+# WHY : Anything that resolves into the repo was created by a previous run or
+#       by stow and can be replaced; anything else is the user's file and is
+#       backed up. This is the test the idempotency rule in the header rests
+#       on.
+# HOW : Two cases. A path belongs to the repo if it is a symlink into it (a
+#       --no-folding package: ~/.config/bat/config.darwin) or if a parent
 #       directory is (a folded package: ~/.config/nvim is one symlink, so
 #       ~/.config/nvim/lua/theme.lua is a plain file reached through it).
-#       Testing only for a leaf symlink would classify every file in a folded
-#       package as a stranger and "back up" the entire deployed config on each
-#       run. `pwd -P` resolves symlinked parents, which covers that case.
+#       Testing only for a leaf symlink would treat every file in a folded
+#       package as the user's and back up the whole deployed config on each
+#       run. `pwd -P` resolves symlinked parents, which covers the second
+#       case.
 is_ours() {
     local path="$1" resolved
     [ -e "$path" ] || [ -L "$path" ] || return 1
 
     if [ -L "$path" ]; then
         # Resolve the link target relative to the directory holding the link,
-        # so relative targets (which is what stow creates) work.
+        # so the relative targets stow creates work.
         resolved="$(cd "$(dirname "$path")" 2>/dev/null \
             && cd "$(dirname "$(readlink "$path")")" 2>/dev/null && pwd -P)" || return 1
     else
@@ -242,11 +248,18 @@ is_ours() {
     esac
 }
 
+# WHAT: Print the help text: the header's title, USAGE, and WHAT IT DOES
+#       blocks.
+# WHY : The header is the single copy of that text.
+# NOTE: The line range must be updated when the header changes.
 usage() { sed -n '2,30p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
 # ==============================================================================
 # 1. Argument parsing
 # ==============================================================================
+# WHAT: Set the option variables above from the command line.
+# NOTE: `--packages` takes its list as a separate argument or with `=`, so
+#       both `--packages nvim` and `--packages=nvim` work.
 parse_args() {
     while [ $# -gt 0 ]; do
         case "$1" in
@@ -258,8 +271,8 @@ parse_args() {
             --packages)
                 shift
                 [ $# -gt 0 ] || die "--packages needs a comma-separated list"
-                # WHY: commas to spaces, so the value slots into the same
-                #      space-separated form as PACKAGES_FOLD/PACKAGES_NOFOLD.
+                # WHY: Commas become spaces, so the value has the same form as
+                #      PACKAGES_FOLD and PACKAGES_NOFOLD.
                 PACKAGES_REQUESTED="$(printf '%s' "$1" | tr ',' ' ')"
                 ;;
             --packages=*)
@@ -272,9 +285,8 @@ parse_args() {
 }
 
 # WHAT: Filter a package list down to what --packages asked for.
-# WHY : Keeps the fold/no-fold split intact under --packages: each group is
-#       filtered separately, so a selective run still stows each package the
-#       way that package requires.
+# WHY : Each group is filtered separately, so a selective run still stows each
+#       package the way that package requires.
 select_packages() {
     local candidates="$1" pkg want result=""
     [ -n "$PACKAGES_REQUESTED" ] || { printf '%s' "$candidates"; return; }
@@ -290,10 +302,10 @@ select_packages() {
 # 2. Platform detection
 # ==============================================================================
 # WHAT: Identify the OS, and on Linux the distribution and its package manager.
-# WHY : Only three things actually depend on this — Homebrew's prerequisites,
-#       the GUI applications, and which per-OS config variant gets linked. The
-#       script degrades rather than refusing on an unrecognised distribution,
-#       because Homebrew itself works nearly everywhere.
+# WHY : Three things depend on it: Homebrew's prerequisites, the GUI
+#       applications, and which per-OS config variant is linked. An
+#       unrecognised distribution is not an error, because Homebrew works on
+#       most of them.
 detect_platform() {
     step "Detecting platform"
 
@@ -304,7 +316,7 @@ detect_platform() {
     esac
 
     if [ "$OS" = "linux" ]; then
-        # /etc/os-release is the systemd-era standard and is present on every
+        # /etc/os-release is the systemd-era standard, present on every
         # mainstream distribution.
         if [ -r /etc/os-release ]; then
             # shellcheck disable=SC1091
@@ -313,8 +325,8 @@ detect_platform() {
             DISTRO="unknown"
         fi
 
-        # WHY: probe for the binary rather than trusting the distro ID, which
-        #      covers derivatives (Mint→apt, Manjaro→pacman) for free.
+        # WHY: Probing for the binary rather than trusting the distro ID also
+        #      covers derivatives (Mint uses apt, Manjaro uses pacman).
         if   command -v apt-get >/dev/null 2>&1; then PKG_MANAGER="apt"
         elif command -v dnf     >/dev/null 2>&1; then PKG_MANAGER="dnf"
         elif command -v pacman  >/dev/null 2>&1; then PKG_MANAGER="pacman"
@@ -323,8 +335,8 @@ detect_platform() {
     fi
 
     # WHY: macOS reads the editors' settings from Library/, so the .config tree
-    #      is the one to drop, and the reverse holds on Linux. The pattern is a
-    #      regex matched against each path element, hence the escaped dot.
+    #      is dropped there, and the reverse on Linux. The pattern is a regex
+    #      matched against each path element, hence the escaped dot.
     if [ "$OS" = "macos" ]; then
         EDITOR_IGNORE='\.config'
         EDITOR_SKIP_PREFIX=".config/"
@@ -343,11 +355,10 @@ detect_platform() {
 # ==============================================================================
 # 3. Homebrew prerequisites (Linux only)
 # ==============================================================================
-# WHAT: Install the compiler and utilities Homebrew needs before it will run.
+# WHAT: Install the compiler and utilities Homebrew needs before it runs.
 # WHY : macOS gets these from the Command Line Tools, which Homebrew's own
-#       installer handles. On Linux they must exist first, and Homebrew fails
-#       confusingly without them. An unknown package manager is a warning, not
-#       an error — the user may well have the tools already.
+#       installer handles. On Linux they must exist first. An unknown package
+#       manager is a warning; the tools may already be present.
 install_prerequisites() {
     [ "$OS" = "linux" ] || return 0
     command -v brew >/dev/null 2>&1 && return 0
@@ -378,11 +389,11 @@ install_prerequisites() {
 # ==============================================================================
 # 4. Homebrew
 # ==============================================================================
-# WHAT: Install Homebrew if absent, then make it usable for the rest of this run.
-# WHY : `brew shellenv` is the critical second half. The installer does not
-#       modify the running shell, so without evaluating it here every later step
-#       — brew bundle, stow, nvim — would fail with "command not found" on a
-#       machine where Homebrew was just installed.
+# WHAT: Install Homebrew if absent, then put it on PATH for the rest of this run.
+# WHY : The installer does not modify the running shell, so without evaluating
+#       `brew shellenv` here every later step (brew bundle, stow, nvim) would
+#       fail with "command not found" on a machine where Homebrew was just
+#       installed.
 install_homebrew() {
     step "Homebrew"
 
@@ -394,7 +405,8 @@ install_homebrew() {
             "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     fi
 
-    # Probe every prefix Homebrew uses, mirroring fish/conf.d/00-path.fish.
+    # Probe every prefix Homebrew uses; fish/conf.d/00-path.fish probes the
+    # first three, and the fourth is a per-user Linuxbrew install.
     local prefix
     for prefix in /opt/homebrew /usr/local /home/linuxbrew/.linuxbrew "$HOME/.linuxbrew"; do
         if [ -x "$prefix/bin/brew" ]; then
@@ -412,22 +424,19 @@ install_homebrew() {
 # 5. Brewfile
 # ==============================================================================
 # WHAT: Install everything the Brewfile declares.
-# WHY : The Brewfile is Ruby and guards its own entries with OS.mac? / OS.linux?
-#       and the CLI-only flag, so one file and one command serve both platforms.
-# NOTE: The environment variable MUST be HOMEBREW_-prefixed. Homebrew sanitises
-#       its environment and silently drops anything else, which would make
-#       --cli-only appear to work while installing the GUI apps anyway.
+# WHY : The Brewfile guards its own entries with OS.mac?, OS.linux?, and the
+#       CLI-only variable, so one file and one command serve both platforms.
+#       The variable must be HOMEBREW_-prefixed; the Brewfile header explains.
 install_brewfile() {
     step "Installing packages from the Brewfile"
     [ -f "$DOTFILES_DIR/Brewfile" ] || die "No Brewfile at $DOTFILES_DIR"
 
-    # WHY NOT FATAL: `brew bundle` fails the whole run if any single entry
-    #       fails, and the commonest cause is trivial — a font already installed
-    #       by hand that the cask refuses to adopt, or a formula unavailable on
-    #       this platform. None of that should stop the configuration from being
-    #       linked, which is the part of this script only it can do. The failure
-    #       is reported loudly and the run continues; `brew bundle check` at the
-    #       end tells you exactly what is still missing.
+    # WHY : A failed entry is not fatal. `brew bundle` fails the whole run if
+    #       any single entry fails, and the common causes (a font already
+    #       installed by hand that the cask refuses to adopt, a formula
+    #       unavailable on this platform) should not stop the configuration
+    #       from being linked. The failure is reported and `brew bundle check`
+    #       lists what is missing.
     local bundle_status=0
     if [ "$CLI_ONLY" -eq 1 ]; then
         info "CLI-only: GUI applications will be skipped"
@@ -451,18 +460,15 @@ install_brewfile() {
 # 6. GUI applications Homebrew cannot install (Linux only)
 # ==============================================================================
 # WHAT: Install Ghostty and Zed through the distribution's package manager.
-# WHY : Both are Homebrew *casks*, and casks are macOS-only — on Linux brew
-#       cannot provide them at all. Neovide is different: it has a real formula,
-#       so the Brewfile already handled it.
-# NOTE: Visual Studio Code and Cursor are casks too, and are NOT handled here.
-#       Code needs Microsoft's third-party apt/dnf repository and Cursor ships
-#       only an AppImage; adding a system repository unattended is out of scope
-#       for this script, exactly as fetching Ghostty's community .deb is. Their
-#       configuration still deploys — only the applications are manual. The
-#       Brewfile records the same decision and carries the download links.
-#       Every step here is best-effort and never fatal. Packaging for these two
-#       varies a lot between distributions, and a missing terminal emulator
-#       should not stop a dotfiles install that is otherwise fine.
+# WHY : Both are Homebrew casks, and casks are macOS-only. Neovide has a
+#       formula, so the Brewfile handled it.
+# NOTE: Visual Studio Code and Cursor are casks too and are not handled here.
+#       Code needs Microsoft's third-party apt or dnf repository and Cursor
+#       ships only an AppImage; this script adds no system repository and
+#       fetches no third-party package, which is also why it does not fetch
+#       Ghostty's community .deb. Their configuration still deploys; the
+#       Brewfile carries the download links. Every step here warns and
+#       continues, because packaging varies between distributions.
 install_gui_apps_linux() {
     [ "$OS" = "linux" ] || return 0
     [ "$CLI_ONLY" -eq 0 ] || return 0
@@ -475,9 +481,8 @@ install_gui_apps_linux() {
         case "$PKG_MANAGER" in
             pacman) run sudo pacman -S --needed --noconfirm ghostty || warn "Ghostty install failed" ;;
             apt)
-                # Ghostty entered the official Ubuntu archive in 26.04. Older
-                # releases need the community .deb, which is not something this
-                # script should fetch on the user's behalf.
+                # Ghostty entered the Ubuntu archive in 26.04. Older releases
+                # need the community .deb, which this script does not fetch.
                 if run sudo apt-get install -y ghostty; then
                     ok "Ghostty installed"
                 else
@@ -510,10 +515,9 @@ install_gui_apps_linux() {
         case "$PKG_MANAGER" in
             pacman) run sudo pacman -S --needed --noconfirm zed || warn "Zed install failed" ;;
             *)
-                # Debian/Fedora have no official Zed package. The upstream
-                # method is `curl … | sh`, which this script deliberately does
-                # not run for you — piping a remote script into a shell should
-                # be your decision, not a side effect of installing dotfiles.
+                # Debian and Fedora have no official Zed package. The upstream
+                # method is `curl … | sh`, which this script does not run:
+                # piping a remote script into a shell is the user's decision.
                 warn "Zed has no official package for $PKG_MANAGER."
                 warn "Install it yourself from https://zed.dev/download (or Flathub: dev.zed.Zed)."
                 ;;
@@ -526,11 +530,9 @@ install_gui_apps_linux() {
 # ==============================================================================
 # WHAT: Install the font families the configs reference, from the private LFS
 #       repository, into the user font directory.
-# WHY : macOS gets fonts from Homebrew casks, which do not exist on Linux. This
-#       is the Linux equivalent, and the reason the repository exists.
-# NOTE: Every failure here is a warning. A machine without the fonts renders
-#       icons as boxes, which is cosmetic; it is not a reason to fail an
-#       install that otherwise succeeded.
+# WHY : macOS gets fonts from Homebrew casks, which do not exist on Linux.
+# NOTE: Every failure here is a warning. Without the fonts Neovim's icons
+#       render as boxes; the rest of the install is unaffected.
 install_fonts_linux() {
     [ "$OS" = "linux" ] || return 0
 
@@ -542,9 +544,10 @@ install_fonts_linux() {
         return 0
     fi
 
-    # WHY BatchMode: without it ssh prompts for a passphrase or host key and the
-    #      install hangs. ConnectTimeout keeps an unreachable host from stalling
-    #      the run. macOS has no `timeout` binary, so ssh must do this itself.
+    # WHY : BatchMode stops ssh prompting for a passphrase or host key, which
+    #       would hang the install. ConnectTimeout keeps an unreachable host
+    #       from stalling the run; macOS has no `timeout` binary, so ssh does
+    #       this itself.
     info "Checking access to the font repository…"
     if ! GIT_SSH_COMMAND='ssh -o BatchMode=yes -o ConnectTimeout=5' \
         git ls-remote "$FONTS_REPO" >/dev/null 2>&1; then
@@ -556,10 +559,10 @@ install_fonts_linux() {
         return 0
     fi
 
-    # WHY GIT_LFS_SKIP_SMUDGE: without it the clone downloads every binary in
-    #      the repository — 317 MB — before anything gets to choose. Skipping
-    #      the smudge filter fetches only pointers, and `git lfs pull --include`
-    #      below then downloads just the files that will be installed.
+    # WHY : GIT_LFS_SKIP_SMUDGE makes the clone fetch pointers only; without it
+    #       the clone downloads every binary in the repository (317 MB) before
+    #       anything can choose. `git lfs pull --include` below then downloads
+    #       only the files that will be installed.
     if [ -d "$FONTS_CACHE/.git" ]; then
         info "Updating the font cache…"
         run git -C "$FONTS_CACHE" fetch --depth 1 origin main || warn "Font fetch failed"
@@ -597,8 +600,8 @@ SELECTION
     local installed=0
     while IFS='|' read -r dir glob; do
         [ -n "$dir" ] || continue
-        # WHY the find: directory names contain spaces and the globs are matched
-        #      by the shell, so a plain `cp dir/glob` would word-split.
+        # WHY : `find` rather than `cp dir/glob`: the directory names contain
+        #       spaces and the shell would word-split the glob.
         local n
         n=$(find "$FONTS_CACHE/$dir" -maxdepth 1 -name "$glob" \
             \( -name '*.ttf' -o -name '*.otf' \) -exec cp {} "$font_dir/" \; -print 2>/dev/null | wc -l)
@@ -620,28 +623,26 @@ SELECTION
 # ==============================================================================
 # 7. Backing up and stowing
 # ==============================================================================
-# WHAT: Find real files that stow would collide with, and move them aside.
-# WHY : Stow refuses to overwrite anything it does not own, which is the
-#       behaviour we want — but on a machine with existing configs that means it
-#       refuses to do anything at all. Moving conflicts into a timestamped
-#       directory clears the way while destroying nothing.
-#       Symlinks into this repo are skipped: those are ours from a previous run,
-#       and backing them up would fill the backup with junk on every re-run.
-# WHAT: Walk every file a package would install and back up whatever is in the
-#       way. The optional second argument is a leading path fragment to skip.
-# WHY : The skip is for the editor packages only, whose undeployed tree must not
-#       be treated as something to install — see EDITOR_IGNORE. It must NEVER be
-#       applied to the general call: every other package lives under .config/,
-#       so a .config/ skip there would silently disable conflict detection for
-#       bat, fish, ghostty, git and zed.
+# WHAT: Walk every file the given packages would install and move the real
+#       files in the way into a timestamped backup directory. The optional
+#       second argument is a leading path fragment to skip.
+# WHY : Stow refuses to overwrite anything it does not own, so on a machine
+#       with existing configs it would do nothing. Moving conflicts aside
+#       destroys nothing. Symlinks into this repo are skipped: they are from a
+#       previous run, and backing them up would copy the deployed config on
+#       every re-run.
+# NOTE: The skip is for the editor packages only, whose undeployed tree must
+#       not be treated as something to install (see EDITOR_IGNORE). Every other
+#       package lives under .config/, so a .config/ skip on the general call
+#       would disable conflict detection for bat, fish, ghostty, git, and zed.
 backup_conflicts() {
     local packages="$1" skip="${2:-}" pkg src rel target conflicts=""
 
     for pkg in $packages; do
         [ -d "$DOTFILES_DIR/$pkg" ] || continue
-        # Walk every file the package would install. `find -print` (not -print0)
-        # is safe here because these paths are ours and contain no newlines;
-        # they do contain spaces, hence the quoting and IFS handling below.
+        # `find -print` (not -print0) works here because these paths are the
+        # repo's own and contain no newlines; they do contain spaces, hence
+        # the quoting and IFS handling below.
         while IFS= read -r src; do
             rel="${src#"$DOTFILES_DIR/$pkg/"}"
             case "$rel" in
@@ -653,10 +654,10 @@ backup_conflicts() {
             # WHY: Skip the tree this platform does not deploy, if asked.
             [ -n "$skip" ] && case "$rel" in "$skip"*) continue ;; esac
             target="$HOME/$rel"
-            # WHY: The -L test is not redundant with -e. A DANGLING symlink —
-            #      one left by a previous install from a repo that has since
-            #      moved — fails -e, and without the second test it would be
-            #      skipped here and then collide during stow.
+            # WHY: The -L test is needed as well as -e. A dangling symlink
+            #      (from a repo that has since moved) fails -e, and without the
+            #      second test it would be skipped here and then collide
+            #      during stow.
             if { [ -e "$target" ] || [ -L "$target" ]; } && ! is_ours "$target"; then
                 conflicts="$conflicts$target
 "
@@ -671,19 +672,17 @@ EOF
     BACKUP_DIR="$HOME/.dotfiles-backup-$(date +%Y%m%d-%H%M%S)"
     warn "These existing files are in the way and would be moved to:"
     warn "  $BACKUP_DIR"
-    # WHY >&2: the list belongs with the warning lines above and the question
-    #       below. Sending it to stdout instead let redirection interleave the
-    #       three parts of one message out of order.
+    # WHY : The list goes to stderr with the warning lines above and the
+    #       question below; on stdout, redirection could interleave the three
+    #       parts of one message out of order.
     printf '%s' "$conflicts" | sed 's|^|      |' >&2
 
     if ! confirm yes "Move them and continue?"; then
-        # WHY THIS WORDING: an earlier version claimed "Nothing was changed",
-        #       which was false — by the time this prompt appears the package
-        #       manager has already run. Aborting here leaves a half-set-up
-        #       machine, and saying so is the difference between a user who
-        #       re-runs and one who wonders what state they are in.
+        # WHY : The message says what has already run. By the time this prompt
+        #       appears the package manager has run, so "nothing was changed"
+        #       would be false and the user would not know the machine's state.
         warn "Aborted before linking any configuration."
-        warn "Already done and NOT undone by this abort:"
+        warn "Already done, and not undone by this abort:"
         warn "  • Homebrew installed or updated"
         warn "  • packages from the Brewfile installed"
         [ "$OS" = "linux" ] && warn "  • GUI applications installed"
@@ -704,14 +703,13 @@ EOF
 }
 
 # WHAT: Remove folded symlinks left by a previous layout.
-# WHY : A package that used to be folded leaves ~/.config/<pkg> as a single
-#       symlink into the repo. Stowing it with --no-folding afterwards would
-#       conflict, because stow cannot turn a symlink into a real directory. As
-#       these links are ours, deleting them is safe and is what makes the
-#       fold→no-fold migration invisible.
+# WHY : A package stowed folded leaves ~/.config/<pkg> as a single symlink into
+#       the repo, and stowing it with --no-folding afterwards conflicts,
+#       because stow cannot turn a symlink into a real directory. The link is
+#       the repo's own, so deleting it is safe.
 unfold_stale_links() {
     local packages="$1" pkg dir
-    # shellcheck disable=SC2086  # deliberate: $packages is a space-separated list
+    # shellcheck disable=SC2086  # $packages is a space-separated list, split on the spaces
     for pkg in $packages; do
         dir="$HOME/.config/$pkg"
         if [ -L "$dir" ] && is_ours "$dir"; then
@@ -721,6 +719,11 @@ unfold_stale_links() {
     done
 }
 
+# WHAT: Back up conflicts, then run the three stow invocations.
+# WHY : --no-folding and --ignore are per-run flags, so each group is stowed
+#       in its own call. The editor packages are checked for conflicts
+#       separately, so their skip prefix cannot reach the other packages.
+#       README.md § The stow model has the reasoning.
 stow_packages() {
     command -v stow >/dev/null 2>&1 || {
         [ "$DRY_RUN" -eq 1 ] && { warn "stow not installed; skipping (dry run)"; return 0; }
@@ -734,13 +737,10 @@ stow_packages() {
 
     step "Linking configuration"
     backup_conflicts "$fold $nofold"
-    # WHY: The editor packages are checked separately so the skip-prefix that
-    #      hides their undeployed tree cannot reach the packages above.
     [ -n "$editor" ] && backup_conflicts "$editor" "$EDITOR_SKIP_PREFIX"
     unfold_stale_links "$nofold $editor"
 
-    # Two invocations because folding is a per-run flag, not per-package.
-    # The unquoted expansions below are deliberate: each list must split into
+    # The unquoted expansions below are intended: each list must split into
     # several arguments for stow. Package names are fixed identifiers defined at
     # the top of this file, so there is nothing to glob or mis-split.
     if [ -n "$fold" ]; then
@@ -753,8 +753,6 @@ stow_packages() {
         # shellcheck disable=SC2086
         run stow --no-folding --target="$HOME" --dir="$DOTFILES_DIR" $nofold
     fi
-    # A third invocation, because --ignore is a per-run flag like --no-folding.
-    # Applying it to the list above would erase the other packages' trees.
     if [ -n "$editor" ]; then
         info "Editors:   $editor (ignoring /$EDITOR_IGNORE/)"
         # shellcheck disable=SC2086
@@ -768,12 +766,12 @@ stow_packages() {
 # 8. Per-OS selector symlinks
 # ==============================================================================
 # WHAT: The three links stow cannot express, because they depend on the OS.
-# WHY : bat and Ghostty have config formats with no conditionals, so each ships
-#       a .darwin and a .linux variant and this picks one. tlrc needs the
-#       opposite treatment: its config lives at the portable XDG path, and macOS
-#       needs a bridge from the Application Support location it actually reads.
-#       These are recreated on every run, which is how a --dry-run followed by a
-#       real run, or an OS change, converges correctly.
+# WHY : The bat and Ghostty config formats have no conditionals, so each ships
+#       a .darwin and a .linux variant and this picks one. tlrc's config lives
+#       at the XDG path, and macOS needs a bridge from the Application Support
+#       location it reads. The links are recreated on every run, so a dry run
+#       followed by a real run, or an OS change, ends in the same state. See
+#       README.md § Per-OS configuration.
 link_os_selectors() {
     local suffix
     if [ "$OS" = "macos" ]; then suffix="darwin"; else suffix="linux"; fi
@@ -790,10 +788,9 @@ link_os_selectors() {
         ok "ghostty → os-$suffix.conf"
     fi
 
-    # WHY: tlrc resolves its config through the Rust `dirs` crate, which returns
-    #      ~/.config on Linux but ~/Library/Application Support on macOS. The
-    #      repo ships only the portable path; this bridges the macOS one so both
-    #      platforms read the same file from any shell.
+    # WHY: The tlrc client resolves its config through the Rust `dirs` crate, which gives
+    #      ~/.config on Linux and ~/Library/Application Support on macOS. The
+    #      repo ships the XDG path; this bridges the macOS one.
     if [ "$OS" = "macos" ] && [ -f "$HOME/.config/tlrc/config.toml" ]; then
         run mkdir -p "$HOME/Library/Application Support/tlrc"
         run ln -sfn "$HOME/.config/tlrc/config.toml" \
@@ -805,29 +802,16 @@ link_os_selectors() {
 # ==============================================================================
 # 9. Post-install steps
 # ==============================================================================
-# WHAT: Run Neovim once with no UI so it installs plugins and compiles parsers.
-# WHY : vim.pack clones on first start and nvim-treesitter then compiles ~22
-#       parsers. Doing it here means the first real launch is instant instead of
-#       a several-minute wait with half-broken highlighting.
 # WHAT: Install the extensions listed in the editor packages' .txt files.
 # WHY : Neither editor has a declarative equivalent of Zed's
-#       auto_install_extensions — nothing in settings.json can install an
-#       extension, and .vscode/extensions.json is workspace-level
-#       *recommendations* only. Each editor's own CLI is the shipped mechanism,
-#       so the lists live in the repo and this feeds them in.
-#       The step is best-effort by design: a missing CLI, an unpublished id or
-#       an offline machine must not fail an install whose real job — linking
-#       configuration — has already succeeded.
-# NOTE: The two editors resolve ids against DIFFERENT galleries. Visual Studio
-#       Code uses Microsoft's Marketplace; Cursor uses its own gallery at
-#       marketplace.cursorapi.com, which mirrors much of the Marketplace but
-#       not Microsoft's licence-restricted extensions. An id only installs
-#       where it is published. That is why there are three lists rather than
-#       one; see vscode/extensions.txt for the full explanation and for the
-#       query that decides which list an id belongs in.
-# HOW : The `code` CLI appears on $PATH via the editor's "Shell Command:
-#       Install 'code' command in PATH" palette action, which is why its
-#       absence is a warning rather than an error.
+#       auto_install_extensions, so the lists live in the repo and this feeds
+#       them to each editor's CLI. The two editors resolve ids against
+#       different galleries, so there are three lists;
+#       vscode/README.md § Extensions explains and has the query that decides
+#       where an id belongs.
+# HOW : The `code` CLI reaches $PATH through the editor's "Shell Command:
+#       Install 'code' command in PATH" palette action, so its absence is a
+#       warning.
 install_editor_extensions() {
     step "Installing editor extensions"
 
@@ -841,21 +825,17 @@ install_editor_extensions() {
 }
 
 # WHAT: Feed one editor's CLI the ids it does not already have.
-# WHY : Split out so the two editors share the parsing, and so a failure in one
-#       cannot stop the other.
-# NOTE: The installed set is read ONCE, with --list-extensions, and every id is
-#       checked against it in the shell. The obvious alternative — calling
-#       --install-extension for everything and letting --force make it a no-op
-#       — costs about 0.76s per id whether or not anything happens, which at
-#       73 declared ids across the two editors is roughly 55 seconds of every
-#       install spent reinstalling what is already there. One --list-extensions
-#       costs 0.22s.
-# NOTE: The consequence is that this step no longer UPGRADES anything, since it
-#       no longer touches an extension that is present. That is deliberate and
-#       safe here only because `extensions.autoUpdate` is "on" in
+# WHY : Split out so the two editors share the parsing and a failure in one
+#       does not stop the other.
+# NOTE: The installed set is read once, with --list-extensions, and each id is
+#       checked against it in the shell. Calling --install-extension for every
+#       id and letting --force make it a no-op costs about 0.76 s per id; the
+#       two editors' lists add up to 73 install calls, about 55 s per install.
+#       One --list-extensions call costs 0.22 s.
+# NOTE: This step therefore does not upgrade an extension that is present.
+#       That is safe because `extensions.autoUpdate` is "on" in
 #       vscode/.config/Code/User/settings.json, so both editors update
-#       themselves. Turn that off and extensions freeze at whatever version
-#       they were installed at.
+#       themselves; with it off, extensions stay at their installed version.
 install_extension_list() {
     local cli="$1" list path id lower installed
     local declared=0 present=0 added=0 failed=0
@@ -866,27 +846,28 @@ install_extension_list() {
         return 1
     }
 
-    # WHY: The surrounding spaces are load-bearing, not tidiness. The test
-    #      below is a substring match, and this repo declares BOTH
-    #      `ms-python.python` and `ms-python.vscode-python-envs`. Without the
-    #      padding the shorter id would match inside the longer one and a
-    #      genuinely missing extension would be skipped forever.
-    # WHY: Both sides are lower-cased because Marketplace ids are
-    #      case-insensitive and are DISPLAYED capitalised
-    #      (`Catppuccin.catppuccin-vsc`) while both CLIs report them lowercase.
-    #      Everything here is lowercase today, so this is insurance: paste an id
-    #      as the Marketplace shows it and without this the check would miss on
-    #      every run. `tr` rather than ${var,,} — bash 3.2 has no case
-    #      conversion.
-    # NOTE: If --list-extensions fails, this is empty, every id looks missing
-    #       and all of them are installed. That is the safe way round.
+    # WHY : The surrounding spaces are required. The test below is a substring
+    #       match, and the repo declares both `ms-python.python` and
+    #       `ms-python.vscode-python-envs`; without the padding the shorter id
+    #       would match inside the longer one and a missing extension would
+    #       never be installed.
+    # WHY : Both sides are lower-cased because Marketplace ids are
+    #       case-insensitive and displayed capitalised
+    #       (`Catppuccin.catppuccin-vsc`) while both CLIs report them
+    #       lowercase, so an id pasted from the Marketplace would otherwise
+    #       never match. Every id here is lowercase today; the lower-casing
+    #       guards a future paste. `tr` rather than ${var,,}: bash 3.2 has no
+    #       case conversion.
+    # NOTE: If --list-extensions fails, the set is empty, every id looks
+    #       missing, and all of them are installed; reinstalling a present
+    #       extension is harmless.
     installed=" $("$cli" --list-extensions 2>/dev/null | tr '[:upper:]' '[:lower:]' | tr '\n' ' ')"
 
     for list in "$@"; do
         path="$DOTFILES_DIR/$list"
         [ -f "$path" ] || continue
-        # WHY: The `|| true` is load-bearing. grep exits 1 when nothing matches,
-        #      which is the normal state of a list that is entirely comments,
+        # WHY: The `|| true` is required. The grep command exits 1 when nothing
+        #      matches, the normal state of a list that is entirely comments,
         #      and `set -e` would end the script there.
         while IFS= read -r id; do
             [ -n "$id" ] || continue
@@ -929,20 +910,14 @@ EOF
     return 0
 }
 
-# WHAT: Download the Catppuccin themes for tools whose port is a FILE rather
-#       than a setting — delta, eza and Xcode.
-# WHY : These three ship their theme as a file the tool reads from a fixed
-#       path, and the files are not committed here. Fetching keeps them current
-#       with upstream at the cost of a network dependency, which is why every
-#       failure below is a warning rather than an error.
-#       The other Catppuccin surfaces need nothing fetched: fish 4.4+ and bat
-#       both ship the flavours built in, and Ghostty, Zed, VS Code, Cursor and
-#       Neovim get theirs from an extension or a bundled theme.
-# NOTE: An absent file is harmless everywhere it is used. Git ignores an
-#       `include.path` that does not exist, delta ignores a `features` name it
-#       cannot resolve, and eza falls back to its built-in colours when
-#       $EZA_CONFIG_DIR holds no theme.yml. So an offline install leaves these
-#       three unthemed and nothing else broken.
+# WHAT: Download the Catppuccin themes for the tools whose port is a file
+#       rather than a setting: delta, eza, and Xcode.
+# WHY : The files are not committed; fetching keeps them current with upstream
+#       at the cost of a network dependency, so every failure is a warning.
+#       The other Catppuccin surfaces need nothing fetched: fish 4.4 or later
+#       and bat ship the flavours, and Ghostty, Zed, VS Code, Cursor, and Neovim get
+#       theirs from a bundled theme or an extension. README.md § Fetched themes
+#       says what each consumer does when the file is absent.
 # HOW : Re-run the installer to refresh them; each fetch overwrites.
 install_catppuccin_themes() {
     step "Fetching Catppuccin themes"
@@ -957,17 +932,17 @@ install_catppuccin_themes() {
     fetch_theme "$raw/delta/main/catppuccin.gitconfig" \
         "$HOME/.config/git/catppuccin.gitconfig" "delta"
 
-    # WHY: eza reads its theme from $EZA_CONFIG_DIR/theme.yml — one directory,
-    #      one theme. Two directories is what lets the shell point at the right
-    #      one per appearance; see fish/.config/fish/conf.d/25-theme.fish.
-    #      The mauve accent matches catppuccin.accentColor in the editors.
+    # WHY: The eza tool reads its theme from $EZA_CONFIG_DIR/theme.yml, one directory per
+    #      theme, so two directories let fish/.config/fish/conf.d/25-theme.fish
+    #      point at one per appearance. The mauve accent matches
+    #      catppuccin.accentColor in the editors.
     fetch_theme "$raw/eza/main/themes/mocha/catppuccin-mocha-mauve.yml" \
         "$HOME/.config/eza-mocha/theme.yml" "eza (mocha)"
     fetch_theme "$raw/eza/main/themes/latte/catppuccin-latte-mauve.yml" \
         "$HOME/.config/eza-latte/theme.yml" "eza (latte)"
 
-    # WHY: macOS-only because Xcode is. The %20 is required — the upstream
-    #      filenames contain a space, and curl will not encode it for you.
+    # WHY: macOS-only because Xcode is. The upstream filenames contain a space,
+    #      which must be written as %20; curl does not encode it.
     if [ "$OS" = "macos" ]; then
         local xc="$HOME/Library/Developer/Xcode/UserData/FontAndColorThemes"
         fetch_theme "$raw/xcode/main/themes/Catppuccin%20Mocha.xccolortheme" \
@@ -982,8 +957,8 @@ install_catppuccin_themes() {
 }
 
 # WHAT: Download one file to one destination, creating the directory.
-# WHY : Split out so every fetch gets the same treatment: a temp file first, so
-#       an interrupted or failed download can never leave a truncated theme in
+# WHY : One function gives every fetch the same handling: a temp file first,
+#       so a failed or interrupted download never leaves a truncated theme in
 #       place, and a warning rather than an error on failure.
 fetch_theme() {
     local url="$1" dest="$2" label="$3" tmp
@@ -1007,18 +982,22 @@ fetch_theme() {
     return 0
 }
 
+# WHAT: Run Neovim once with no UI so it installs plugins and compiles parsers.
+# WHY : The vim.pack manager clones on first start and nvim-treesitter then
+#       compiles about 22 parsers, so the first interactive launch would
+#       otherwise wait minutes with partial highlighting.
 bootstrap_neovim() {
     command -v nvim >/dev/null 2>&1 || { warn "nvim not found; skipping bootstrap"; return 0; }
     step "Bootstrapping Neovim (plugins and parsers)"
     info "This takes a few minutes on a fresh machine…"
-    # WHY THE EXPLICIT WAIT: starting Neovim is enough to make vim.pack clone
-    #       the plugins, but plugins/treesitter.lua calls install() WITHOUT
-    #       waiting — deliberately, so an interactive session is never blocked.
-    #       Headless, that means Neovim would exit before a single parser
-    #       finished compiling. Collecting the parser list from languages.lua
-    #       and waiting on the handle is what actually does the work here.
-    # NOTE: Not fatal. One grammar that will not compile should not fail an
-    #       otherwise good install; :checkhealth will show it later.
+    # WHY : The explicit wait. Starting Neovim makes vim.pack clone the
+    #       plugins, but plugins/treesitter.lua calls install() without waiting
+    #       so that an interactive session is never blocked; headless, Neovim
+    #       would exit before a parser finished compiling. Collecting the
+    #       parser list from languages.lua and waiting on the handle does the
+    #       compiling here.
+    # NOTE: Not fatal. A grammar that will not compile shows up in
+    #       :checkhealth later.
     run nvim --headless "+lua
         local seen, parsers = {}, {}
         for _, lang in ipairs(require('languages')) do
@@ -1032,8 +1011,8 @@ bootstrap_neovim() {
 }
 
 # WHAT: Download the tldr page cache.
-# WHY : The config defers auto-updates until after a page renders, so the very
-#       first lookup on a fresh machine would otherwise be the slow one.
+# WHY : The config defers auto-updates until after a page renders, so the first
+#       lookup on a fresh machine would otherwise wait for the download.
 prime_tldr_cache() {
     command -v tldr >/dev/null 2>&1 || return 0
     step "Priming the tldr cache"
@@ -1041,13 +1020,13 @@ prime_tldr_cache() {
     ok "tldr ready"
 }
 
-# WHAT: Make fish the login shell.
-# WHY : Everything in fish/ only applies to an interactive fish session, so
-#       without this the shell config is installed but never used.
-#       Resolved with `command -v` *after* Homebrew is on PATH, so it finds the
+# WHAT: Offer to make fish the login shell.
+# WHY : Everything in fish/ applies only to an interactive fish session, so
+#       without this the shell config is installed but not used. The path is
+#       resolved with `command -v` after Homebrew is on PATH, so it is the
 #       brew-installed fish rather than a system one.
-# NOTE: Never fatal. It needs a password, it touches a system file, and it can
-#       legitimately be refused — none of which should fail the install.
+# NOTE: Never fatal. It needs a password, it edits a system file, and it can be
+#       refused.
 set_login_shell() {
     command -v fish >/dev/null 2>&1 || { warn "fish not found; skipping shell change"; return 0; }
 
@@ -1064,13 +1043,11 @@ set_login_shell() {
     info "Current: ${current:-unknown}"
     info "New:     $fish_path"
 
-    # WHY THE TTY TEST: `chsh` prompts for your password ITSELF, and there is
-    #       no flag to feed it one. Without a terminal that prompt cannot be
-    #       answered and the command hangs forever — which is exactly what
-    #       happens if this runs under CI, a pipe, or an automation harness.
-    #       `--yes` deliberately does NOT override this: assuming consent is
-    #       reasonable for moving a file, not for an operation that will then
-    #       block on credentials nobody can supply.
+    # WHY : The tty test. `chsh` prompts for the password itself, with no flag
+    #       to supply one, so without a terminal the command would hang (under
+    #       CI, a pipe, or an automation harness). `--yes` does not override
+    #       this: consent for moving a file does not extend to an operation
+    #       that then blocks on credentials nobody can supply.
     if [ ! -t 0 ]; then
         warn "Not running in a terminal, so the login shell was left alone."
         warn "chsh needs to prompt for your password. Change it yourself with:"
@@ -1083,8 +1060,8 @@ set_login_shell() {
         return 0
     fi
 
-    # chsh refuses a shell that is not listed in /etc/shells, so that comes
-    # first. Also a password prompt, hence also gated on the terminal above.
+    # chsh refuses a shell not listed in /etc/shells, so that comes first. It is
+    # also a password prompt, hence gated on the terminal above.
     if ! grep -qxF "$fish_path" /etc/shells 2>/dev/null; then
         info "Adding $fish_path to /etc/shells (needs sudo)"
         run sudo sh -c "printf '%s\n' '$fish_path' >> /etc/shells" \
@@ -1102,9 +1079,8 @@ set_login_shell() {
 # 10. Uninstall
 # ==============================================================================
 # WHAT: Remove every symlink this script created, leaving software installed.
-# WHY : Stow can unstow its own packages, but it knows nothing about the three
-#       OS selector links from step 8 — those must be removed explicitly or they
-#       are left dangling at paths stow will never look at again.
+# WHY : Stow unstows its own packages but knows nothing about the three OS
+#       selector links from step 8, which must be removed explicitly.
 uninstall() {
     step "Removing symlinks"
 
@@ -1118,11 +1094,10 @@ uninstall() {
         fi
     done
 
-    # WHY: The themes fetched by install_catppuccin_themes are real files this
-    #      script created, not symlinks stow knows about, so nothing else would
-    #      ever remove them. The eza directories are ours entirely and go with
-    #      their contents; the Xcode themes are removed individually because
-    #      that directory is Xcode's and holds its own themes too.
+    # WHY: The fetched themes are real files this script created, not symlinks
+    #      stow knows about. The eza directories hold nothing else, so they go
+    #      too; the Xcode themes are removed individually because that
+    #      directory is Xcode's and holds its own themes.
     local fetched
     for fetched in "$HOME/.config/git/catppuccin.gitconfig" \
         "$HOME/.config/eza-mocha/theme.yml" \
@@ -1145,7 +1120,7 @@ uninstall() {
     editor="$(select_packages "$PACKAGES_EDITOR")"
 
     if command -v stow >/dev/null 2>&1; then
-        # shellcheck disable=SC2086  # deliberate word splitting, as above
+        # shellcheck disable=SC2086  # word splitting intended, as above
         [ -n "$fold" ] && run stow -D --target="$HOME" --dir="$DOTFILES_DIR" $fold
         # shellcheck disable=SC2086
         [ -n "$nofold" ] && run stow -D --no-folding --target="$HOME" --dir="$DOTFILES_DIR" $nofold
@@ -1161,8 +1136,8 @@ uninstall() {
     fi
 
     info ""
-    info "Fonts installed from the font repository are left in place —"
-    info "they are files, not symlinks. Remove them with:"
+    info "Fonts installed from the font repository are left in place; they are"
+    info "files, not symlinks. Remove them with:"
     info "    rm ~/.local/share/fonts/{JetBrainsMono,FiraCode,IBMPlexMono,SourceCodePro}* && fc-cache -f"
     info ""
     info "Installed software was left alone. To remove it too:"
@@ -1173,11 +1148,12 @@ uninstall() {
 # ==============================================================================
 # 11. Summary
 # ==============================================================================
+# WHAT: Print what to restart, where backups went, and how to verify.
 print_summary() {
     step "Done"
 
     if [ "$DRY_RUN" -eq 1 ]; then
-        info "This was a dry run — nothing was changed."
+        info "This was a dry run; nothing was changed."
         info "Re-run without --dry-run to apply."
         return 0
     fi
@@ -1206,6 +1182,13 @@ print_summary() {
 # ==============================================================================
 # Main
 # ==============================================================================
+# WHAT: Run the steps in the order the header lists.
+# WHY : The themes and the extensions run outside the dry-run guard because
+#       both can preview cheaply: the themes print the five files they would
+#       place, and the extension step reads each editor's installed set and
+#       names what it would add. The Neovim bootstrap, the tldr cache, and the
+#       login shell are slow or need a terminal and have nothing to show in a
+#       dry run.
 main() {
     parse_args "$@"
 
@@ -1226,16 +1209,7 @@ main() {
     install_fonts_linux
     stow_packages
     link_os_selectors
-
-    # WHY: Outside the guard below because it is the only one of these steps
-    #      that is cheap to preview — it prints the five files it would place
-    #      in $HOME and touches nothing. The rest are slow or network-heavy and
-    #      have nothing useful to say in a dry run.
     install_catppuccin_themes
-    # WHY: Outside the guard for the same reason as the themes above — now that
-    #      it reads each editor's installed set instead of reinstalling
-    #      everything, a preview costs two --list-extensions calls and can name
-    #      exactly what a real run would add.
     install_editor_extensions
 
     if [ "$DRY_RUN" -eq 0 ]; then

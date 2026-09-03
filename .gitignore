@@ -1,14 +1,7 @@
-# macOS Finder metadata. Also excluded from stow via the .stow-local-ignore
-# files in the fish/, git/ and zed/ packages, so a stray one never gets
-# symlinked into ~/.config.
+# macOS Finder metadata. The .stow-local-ignore files also keep it out of stow.
 .DS_Store
 
-# NOTE on what is deliberately NOT ignored:
-#
-#   nvim/.config/nvim/nvim-pack-lock.json
-#     Created by vim.pack on first launch. COMMIT IT — it pins exact plugin
-#     revisions so a fresh machine reproduces this setup exactly.
-#
-#   git/.config/git/config.work
-#     Contains the work Git identity. Committed by choice; see the note in
-#     that file for how to make it local-only again if this repo is published.
+# Committed, although they look like state: nvim/.config/nvim/nvim-pack-lock.json
+# (pins the plugin revisions a fresh machine installs; see nvim/README.md) and
+# git/.config/git/config.work (the work identity; its header says how to make
+# it local-only).

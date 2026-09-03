@@ -2,199 +2,159 @@
 # Brewfile — every external dependency of these dotfiles
 # ==============================================================================
 #
-# Install or update everything with:
+# Install or update everything with `brew bundle --file ~/personal/dotfiles/Brewfile`,
+# or run ./install.sh, which does this and the rest. `brew bundle` skips
+# entries already installed. `brew bundle cleanup --file <this file>` lists
+# what is installed but not declared here.
 #
-#     brew bundle --file ~/personal/dotfiles/Brewfile
+# A BREWFILE IS RUBY
+#   `OS.mac?` and `OS.linux?` come from Homebrew, and any entry can carry a
+#   trailing condition. Casks are macOS-only (Homebrew on Linux installs
+#   formulae only), so every cask is guarded; without the guard `brew bundle`
+#   fails on Linux at the first one.
 #
-# or just run ./install.sh, which does this and everything around it.
+#   `ENV["HOMEBREW_DOTFILES_CLI_ONLY"]` is set by `./install.sh --cli-only`
+#   and skips the GUI applications. The HOMEBREW_ prefix is required: Homebrew
+#   passes only HOMEBREW_* variables through to this file, so a plain
+#   DOTFILES_CLI_ONLY would read as nil and every GUI app would install.
 #
-# `brew bundle` is idempotent — already-installed entries are skipped — so
-# re-running after adding a line is always safe. To find what is installed but
-# NOT listed here:
+# NOT LISTED HERE
+#   * clangd: Xcode on macOS; an LLVM package on Linux, often versioned as
+#     clangd-18 with `clangd` through update-alternatives.
+#   * sourcekit-lsp: Xcode on macOS; the swift.org toolchain on Linux.
+#   * rust-analyzer and rustfmt: rustup (see fish/conf.d/00-path.fish).
+#   * fish_indent: ships with fish.
+#   * Fonts on Linux: casks cannot install them, so install.sh fetches them
+#     from a private repository (README.md § The font stack).
 #
-#     brew bundle cleanup --file ~/personal/dotfiles/Brewfile
-#
-# ── A BREWFILE IS RUBY ────────────────────────────────────────────────────────
-#   That is what makes one file serve both platforms. `OS.mac?` and `OS.linux?`
-#   are provided by Homebrew, and any entry can carry a trailing condition:
-#
-#       brew "gnupg" if OS.mac?
-#
-#   This matters because **casks are macOS-only**. Homebrew on Linux installs
-#   formulae only, so every cask below is guarded — without the guard,
-#   `brew bundle` fails on Linux at the first one.
-#
-#   `ENV["HOMEBREW_DOTFILES_CLI_ONLY"]` is set by `./install.sh --cli-only` and
-#   skips the GUI applications, which is what you want on a server or in a
-#   container.
-#
-#   THE HOMEBREW_ PREFIX IS MANDATORY. Homebrew sanitises its environment and
-#   passes through only variables named HOMEBREW_*. A plain DOTFILES_CLI_ONLY
-#   is silently stripped before this file is evaluated, so the guard would read
-#   as nil and every GUI app would install anyway — with no error to tell you.
-#
-# ── NOT LISTED HERE ───────────────────────────────────────────────────────────
-#   * clangd       — Xcode on macOS; an LLVM package on Linux (often versioned
-#                    as clangd-18, with `clangd` via update-alternatives)
-#   * sourcekit-lsp — Xcode on macOS; the swift.org toolchain on Linux
-#   * rust-analyzer, rustfmt — rustup (see fish/conf.d/00-path.fish)
-#   * fish_indent  — ships with fish itself
-#   * Fonts on Linux — casks cannot install them and distro packaging is
-#                    inconsistent, so install.sh prints the list and you install
-#                    them by hand. See the root README's font matrix.
+# Each line names what the package is and which config uses it, in the
+# trailing comment.
 # ==============================================================================
 
 # --- Fonts (macOS only: these are casks) ---------------------------------------
-# The font stack used by every tool here, in fallback order. The two Nerd builds
-# carry the icon glyphs Neovim draws; the rest are per-glyph fallbacks.
-# See the root README for which surface uses which build.
-cask "font-jetbrains-mono-nerd-font" if OS.mac?
-cask "font-fira-code-nerd-font"      if OS.mac?
-cask "font-fira-code"                if OS.mac?
-cask "font-source-code-pro"          if OS.mac?
-cask "font-ibm-plex-mono"            if OS.mac?
+# The font stack, in fallback order; the two Nerd builds carry the icons Neovim
+# draws. README.md § The font stack says which surface uses which build.
+cask "font-jetbrains-mono-nerd-font" if OS.mac? # primary font, Nerd build -> ghostty/, nvim/, neovide/, and the zed/, vscode/, cursor/ terminals
+cask "font-fira-code-nerd-font"      if OS.mac? # first fallback, Nerd build  -> the same surfaces
+cask "font-fira-code"                if OS.mac? # fallback                    -> every font stack, and the zed/ and vscode/ editor panes
+cask "font-source-code-pro"          if OS.mac? # fallback                    -> every font stack
+cask "font-ibm-plex-mono"            if OS.mac? # fallback                    -> every font stack
 
 # --- Applications ------------------------------------------------------------------
-# Every application this repo configures is declared here, so that the Brewfile
-# and the package list stay in step — a package with no application to configure
-# is as wrong as an application nobody declared.
-#
-# macOS gets all five as casks. Linux differs per application:
-#   * Neovide has a real formula, so brew still handles it.
-#   * Ghostty and Zed are cask-only; install.sh installs them through the
-#     distribution's package manager instead.
-#   * Visual Studio Code and Cursor are installed BY HAND on Linux, and
-#     deliberately so. Code would need Microsoft's apt/dnf repository —
-#     importing a signing key and writing a sources file — and Cursor ships
-#     only an AppImage. Adding a third-party system repository is a larger
-#     change than a dotfiles installer should make unattended, the same
-#     reasoning that stops it fetching Ghostty's community .deb. The
-#     configuration still deploys; only the applications are manual.
-#       https://code.visualstudio.com/docs/setup/linux
-#       https://cursor.com/downloads
+# Every application this repo configures is declared here, so the Brewfile
+# and the package list match. macOS gets all five as casks. On Linux, Neovide
+# has a formula. Ghostty and Zed are cask-only, so install.sh uses the
+# distribution's package manager. Visual Studio Code and Cursor are installed
+# by hand: Code needs Microsoft's apt or dnf repository (a signing key and a
+# sources file), Cursor ships only an AppImage, and install.sh adds no
+# third-party system repository.
+#     https://code.visualstudio.com/docs/setup/linux
+#     https://cursor.com/downloads
 cask "ghostty"            if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # terminal    -> ghostty/
 cask "zed"                if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # GUI editor  -> zed/
 cask "neovide-app"        if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # Neovim GUI  -> neovide/
 cask "visual-studio-code" if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # GUI editor  -> vscode/
 cask "cursor"             if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # GUI editor  -> cursor/
-brew "neovide"     if OS.linux? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"] # same, as a formula
+brew "neovide"     if OS.linux? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"] # Neovim GUI, as a formula -> neovide/
 
 # --- Dotfiles management -------------------------------------------------------------
-# GNU stow creates the symlinks from this repo into $HOME. Required to install
-# any of these configs — see the root README.
-brew "stow"
+brew "stow"          # GNU stow links this repo into $HOME -> install.sh, README.md § The stow model
 
 # --- Shell and core CLI ---------------------------------------------------------------
-brew "fish"          # the shell              -> fish/
-brew "oh-my-posh"    # prompt                 -> fish/conf.d/30-prompt.fish
-brew "eza"           # ls replacement         -> fish/functions/{ll,la,lt,lta}.fish
-brew "bat"           # cat + syntax colour    -> bat/  (also $MANPAGER)
-brew "fd"            # find replacement       -> fish/functions/{ff,fx,fd}.fish, fzf-lua
-brew "ripgrep"       # grep replacement       -> fzf-lua live grep
-brew "fzf"           # fuzzy matcher          -> fzf-lua
-brew "tlrc"          # tldr client (installs the `tldr` binary) -> tlrc/
+brew "fish"          # the shell                          -> fish/
+brew "oh-my-posh"    # prompt                             -> fish/conf.d/30-prompt.fish
+brew "eza"           # ls replacement                     -> fish/functions/{ll,la,lt,lta}.fish
+brew "bat"           # cat with syntax highlighting       -> bat/, and $MANPAGER in fish/conf.d/10-environment.fish
+brew "fd"            # find replacement                   -> fish/functions/{ff,fx,fd}.fish, fzf-lua
+brew "ripgrep"       # grep replacement                   -> fzf-lua live grep
+brew "fzf"           # fuzzy matcher                      -> fzf-lua
+brew "tlrc"          # tldr client (the `tldr` binary)    -> tlrc/
 
 # --- Linux-only runtime dependencies ---------------------------------------------------
 # WHAT: Clipboard providers for Neovim's `clipboard=unnamedplus`.
-# WHY : macOS ships pbcopy/pbpaste, so Neovim finds a provider for free. Linux
-#       has no built-in equivalent: without one of these, every yank silently
-#       stops reaching the system clipboard and `:checkhealth vim.provider`
-#       reports "No clipboard tool found". Both are installed because the right
-#       one depends on the session — wl-clipboard for Wayland (the default on
-#       current GNOME and KDE), xclip for X11 — and Neovim picks at runtime.
-brew "wl-clipboard" if OS.linux?
-brew "xclip"        if OS.linux?
+# WHY : macOS ships pbcopy and pbpaste; Linux has no built-in equivalent, and
+#       without one every yank stops reaching the system clipboard
+#       (`:checkhealth vim.provider` reports "No clipboard tool found"). Both
+#       are installed because the right one depends on the session, and
+#       Neovim picks at runtime.
+brew "wl-clipboard" if OS.linux? # Wayland, the default on current GNOME and KDE
+brew "xclip"        if OS.linux? # X11
 
 # --- Git -----------------------------------------------------------------------------
-brew "git-delta"     # diff pager             -> git/config [delta]
-brew "gnupg"         # commit/tag signing     -> git/config [gpg]
-
+brew "git-delta"     # diff pager               -> git/config [delta]
+brew "gnupg"         # commit and tag signing   -> git/config [gpg]
 # WHAT: Git Large File Storage.
-# WHY : Required to clone the private font repository install.sh pulls from on
-#       Linux — without it a clone yields text pointers where the fonts should
-#       be. It is also what makes the [filter "lfs"] block in git/config work;
-#       that block sets required = true, so a missing binary is a loud error
-#       rather than silently committing pointer files.
-brew "git-lfs"
+# WHY : Required to clone the private font repository install.sh fetches from
+#       on Linux; without it a clone yields text pointers instead of fonts.
+#       The [filter "lfs"] block in git/config sets required = true, so a
+#       missing binary is an error rather than a checkout of pointer files.
+brew "git-lfs"       # large-file filters       -> git/config [filter "lfs"], install.sh fonts
 
 # --- Neovim --------------------------------------------------------------------------
-brew "neovim"        # the editor (config requires >= 0.12)
-
-# REQUIRED for syntax highlighting: nvim-treesitter (main branch) compiles every
-# parser via `tree-sitter build`. Without this CLI, no parser installs.
-# (The similarly named "tree-sitter" formula is only the C library.)
-brew "tree-sitter-cli"
+brew "neovim"        # the editor; the config needs 0.12 or later -> nvim/
+# WHAT: The tree-sitter command-line tool.
+# WHY : nvim-treesitter compiles every parser with `tree-sitter build`; without
+#       the CLI no parser installs. The "tree-sitter" formula is the C library
+#       only and does not provide it.
+brew "tree-sitter-cli" # parser compiler -> nvim/lua/plugins/treesitter.lua
 
 # --- Language servers ------------------------------------------------------------------
 # One per language entry in nvim/.config/nvim/lua/languages.lua.
-brew "ty"                    # Python: type checking + IDE features (Astral)
-brew "ruff"                  # Python: linting/formatting + LSP
-brew "taplo"                 # TOML
-brew "yaml-language-server"  # YAML (with schemastore.org schemas)
-brew "marksman"              # Markdown
-brew "bash-language-server"  # sh/bash
-brew "fish-lsp"              # fish
-brew "neocmakelsp"           # CMake — the same server Zed's `neocmake` extension uses
-brew "docker-language-server" # Dockerfile + Compose (Docker's own, not the npm one)
-brew "gopls"                 # Go
-
+brew "ty"                    # Python type checking and IDE features (Astral) -> languages.lua, vscode extension astral-sh.ty
+brew "ruff"                  # Python linting, formatting, and LSP           -> languages.lua, ruff/, vscode extension charliermarsh.ruff
+brew "taplo"                 # TOML server and formatter                     -> languages.lua
+brew "yaml-language-server"  # YAML server, with schemastore.org schemas     -> languages.lua, nvim/after/lsp/yamlls.lua
+brew "marksman"              # Markdown server: links and references         -> languages.lua
+brew "bash-language-server"  # sh and bash server                            -> languages.lua
+brew "fish-lsp"              # fish server                                   -> languages.lua
+brew "neocmakelsp"           # CMake server; the same one Zed's `neocmake` extension uses -> languages.lua
+brew "docker-language-server" # Dockerfile and Compose server (Docker's own)  -> languages.lua
+brew "gopls"                 # Go server; needs the `go` toolchain below     -> languages.lua, vscode extension golang.go, zed
 # WHAT: The Zig language server.
-# WHY : Listed apart because of a trap that bites on upgrade rather than on
-#       install: zls and the zig compiler are VERSION-LOCKED. Its README says
-#       plainly "When upgrading Zig, make sure to update ZLS to keep them in
-#       sync." A `brew upgrade` that moves one and not the other leaves zls
-#       refusing to start, and the symptom is a language server that silently
-#       stops attaching rather than an error naming the cause.
-#       Homebrew makes zig a hard dependency of zls, so they install together
-#       and are matched today. Check with `zig version` and `zls --version`.
-brew "zls"                   # Zig
-
-# NOTE: XML has no line here on purpose. Its server, lemminx, has no Homebrew
-#       formula, so the Neovim entry for XML is treesitter-only. Zed and VS
-#       Code both bundle lemminx inside their own extensions and are unaffected
-#       — see the XML entry in nvim/.config/nvim/lua/languages.lua.
+# WHY : The zls server and the zig compiler are version-locked; zls's README: "When
+#       upgrading Zig, make sure to update ZLS to keep them in sync." A
+#       `brew upgrade` that moves one and not the other leaves zls unable to
+#       start, and the symptom is a server that stops attaching with no error
+#       naming the cause. Homebrew makes zig a dependency of zls, so they
+#       install together. Check with `zig version` and `zls --version`.
+brew "zls"                   # Zig server                                    -> languages.lua, zed `zig` extension
+# NOTE: XML has no line here. Its server, lemminx, has no Homebrew formula, so
+#       the Neovim XML entry is treesitter-only; Zed and VS Code bundle
+#       lemminx in their extensions. See the XML entry in languages.lua.
 
 # --- Language toolchains -------------------------------------------------------------------
-# WHAT: The Go and Zig compilers themselves.
-# WHY : These break the pattern in the NOT LISTED HERE note above, where Rust
-#       comes from rustup and Swift from Xcode, so the difference is worth
-#       stating: neither Go nor Zig has an equivalent version manager that this
-#       setup already uses, and Homebrew carries both. They are real
-#       dependencies rather than conveniences — gopls shells out to the `go`
-#       command to resolve modules, and zls reads the Zig standard library from
-#       the compiler's installation.
-# NOTE: The zig line is redundant in the sense that installing zls pulls zig
-#       anyway. It is written out so the compiler is a declared dependency in
-#       its own right rather than an accident of zls's dependency graph — and
-#       so `brew bundle` reinstalls it if zls is ever removed.
-brew "go"
-brew "zig"
+# WHAT: The Go and Zig compilers.
+# WHY : Rust comes from rustup and Swift from Xcode (see NOT LISTED HERE), but
+#       Go and Zig have no version manager in this setup, and Homebrew carries
+#       both. The gopls server runs the `go` command to resolve modules, and zls reads
+#       the Zig standard library from the compiler's installation. Installing
+#       zls pulls zig anyway; the line declares the compiler as a dependency
+#       in its own right, so `brew bundle` reinstalls it if zls is removed.
+brew "go"            # Go toolchain   -> gopls, goimports, staticcheck, delve
+brew "zig"           # Zig toolchain  -> zls, `zig fmt`
 
 # --- Formatters and linters ---------------------------------------------------------------
-# Used by <leader>F in Neovim via conform.nvim. If one is missing, formatting
-# falls back to the language server.
-brew "clang-format"  # C/C++/ObjC — reads each project's .clang-format
-brew "shfmt"         # shell scripts
-brew "yamlfmt"       # YAML
-brew "shellcheck"    # not a formatter: bash-language-server surfaces its lints
-brew "goimports"     # Go — gofmt's rules PLUS adding and removing imports
-brew "staticcheck"   # not a formatter: extra Go lints, which gopls can surface
+# Used by <leader>F in Neovim through conform.nvim; a missing one falls back to
+# the language server.
+brew "clang-format"  # C, C++, Objective-C; reads each project's .clang-format -> languages.lua
+brew "shfmt"         # shell scripts                                          -> languages.lua
+brew "yamlfmt"       # YAML                                                   -> languages.lua
+brew "shellcheck"    # shell linter, surfaced by bash-language-server         -> languages.lua (bashls)
+brew "goimports"     # Go: gofmt's rules plus import management               -> languages.lua
+brew "staticcheck"   # Go linter; gopls can surface it, the Go extension offers it -> vscode extension golang.go
 # NOTE: Zig needs no formatter line. The zigfmt entry in languages.lua runs
-#       `zig fmt`, which ships inside the compiler declared above.
+#       `zig fmt`, which ships inside the compiler above.
 
 # --- Debuggers -----------------------------------------------------------------------------
 # WHAT: The Go debugger.
-# WHY : Declared so a fresh machine has it before it is wanted. The `golang.go`
-#       extension in VS Code and Cursor otherwise offers to fetch it with
-#       `go install` on the first debug session, which does work here —
-#       ~/go/bin is on PATH via fish/conf.d/00-path.fish — but leaves the
-#       machine holding a tool the repo never declared.
-# NOTE: Nothing in this repo CONFIGURES a debugger; Neovim has no DAP setup.
-#       This only makes the binary present for the editors that do.
-brew "delve"
+# WHY : The `golang.go` extension in VS Code and Cursor otherwise offers to
+#       `go install` it on the first debug session into ~/go/bin, which
+#       fish/conf.d/00-path.fish puts on PATH, but that leaves an undeclared
+#       tool on the machine. Nothing in this repo configures a debugger; Neovim
+#       has no DAP setup.
+brew "delve"         # Go debugger    -> vscode extension golang.go
 
-# WHAT: Apple's official Swift formatter.
-# WHY : macOS-only here. It also ships inside Xcode, and on Linux Swift comes
-#       from the swift.org toolchain, which bundles its own — so installing it
-#       through brew there would be a second, possibly mismatched copy.
-brew "swift-format" if OS.mac?
+# WHAT: Apple's Swift formatter.
+# WHY : macOS-only. On Linux the swift.org toolchain bundles its own, so a
+#       brew copy there would be a second, possibly mismatched one.
+brew "swift-format" if OS.mac? # Swift formatter -> languages.lua

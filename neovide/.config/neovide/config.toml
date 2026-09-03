@@ -98,13 +98,6 @@ vsync = true
 # default: true
 idle = true
 
-# WHAT: Light/dark appearance of Neovide's window chrome.
-# WHY : "auto" follows the macOS system appearance, matching Ghostty, Zed and
-#       bat — the whole stack flips together.
-# HOW : "light", "dark".
-# default: "auto"
-theme = "auto"
-
 # ==============================================================================
 # TABLES — everything below belongs to the table header above it.
 # ==============================================================================

@@ -40,6 +40,34 @@ vim.o.signcolumn = "yes"
 --       subtly.
 vim.o.cursorline = true
 
+-- Cursor shape ----------------------------------------------------------------
+-- WHAT: The cursor's shape and blink timing, per mode. `a:` means ALL modes.
+-- WHY : A blinking block everywhere, which is the stack-wide choice — Ghostty,
+--       Zed and both VS Code editors draw the same thing. Neovim is the only
+--       tool that needed changing: its default is
+--         n-v-c-sm:block,i-ci-ve:ver25,r-cr-o:hor20,t:block-blinkon500-blinkoff500-TermCursor
+--       so INSERT mode was a thin vertical bar and REPLACE a horizontal one.
+--       Nothing else in the stack changes shape by mode, so neither should
+--       this.
+-- NOTE: The `t:` entry looks redundant next to `a:` and is not — do not
+--       "simplify" it away. Entries are applied left to right, so the later
+--       `t:` overrides `a:` for terminal mode only, and it exists purely to
+--       keep the `TermCursor` highlight group. That group is what colours the
+--       :terminal cursor; a bare `a:block` silently drops it and the terminal
+--       cursor changes colour.
+-- NOTE: This option FAILS SILENTLY. `set guicursor=a:nonsense` is accepted
+--       without an error and reported back verbatim, so a typo here shows up
+--       as a cursor that never changes rather than as a message. Check the
+--       applied value with `:set guicursor?` rather than assuming.
+-- HOW : Where this actually lands depends on the front end. Neovide renders
+--       this option directly. In a terminal, Neovim translates it into
+--       DECSCUSR escapes, which is why it agrees with Ghostty's own
+--       `cursor-style` / `cursor-style-blink` rather than fighting it.
+--       For a steady cursor, drop the three blink fields. To go back to
+--       per-mode shapes, `:set guicursor&` restores the default above.
+vim.o.guicursor = "a:block-blinkwait700-blinkoff400-blinkon250,"
+    .. "t:block-blinkwait700-blinkoff400-blinkon250-TermCursor"
+
 -- Indentation -----------------------------------------------------------------
 -- WHAT: `expandtab` inserts spaces when you press <Tab>; `tabstop` is how wide
 --       a real tab character displays; `shiftwidth` is the width used by

@@ -124,10 +124,25 @@ background-blur = true
 
 # --- Cursor and mouse -----------------------------------------------------------
 # WHAT: Cursor shape.
-# WHY : Static block. This pairs with `no-cursor` in shell-integration-features
-#       below: shell integration would otherwise report cursor-shape changes
-#       per mode and override this.
+# WHY : A block, matching every other tool in this setup — Neovim's guicursor,
+#       Zed and both VS Code editors all draw the same thing. This pairs with
+#       `no-cursor` in shell-integration-features below: shell integration
+#       would otherwise report cursor-shape changes per mode and override it.
+#       Applications can still set the shape through DECSCUSR, which is how
+#       Neovim asks for a block and gets one rather than fighting this.
 cursor-style = block
+
+# WHAT: Whether the cursor blinks.
+# WHY : Blinking, matching Zed's `cursor_blink` and VS Code's
+#       `editor.cursorBlinking`.
+# NOTE: Setting `true` is NOT the same as leaving this blank, even though both
+#       blink. Ghostty's own documentation is explicit: when unset it also
+#       honours DEC Mode 12, so a running program can turn blinking off. Any
+#       non-null value makes Ghostty ignore Mode 12, which is what makes the
+#       blink unconditional. DECSCUSR is still respected either way, so the
+#       shape above stays application-controlled.
+# default: (blank — blinks, but Mode 12 can disable it)
+cursor-style-blink = true
 
 # WHAT: Hide the mouse pointer while typing; it reappears on movement.
 # WHY : Matches vim.g.neovide_hide_mouse_when_typing in the Neovide config.

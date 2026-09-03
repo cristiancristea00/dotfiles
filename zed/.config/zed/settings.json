@@ -177,6 +177,15 @@
     //       and the line background).
     "current_line_highlight": "all",
 
+    // WHAT: The shape of the editor's cursor and whether it blinks.
+    // WHY : A blinking block, which is the stack-wide choice — Ghostty's
+    //       `cursor-style`, Neovim's `guicursor` and VS Code's
+    //       `editor.cursorStyle` all draw the same thing. Zed's default is
+    //       already `block`; it is stated here so the choice is visible and
+    //       cannot drift if that default changes.
+    // HOW : Shapes are "bar", "block", "underline" and "hollow". The terminal
+    //       has its own pair of these settings — see the `terminal` block
+    //       below, which must be kept in step with this one.
     "cursor_shape": "block",
     "cursor_blink": true,
 
@@ -230,8 +239,26 @@
     //       used to skip oh-my-posh on it and no longer does — but it is the
     //       hook to reach for if this terminal ever needs shell config the
     //       others must not get.
+    // NOTE: The two cursor keys here are the terminal's own; they do NOT
+    //       inherit from the editor settings above, which is why both places
+    //       name the same values. Change one, change the other.
     "terminal": {
         "shell": { "program": "fish" },
+        // WHAT: Cursor shape in the integrated terminal.
+        // WHY : Block, matching the editor and the rest of the stack. This is
+        //       already Zed's default; stated so it cannot drift silently.
+        // HOW : "bar", "block", "underline", "hollow", or "inherit" to follow
+        //       the editor's `cursor_shape`.
+        "cursor_shape": "block",
+        // WHAT: Whether the terminal cursor blinks.
+        // WHY : "on", i.e. always. The default is "terminal_controlled", which
+        //       means blink is OFF unless the running program asks for it — so
+        //       a plain fish prompt had a steady cursor while the editor beside
+        //       it blinked. "on" makes the two agree.
+        // HOW : "off" never blinks, "terminal_controlled" defers to the
+        //       program, "on" always blinks.
+        // default: "terminal_controlled"
+        "blinking": "on",
         "font_family": "JetBrainsMono Nerd Font Mono",
         "font_fallbacks": ["FiraCode Nerd Font Mono", "JetBrains Mono", "Fira Code", "Source Code Pro", "IBM Plex Mono"],
         "font_features": { "calt": false, "liga": false },

@@ -257,6 +257,29 @@
     //       actually there.
     "terminal.integrated.fontLigatures.enabled": false,
 
+    // WHAT: The integrated terminal's cursor — shape, blink, and what it looks
+    //       like when the terminal panel does NOT have keyboard focus.
+    // WHY : A blinking block, matching `editor.cursorStyle` above and the rest
+    //       of the stack. These are separate keys from the editor's and do not
+    //       inherit from them, which is why the values are repeated.
+    //       `cursorStyle` is already VS Code's default; it is stated so the
+    //       choice is visible rather than inherited by accident.
+    //       `cursorBlinking` is NOT the default — the terminal ships with
+    //       blinking off, so without this line the terminal cursor sat still
+    //       while the editor's blinked.
+    // NOTE: `cursorStyleInactive` stays "outline" ON PURPOSE. It is still a
+    //       block, just hollow, and it is the only remaining cue for which
+    //       pane holds focus — setting it to "block" would make focused and
+    //       unfocused terminals indistinguishable. Neovide draws its unfocused
+    //       cursor the same way, via `neovide_cursor_unfocused_outline_width`.
+    // HOW : Shapes are "block", "line", "underline"; `cursorStyleInactive`
+    //       also accepts "outline" and "none". Note `cursorBlinking` here is a
+    //       BOOLEAN, unlike `editor.cursorBlinking`, which is a string.
+    // default: "block" / false / "outline"
+    "terminal.integrated.cursorStyle": "block",
+    "terminal.integrated.cursorBlinking": true,
+    "terminal.integrated.cursorStyleInactive": "outline",
+
     // WHAT: Which shell the integrated terminal launches.
     // WHY : The fish shell, matching the login shell the installer configures.
     //       Both keys are
@@ -422,5 +445,9 @@
     //       by NOT listing `vscodevim.vim` in the extension lists — see the
     //       comment there.
 
-    "security.workspace.trust.untrustedFiles": "open"
+    "security.workspace.trust.untrustedFiles": "open",
+    "python.defaultInterpreterPath": "/usr/bin/python3",
+    "[markdown]": {
+        "editor.defaultFormatter": "yzhang.markdown-all-in-one"
+    }
 }

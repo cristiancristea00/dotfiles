@@ -29,13 +29,13 @@ it is missing, applies the `Brewfile`, backs up anything already in the way,
 links every package with stow, selects the per-OS config variants, bootstraps
 Neovim, and offers to make fish your login shell.
 
-| Option           | Effect                                                                 |
-| ---------------- | ---------------------------------------------------------------------- |
-| `--dry-run`      | Print every action, change nothing                                     |
+| Option           | Effect                                                                                  |
+| ---------------- | --------------------------------------------------------------------------------------- |
+| `--dry-run`      | Print every action, change nothing                                                      |
 | `--cli-only`     | Skip the GUI apps (Ghostty, Zed, Neovide, VS Code, Cursor) — for servers and containers |
-| `--packages a,b` | Only handle the named packages                                         |
-| `--uninstall`    | Remove the symlinks, leave the software installed                      |
-| `--yes`          | Never prompt; implied when stdin is not a terminal                     |
+| `--packages a,b` | Only handle the named packages                                                          |
+| `--uninstall`    | Remove the symlinks, leave the software installed                                       |
+| `--yes`          | Never prompt; implied when stdin is not a terminal                                      |
 
 Run `./install.sh --dry-run` first if you want to see exactly what it will do.
 
@@ -63,18 +63,18 @@ Run `./install.sh --dry-run` first if you want to see exactly what it will do.
 
 ## Packages
 
-| Package                         | Installs to                           | What it is                                               |
-| ------------------------------- | ------------------------------------- | -------------------------------------------------------- |
-| [`bat/`](bat/README.md)         | `~/.config/bat/`                      | `cat` with syntax highlighting; also the `$MANPAGER`     |
-| [`fish/`](fish/README.md)       | `~/.config/fish/`                     | The shell: PATH, environment, prompt, functions          |
-| [`ghostty/`](ghostty/README.md) | `~/.config/ghostty/`                  | Terminal emulator                                        |
-| [`git/`](git/README.md)         | `~/.config/git/`                      | Global Git config, with work/personal identity switching |
-| [`neovide/`](neovide/README.md) | `~/.config/neovide/`                  | Neovim's GUI: window and startup font                    |
-| [`nvim/`](nvim/README.md)       | `~/.config/nvim/`                     | The editor: LSP, treesitter, plugins, keymaps            |
-| [`tlrc/`](tlrc/README.md) | `~/.config/tlrc/` | `tldr` client — macOS gets a bridge symlink, see below |
-| [`vscode/`](vscode/README.md)   | `~/.config/Code/` \| `~/Library/…/Code/` | GUI editor. Holds the settings file **Cursor also uses** |
-| [`zed/`](zed/README.md)         | `~/.config/zed/`                      | GUI editor, configured as a normal (non-modal) editor    |
-| [`cursor/`](cursor/README.md)   | `~/.config/Cursor/` \| `~/Library/…/Cursor/` | Nothing but symlinks into `vscode/`               |
+| Package                         | Installs to                                  | What it is                                               |
+| ------------------------------- | -------------------------------------------- | -------------------------------------------------------- |
+| [`bat/`](bat/README.md)         | `~/.config/bat/`                             | `cat` with syntax highlighting; also the `$MANPAGER`     |
+| [`fish/`](fish/README.md)       | `~/.config/fish/`                            | The shell: PATH, environment, prompt, functions          |
+| [`ghostty/`](ghostty/README.md) | `~/.config/ghostty/`                         | Terminal emulator                                        |
+| [`git/`](git/README.md)         | `~/.config/git/`                             | Global Git config, with work/personal identity switching |
+| [`neovide/`](neovide/README.md) | `~/.config/neovide/`                         | Neovim's GUI: window and startup font                    |
+| [`nvim/`](nvim/README.md)       | `~/.config/nvim/`                            | The editor: LSP, treesitter, plugins, keymaps            |
+| [`tlrc/`](tlrc/README.md)       | `~/.config/tlrc/`                            | `tldr` client — macOS gets a bridge symlink, see below   |
+| [`vscode/`](vscode/README.md)   | `~/.config/Code/` \| `~/Library/…/Code/`     | GUI editor. Holds the settings file **Cursor also uses** |
+| [`zed/`](zed/README.md)         | `~/.config/zed/`                             | GUI editor, configured as a normal (non-modal) editor    |
+| [`cursor/`](cursor/README.md)   | `~/.config/Cursor/` \| `~/Library/…/Cursor/` | Nothing but symlinks into `vscode/`                      |
 
 Root files — `install.sh`, `Brewfile` (every dependency), `AGENTS.md`
 (conventions for AI coding agents, symlinked as `CLAUDE.md` and `GEMINI.md`),
@@ -161,14 +161,14 @@ prefixes, Neovim checks `vim.uv.os_uname().sysname`, and the Brewfile uses
 One typeface family everywhere, in two builds, with a shared fallback chain.
 The rule: **the Nerd Font build goes wherever icons are drawn.**
 
-| Surface                   | Primary font                   | Ligatures |
-| ------------------------- | ------------------------------ | --------- |
-| Ghostty                   | `JetBrainsMono Nerd Font Mono` | off       |
-| Neovide / Neovim          | `JetBrainsMono Nerd Font Mono` | on        |
-| Zed — editor pane         | `JetBrains Mono`               | on        |
-| Zed — integrated terminal | `JetBrainsMono Nerd Font Mono` | off       |
-| VS Code / Cursor — editor | `JetBrains Mono`               | on        |
-| VS Code / Cursor — terminal | `JetBrainsMono Nerd Font Mono` | off     |
+| Surface                     | Primary font                   | Ligatures |
+| --------------------------- | ------------------------------ | --------- |
+| Ghostty                     | `JetBrainsMono Nerd Font Mono` | off       |
+| Neovide / Neovim            | `JetBrainsMono Nerd Font Mono` | on        |
+| Zed — editor pane           | `JetBrains Mono`               | on        |
+| Zed — integrated terminal   | `JetBrainsMono Nerd Font Mono` | off       |
+| VS Code / Cursor — editor   | `JetBrains Mono`               | on        |
+| VS Code / Cursor — terminal | `JetBrainsMono Nerd Font Mono` | off       |
 
 Fallbacks, in order: **FiraCode Nerd Font Mono** (a second icon-carrying build,
 so icons survive one more step down the chain), then **JetBrains Mono**
@@ -213,17 +213,17 @@ Everything visual uses **Catppuccin**, in the Latte (light) and Mocha
 (dark) flavours. On **macOS** the tools that can follow the system appearance
 all do, so the stack flips together:
 
-| Tool     | Mechanism                                                       |
-| -------- | --------------------------------------------------------------- |
-| Ghostty  | `theme = light:Catppuccin Latte,dark:Catppuccin Mocha`          |
-| Zed      | `"theme": { "mode": "system", … }` — Latte / Mocha              |
-| VS Code / Cursor | `window.autoDetectColorScheme` + `preferredLight`/`DarkColorTheme` |
-| bat      | `--theme=auto:system` — Latte / Mocha                           |
-| Neovim   | `flavour = "auto"`, reading `background`                        |
-| Neovide  | `theme = "auto"` (window chrome only)                           |
-| fish     | `fish_config theme choose catppuccin-mocha` — the theme carries both variants |
-| eza      | A fish handler points `$EZA_CONFIG_DIR` at a Latte or Mocha directory |
-| tlrc     | Palette **names**, which resolve through the terminal's colours |
+| Tool             | Mechanism                                                                     |
+| ---------------- | ----------------------------------------------------------------------------- |
+| Ghostty          | `theme = light:Catppuccin Latte,dark:Catppuccin Mocha`                        |
+| Zed              | `"theme": { "mode": "system", … }` — Latte / Mocha                            |
+| VS Code / Cursor | `window.autoDetectColorScheme` + `preferredLight`/`DarkColorTheme`            |
+| bat              | `--theme=auto:system` — Latte / Mocha                                         |
+| Neovim           | `flavour = "auto"`, reading `background`                                      |
+| Neovide          | `theme = "auto"` (window chrome only)                                         |
+| fish             | `fish_config theme choose catppuccin-mocha` — the theme carries both variants |
+| eza              | A fish handler points `$EZA_CONFIG_DIR` at a Latte or Mocha directory         |
+| tlrc             | Palette **names**, which resolve through the terminal's colours               |
 
 The last two follow the **terminal**, not the OS. Both key off fish's
 read-only `$fish_terminal_color_theme`, which holds `light`, `dark` or
@@ -233,21 +233,21 @@ two work identically on Linux, where there is no `AppleInterfaceStyle` to read.
 
 Three tools **cannot** follow the appearance, and are pinned to Mocha:
 
-| Tool       | Why it is fixed                                                    |
-| ---------- | ------------------------------------------------------------------ |
-| oh-my-posh | Takes a single config path; there is no light/dark form            |
+| Tool       | Why it is fixed                                                     |
+| ---------- | ------------------------------------------------------------------- |
+| oh-my-posh | Takes a single config path; there is no light/dark form             |
 | delta      | `syntax-theme` takes one value; no pair syntax, no system detection |
-| Xcode      | One theme selection, stored in Xcode's own preferences             |
+| Xcode      | One theme selection, stored in Xcode's own preferences              |
 
 ### Themes that are fetched, not committed
 
 Three of these ship their theme as a *file* the tool reads, and those files are
 downloaded by `install.sh` rather than kept in this repo:
 
-| Destination | From |
-| ----------- | ---- |
-| `~/.config/git/catppuccin.gitconfig` | [catppuccin/delta](https://github.com/catppuccin/delta) |
-| `~/.config/eza-{mocha,latte}/theme.yml` | [catppuccin/eza](https://github.com/catppuccin/eza) |
+| Destination                                              | From                                                    |
+| -------------------------------------------------------- | ------------------------------------------------------- |
+| `~/.config/git/catppuccin.gitconfig`                     | [catppuccin/delta](https://github.com/catppuccin/delta) |
+| `~/.config/eza-{mocha,latte}/theme.yml`                  | [catppuccin/eza](https://github.com/catppuccin/eza)     |
 | `~/Library/Developer/Xcode/UserData/FontAndColorThemes/` | [catppuccin/xcode](https://github.com/catppuccin/xcode) |
 
 Every one of them **fails soft**. Git ignores an `include.path` that does not
@@ -279,6 +279,41 @@ switch. bat cannot: `auto:system` is documented as macOS-only, so the Linux
 variant uses `--theme=auto`, which infers light or dark from the terminal's
 background colour instead. In practice that still tracks — Ghostty repaints its
 background when the desktop flips — but it is inference rather than a signal.
+
+---
+
+## The cursor
+
+A **blinking block**, in every tool and every mode. Like the font stack, this
+is only correct if all of it agrees, so the settings are listed together:
+
+| Surface                     | Shape                             | Blink                                |
+| --------------------------- | --------------------------------- | ------------------------------------ |
+| Ghostty                     | `cursor-style = block`            | `cursor-style-blink = true`          |
+| Neovim / Neovide            | `guicursor = a:block-…`           | in the same option                   |
+| Zed — editor                | `cursor_shape`                    | `cursor_blink`                       |
+| Zed — terminal              | `terminal.cursor_shape`           | `terminal.blinking = "on"`           |
+| VS Code / Cursor — editor   | `editor.cursorStyle`              | `editor.cursorBlinking`              |
+| VS Code / Cursor — terminal | `terminal.integrated.cursorStyle` | `terminal.integrated.cursorBlinking` |
+
+Neovim was the only one that needed changing. Its default varies the shape by
+mode — a vertical bar in insert, a horizontal one in replace — which nothing
+else in the stack does. `a:` covers every mode at once.
+
+Three details are easy to get wrong:
+
+* **Neither editor's terminal inherits its editor cursor.** Zed and VS Code
+  both have a second, independent pair of settings, which is why the same
+  values appear twice in each file. Change one, change the other.
+* **The unfocused cursor is deliberately hollow**, in VS Code
+  (`cursorStyleInactive: "outline"`) and Neovide
+  (`neovide_cursor_unfocused_outline_width`). It is still block-shaped, and it
+  is the only cue left for which pane has keyboard focus.
+* **Ghostty's `cursor-style-blink = true` is not the same as leaving it
+  blank**, even though both blink. Unset, Ghostty also honours DEC Mode 12, so
+  a program can switch blinking off; any explicit value makes it ignore Mode
+  12. `DECSCUSR` still controls the shape either way, which is how Neovim asks
+  for a block and gets one instead of fighting the terminal.
 
 ---
 

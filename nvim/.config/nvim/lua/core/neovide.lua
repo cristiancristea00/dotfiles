@@ -63,6 +63,22 @@ vim.g.neovide_cursor_trail_size = 0.3 -- Neovide default: 1.0
 vim.g.neovide_cursor_animate_in_insert_mode = true -- Neovide default: true
 vim.g.neovide_cursor_animate_command_line = false -- Neovide default: true
 
+-- NOTE: Nothing here sets the cursor's SHAPE or whether it blinks. Neovide
+--       renders `guicursor` directly, so both come from core/options.lua,
+--       which asks for a blinking block in every mode. Everything in this
+--       section tunes how the cursor MOVES, not what it looks like.
+--       Two related Neovide knobs, deliberately left at their defaults:
+--         vim.g.neovide_cursor_smooth_blink            -- fade the blink in
+--                                                      -- and out instead of a
+--                                                      -- hard on/off
+--         vim.g.neovide_cursor_unfocused_outline_width -- the hollow cursor
+--                                                      -- drawn when the window
+--                                                      -- is not focused, which
+--                                                      -- is the same choice
+--                                                      -- made for VS Code's
+--                                                      -- terminal.integrated.
+--                                                      -- cursorStyleInactive
+
 -- WHAT: Particle effects emitted by the cursor ("railgun", "torpedo",
 --       "pixiedust", "sonicboom", "ripple", "wireframe").
 -- WHY : Off — pure visual noise for daily work. Fun to try once.

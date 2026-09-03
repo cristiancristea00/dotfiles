@@ -81,4 +81,53 @@ if status is-interactive
     #      theme at all until the appearance was toggled once.
     __eza_theme
 
+    # --- delta ---------------------------------------------------------------
+    # WHAT: Name the Catppuccin flavour delta should use, through
+    #       $DELTA_FEATURES.
+    # WHY : The delta pager takes ONE value for its theme and one for its
+    #       feature set, with no light/dark form. This variable is how the
+    #       flavour is chosen instead, and it REPLACES the `features` line a git
+    #       config might set — which is why ../../../../git/.config/git/config
+    #       deliberately sets none, leaving the choice here. The flavour names
+    #       come from the file install.sh fetches into
+    #       ~/.config/git/catppuccin.gitconfig; each carries the syntax theme,
+    #       the chrome, and the matching light or dark flag.
+    # NOTE: The `unknown` case ERASES the variable rather than falling back to
+    #       Mocha the way the eza handler above does, and the difference is
+    #       deliberate. The eza tool has no detection of its own and must be
+    #       told. The delta pager does — `--detect-dark-light` defaults to
+    #       `auto` and queries the terminal — so when fish cannot say, handing
+    #       the question to delta beats guessing. It then picks its own
+    #       defaults, `Monokai Extended` or `GitHub`: not Catppuccin, but right
+    #       for the background.
+    # NOTE: Erasing genuinely removes the variable from the environment a child
+    #       process sees, which is what makes that hand-off work rather than
+    #       leaving a stale flavour behind.
+    # HOW : To pin one flavour, replace the whole switch with a single
+    #       `set -gx DELTA_FEATURES catppuccin-mocha`. To take delta out of
+    #       this entirely, delete this block and set `features` in the git
+    #       config instead.
+    function __delta_theme --on-variable fish_terminal_color_theme \
+        --description 'Point delta at the Catppuccin flavour matching the terminal'
+        switch "$fish_terminal_color_theme"
+            case light
+                set -gx DELTA_FEATURES catppuccin-latte
+            case dark
+                set -gx DELTA_FEATURES catppuccin-mocha
+            case '*'
+                # Covers `unknown`, and the empty value this holds before the
+                # first prompt. `set -e` on a variable that was never set
+                # returns 4, which is harmless here and is why nothing checks
+                # the status.
+                set -e DELTA_FEATURES
+        end
+    end
+
+    # WHY: Seeding matters for the opposite reason it does for eza. At this
+    #      point the variable is empty, so this call takes the '*' branch and
+    #      leaves $DELTA_FEATURES unset — which is exactly the "let delta work
+    #      it out" state a shell should start in, rather than inheriting a
+    #      flavour from whatever launched it.
+    __delta_theme
+
 end

@@ -112,11 +112,19 @@ universal variables, which is machine state this repo keeps out of version
 control and which a line removed here would not undo. `choose` loads into the
 session, which is why it belongs in `conf.d`.
 
-`eza` rides on the same signal: an `--on-variable` handler in that file points
-`$EZA_CONFIG_DIR` at `~/.config/eza-latte` or `~/.config/eza-mocha`. Those two
-directories are fetched by `install.sh`, not committed — if they are missing,
-eza just uses its own colours. The handler must live in `conf.d`; an autoloaded
-function in `functions/` would never register the event.
+`eza` and `delta` ride on the same signal, each with its own `--on-variable`
+handler in that file. The eza one points `$EZA_CONFIG_DIR` at
+`~/.config/eza-latte` or `~/.config/eza-mocha`; the delta one sets
+`$DELTA_FEATURES` to `catppuccin-latte` or `catppuccin-mocha`. Both depend on
+files `install.sh` fetches rather than commits, and both fail soft if those are
+missing. The handlers must live in `conf.d`; an autoloaded function in
+`functions/` would never register the event.
+
+The two differ in one place, deliberately. When the terminal will not report
+its background, the eza handler falls back to Mocha, while the delta handler
+**erases** `$DELTA_FEATURES` — because delta can query the terminal itself and
+eza cannot, so handing the question over beats guessing. See
+[`../git/README.md`](../git/README.md) for what delta then does.
 
 `fzf` is deliberately left unthemed — see the reasoning in
 `conf.d/20-options.fish`.

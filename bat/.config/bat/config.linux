@@ -3,89 +3,97 @@
 # ==============================================================================
 #
 # WHICH FILE IS THIS
-#   This is the **Linux** variant. bat's config format has no conditionals
-#   and one setting genuinely differs per platform (see the Theme block), so the
-#   package ships `config.darwin` and `config.linux` and install.sh symlinks
-#   ~/.config/bat/config at the right one. Edit this file for Linux; the
-#   macOS variant is its sibling. Everything except the theme block is
-#   identical — keep it that way.
+#   The Linux variant. bat's format has no conditionals, and the theme setting
+#   differs per platform. The package therefore ships `config.darwin` and
+#   `config.linux`, and install.sh symlinks ~/.config/bat/config at the right
+#   one. The two files are identical except for the Theme block; add a new
+#   option to both. See ../../../README.md § Per-OS configuration.
 #
 # WHAT THIS FILE IS
-#   bat's configuration, read from ~/.config/bat/config. The format is unusual:
-#   each line is a COMMAND-LINE ARGUMENT exactly as you would type it, not a
-#   key/value pair. Lines starting with `#` are comments. Anything you pass on
-#   the command line overrides what is set here.
+#   bat's configuration, read from ~/.config/bat/config. Each line is one
+#   command-line argument exactly as typed, not a key/value pair. Lines
+#   starting with `#` are comments. Arguments given on the command line
+#   override this file.
 #
-#   QUOTING TRAP: a value containing spaces MUST be quoted, because each line
-#   is split into arguments the way a shell would.
-#   `--theme-dark=Catppuccin Mocha` becomes two arguments and bat then treats
-#   "Mocha" as a filename to display. Write `--theme-dark="Catppuccin Mocha"`.
+#   FORMAT TRAP: a value containing spaces must be quoted, because each line
+#   is split into arguments the way a shell would. `--theme-dark=Catppuccin
+#   Mocha` becomes two arguments and bat treats "Mocha" as a file to display.
+#   Write `--theme-dark="Catppuccin Mocha"`.
 #
 # WHERE ELSE bat IS USED
-#   fish/conf.d/10-environment.fish routes $MANPAGER through bat, so these
-#   settings shape man pages too. The Neovim config does not use bat.
+#   The MANPAGER set in ../../../fish/.config/fish/conf.d/10-environment.fish
+#   pipes man pages through bat, so the theme and text settings apply there
+#   too. That command passes `--plain --language man`, which overrides
+#   `--style` and the syntax mappings. Neovim does not use bat.
 #
 #   Full option list: `bat --help`. Themes: `bat --list-themes`.
 # ==============================================================================
 
 # --- Theme --------------------------------------------------------------------
-# WHAT: `auto` inspects the TERMINAL's background colour and picks between
-#       --theme-light and --theme-dark accordingly.
-# WHY : This is the one setting that differs from the macOS variant, and it is
-#       why this file exists. macOS uses `auto:system`, which reads the OS-wide
-#       light/dark preference — bat documents that mode as **macOS only**. On
-#       Linux the closest equivalent is `auto`, which asks the terminal rather
-#       than the desktop. In practice that still tracks your theme, because
-#       Ghostty itself follows the desktop appearance and repaints its
-#       background; it just arrives one step removed.
-# HOW : Force a fixed theme with "dark"/"light", or use "ansi" to render from
-#       the terminal's own 16 colours — an exact Ghostty match at the cost of
-#       flatter highlighting. Any name from --list-themes also works.
+# WHAT: `auto` reads the terminal's background colour and picks --theme-light
+#       or --theme-dark to match.
+# WHY : The macOS variant uses `auto:system`, which reads the OS-wide
+#       preference and is documented as macOS-only. Ghostty follows the desktop
+#       appearance and repaints its background, so `auto` still tracks the
+#       desktop, one step removed. See ../../../README.md § Light and dark. The
+#       `ansi` theme would also follow the terminal, and match Ghostty's
+#       palette exactly, but it renders with 16 colours, which flattens the
+#       highlighting.
+# HOW : Force one theme with `dark` or `light`, use `--theme="ansi"` for the
+#       terminal palette, or pick any name from `bat --list-themes`.
+# default: auto
 --theme=auto
 --theme-dark="Catppuccin Mocha"
 --theme-light="Catppuccin Latte"
 
 # --- Decorations ----------------------------------------------------------------
-# WHAT: Which parts of bat's chrome to draw.
-# WHY : Line numbers to refer to, Git modification marks in the gutter, a
-#       filename header so you know what you are looking at, and the grid that
-#       separates them. The grid earns its column: it draws the vertical rule
-#       between the number gutter and the code, which is what stops a line
-#       number reading as part of the line, and frames the file top and bottom
-#       so consecutive `bat` calls do not run together. The cost is one column
-#       of width and three horizontal rules.
+# WHAT: Which parts of bat's frame to draw around the file contents.
+# WHY : Line numbers to refer to, Git change marks in the gutter, a filename
+#       header, and the grid. The grid's vertical rule separates the numbers
+#       from the code, so a line number does not read as part of the line. Its
+#       horizontal rules frame the file top and bottom, so consecutive `bat`
+#       calls stay separate. It costs one column of width and three rules.
 # HOW : Other components: rule, snip, header-filename, header-filesize.
-#       `--style=plain` turns all of it off. Use -p on the command line for a
-#       one-off plain view.
+#       `--style=plain` (or `-p` on the command line) turns all of it off.
+# default: the `default` preset (bat's recommended components)
 --style=numbers,changes,header,grid
 
 # --- Text rendering ---------------------------------------------------------------
-# WHAT: Render italics in themes that use them (comments, mostly).
-# WHY : Off by default because some terminals render italics as inverse video.
-#       Ghostty handles them correctly, and JetBrains Mono has a real italic.
+# WHAT: Emit ANSI italics where the theme uses them (comments, mostly).
+# WHY : Some terminals render italics as inverse video, so bat leaves them off.
+#       Ghostty renders them correctly, and JetBrains Mono has an italic face.
+# default: never
 --italic-text=always
 
-# WHAT: How wide a tab character displays.
-# WHY : 4, matching tab_size in Zed and shiftwidth in Neovim.
+# WHAT: Display width of a tab character.
+# WHY : Matches `tab_size` in Zed and `shiftwidth` in Neovim.
+# default: 4
 --tabs=4
 
 # --- Syntax mappings ---------------------------------------------------------------
 # WHAT: Force a syntax for files bat cannot identify from their name.
-# WHY : Several configs in this very repo have no extension and would otherwise
-#       render as plain text. INI is the closest match for both formats.
-# HOW : `--map-syntax='<glob>:<syntax name>'`. List syntax names with
-#       `bat --list-languages`. The glob matches the whole path.
+# WHY : The ghostty config has no extension and no built-in mapping, so it
+#       renders as plain text; INI is the closest match. bat maps the deployed
+#       ~/.config/git/config to its Git Config syntax on its own, but not the
+#       repo copy or `config.work`, so both are mapped here.
+# HOW : `--map-syntax='<glob>:<syntax name>'`. The glob is matched against the
+#       full path, and `*` does not cross `/`, so `**/` matches any parent
+#       directory. List syntax names with `bat --list-languages`.
 --map-syntax=**/ghostty/config:INI
 --map-syntax="**/git/config:Git Config"
 --map-syntax="**/git/config.work:Git Config"
 
 # --- Documented extension points (inactive) --------------------------------------------
-# WHAT: When to page output. `auto` (the default) pages only when the content
-#       is taller than the terminal.
+# WHAT: When to page output. `auto` pages only when the content is taller than
+#       the terminal.
+# default: auto
 # --paging=auto
 #
 # WHAT: Line wrapping: auto, never, or character.
+# default: auto
 # --wrap=auto
 #
-# WHAT: Use a different pager. By default bat uses `less` with the right flags.
-# --pager=less -FR
+# WHAT: The pager command. By default bat runs `less` with the flags it needs;
+#       arguments given here are passed as written.
+# default: less
+# --pager="less -FR"

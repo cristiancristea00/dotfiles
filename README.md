@@ -221,14 +221,52 @@ all do, so the stack flips together:
 | bat      | `--theme=auto:system` — Latte / Mocha                           |
 | Neovim   | `flavour = "auto"`, reading `background`                        |
 | Neovide  | `theme = "auto"` (window chrome only)                           |
+| fish     | `fish_config theme choose catppuccin-mocha` — the theme carries both variants |
+| eza      | A fish handler points `$EZA_CONFIG_DIR` at a Latte or Mocha directory |
 | tlrc     | Palette **names**, which resolve through the terminal's colours |
 
-Two tools **cannot** follow the appearance, and are pinned to Mocha:
+The last two follow the **terminal**, not the OS. Both key off fish's
+read-only `$fish_terminal_color_theme`, which holds `light`, `dark` or
+`unknown` and updates live when the terminal's background changes. That is
+usually the same thing as the system appearance, and it is what makes these
+two work identically on Linux, where there is no `AppleInterfaceStyle` to read.
+
+Three tools **cannot** follow the appearance, and are pinned to Mocha:
 
 | Tool       | Why it is fixed                                                    |
 | ---------- | ------------------------------------------------------------------ |
 | oh-my-posh | Takes a single config path; there is no light/dark form            |
 | delta      | `syntax-theme` takes one value; no pair syntax, no system detection |
+| Xcode      | One theme selection, stored in Xcode's own preferences             |
+
+### Themes that are fetched, not committed
+
+Three of these ship their theme as a *file* the tool reads, and those files are
+downloaded by `install.sh` rather than kept in this repo:
+
+| Destination | From |
+| ----------- | ---- |
+| `~/.config/git/catppuccin.gitconfig` | [catppuccin/delta](https://github.com/catppuccin/delta) |
+| `~/.config/eza-{mocha,latte}/theme.yml` | [catppuccin/eza](https://github.com/catppuccin/eza) |
+| `~/Library/Developer/Xcode/UserData/FontAndColorThemes/` | [catppuccin/xcode](https://github.com/catppuccin/xcode) |
+
+Every one of them **fails soft**. Git ignores an `include.path` that does not
+exist, delta ignores a `features` name it cannot resolve, and eza falls back to
+its built-in colours when `$EZA_CONFIG_DIR` holds no `theme.yml`. So an install
+with no network leaves those three unthemed and nothing else affected. Re-run
+`./install.sh` to fetch or refresh them.
+
+**Xcode is the one thing here you must finish by hand.** The installer places
+the theme files; selecting one is done in *Xcode → Settings → Themes*, and that
+choice lives in Xcode's own preferences where this repo cannot reach it. Xcode
+is also the only configured application that is neither a stow package nor a
+Brewfile entry, because it comes from the App Store.
+
+`fzf` is deliberately **not** themed, even though a port exists. Left alone it
+draws with the terminal's ANSI colours, which Ghostty already sets to
+Catppuccin — so it is themed *and* follows light/dark for free. The port
+hardcodes one flavour's hex values, which would take that away. See
+`fish/.config/fish/conf.d/20-options.fish` for the full reasoning.
 
 `tlrc` is worth understanding: it sets no theme at all. Its styles are palette
 *names* rather than hex, so it renders in whatever colours the terminal is

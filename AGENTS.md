@@ -129,6 +129,17 @@ Structural things worth knowing before editing:
   formatter routing. Add a language there, not in three plugin files.
 * `nvim/.config/nvim/after/lsp/*.lua` overrides nvim-lspconfig's defaults. The
   `after/` prefix is required — a plain `lsp/` loses the merge.
+* **Not everything configured here is a stow package.** Three Catppuccin
+  themes are *fetched* by `install.sh` into `$HOME` rather than committed —
+  delta's `catppuccin.gitconfig`, eza's two `theme.yml` files, and Xcode's
+  `.xccolortheme` pair. They are deliberately absent from the repo, and every
+  consumer fails soft when they are: Git ignores a missing `include.path`,
+  delta ignores an unresolvable `features` name, and eza falls back to its own
+  colours. Do not "fix" a config that references one of these by adding the
+  file to a package.
+  Xcode is also the only configured application with no Brewfile entry — it
+  comes from the App Store — and selecting its theme is a manual step in
+  *Xcode → Settings → Themes* that the repo cannot perform.
 * The font stack spans five packages and the fallback chain differs between
   editors and terminals. Consult the matrix in the root README before touching
   any font setting, and change all of them together. VS Code is the awkward

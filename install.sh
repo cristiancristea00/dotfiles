@@ -877,6 +877,84 @@ EOF
     return 0
 }
 
+# WHAT: Download the Catppuccin themes for tools whose port is a FILE rather
+#       than a setting — delta, eza and Xcode.
+# WHY : These three ship their theme as a file the tool reads from a fixed
+#       path, and the files are not committed here. Fetching keeps them current
+#       with upstream at the cost of a network dependency, which is why every
+#       failure below is a warning rather than an error.
+#       The other Catppuccin surfaces need nothing fetched: fish 4.4+ and bat
+#       both ship the flavours built in, and Ghostty, Zed, VS Code, Cursor and
+#       Neovim get theirs from an extension or a bundled theme.
+# NOTE: An absent file is harmless everywhere it is used. Git ignores an
+#       `include.path` that does not exist, delta ignores a `features` name it
+#       cannot resolve, and eza falls back to its built-in colours when
+#       $EZA_CONFIG_DIR holds no theme.yml. So an offline install leaves these
+#       three unthemed and nothing else broken.
+# HOW : Re-run the installer to refresh them; each fetch overwrites.
+install_catppuccin_themes() {
+    step "Fetching Catppuccin themes"
+
+    command -v curl >/dev/null 2>&1 || {
+        warn "curl is not installed; skipping the fetched themes"
+        return 0
+    }
+
+    local raw="https://raw.githubusercontent.com/catppuccin"
+
+    fetch_theme "$raw/delta/main/catppuccin.gitconfig" \
+        "$HOME/.config/git/catppuccin.gitconfig" "delta"
+
+    # WHY: eza reads its theme from $EZA_CONFIG_DIR/theme.yml — one directory,
+    #      one theme. Two directories is what lets the shell point at the right
+    #      one per appearance; see fish/.config/fish/conf.d/25-theme.fish.
+    #      The mauve accent matches catppuccin.accentColor in the editors.
+    fetch_theme "$raw/eza/main/themes/mocha/catppuccin-mocha-mauve.yml" \
+        "$HOME/.config/eza-mocha/theme.yml" "eza (mocha)"
+    fetch_theme "$raw/eza/main/themes/latte/catppuccin-latte-mauve.yml" \
+        "$HOME/.config/eza-latte/theme.yml" "eza (latte)"
+
+    # WHY: macOS-only because Xcode is. The %20 is required — the upstream
+    #      filenames contain a space, and curl will not encode it for you.
+    if [ "$OS" = "macos" ]; then
+        local xc="$HOME/Library/Developer/Xcode/UserData/FontAndColorThemes"
+        fetch_theme "$raw/xcode/main/themes/Catppuccin%20Mocha.xccolortheme" \
+            "$xc/Catppuccin Mocha.xccolortheme" "Xcode (mocha)"
+        fetch_theme "$raw/xcode/main/themes/Catppuccin%20Latte.xccolortheme" \
+            "$xc/Catppuccin Latte.xccolortheme" "Xcode (latte)"
+        info "Select one in Xcode > Settings > Themes — that choice is Xcode's"
+        info "own preference and is not something this repo can set."
+    fi
+
+    return 0
+}
+
+# WHAT: Download one file to one destination, creating the directory.
+# WHY : Split out so every fetch gets the same treatment: a temp file first, so
+#       an interrupted or failed download can never leave a truncated theme in
+#       place, and a warning rather than an error on failure.
+fetch_theme() {
+    local url="$1" dest="$2" label="$3" tmp
+
+    if [ "$DRY_RUN" -eq 1 ]; then
+        info "[dry-run] fetch $label -> $dest"
+        return 0
+    fi
+
+    tmp="$(mktemp)" || { warn "Could not create a temp file for $label"; return 0; }
+
+    if curl -fsSL --max-time 30 "$url" -o "$tmp" 2>/dev/null && [ -s "$tmp" ]; then
+        mkdir -p "$(dirname "$dest")"
+        mv "$tmp" "$dest"
+        ok "$label"
+    else
+        rm -f "$tmp"
+        warn "Could not fetch the $label theme; it will be unthemed"
+    fi
+
+    return 0
+}
+
 bootstrap_neovim() {
     command -v nvim >/dev/null 2>&1 || { warn "nvim not found; skipping bootstrap"; return 0; }
     step "Bootstrapping Neovim (plugins and parsers)"
@@ -988,6 +1066,27 @@ uninstall() {
         fi
     done
 
+    # WHY: The themes fetched by install_catppuccin_themes are real files this
+    #      script created, not symlinks stow knows about, so nothing else would
+    #      ever remove them. The eza directories are ours entirely and go with
+    #      their contents; the Xcode themes are removed individually because
+    #      that directory is Xcode's and holds its own themes too.
+    local fetched
+    for fetched in "$HOME/.config/git/catppuccin.gitconfig" \
+        "$HOME/.config/eza-mocha/theme.yml" \
+        "$HOME/.config/eza-latte/theme.yml" \
+        "$HOME/Library/Developer/Xcode/UserData/FontAndColorThemes/Catppuccin Mocha.xccolortheme" \
+        "$HOME/Library/Developer/Xcode/UserData/FontAndColorThemes/Catppuccin Latte.xccolortheme"; do
+        if [ -f "$fetched" ]; then
+            run rm "$fetched"
+            ok "Removed $fetched"
+        fi
+    done
+    for fetched in "$HOME/.config/eza-mocha" "$HOME/.config/eza-latte"; do
+        [ -d "$fetched" ] && rmdir "$fetched" 2>/dev/null
+    done
+    true  # rmdir on a non-empty directory is expected and must not fail the run
+
     local fold nofold editor
     fold="$(select_packages "$PACKAGES_FOLD")"
     nofold="$(select_packages "$PACKAGES_NOFOLD")"
@@ -1079,6 +1178,7 @@ main() {
     if [ "$DRY_RUN" -eq 0 ]; then
         bootstrap_neovim
         install_editor_extensions
+        install_catppuccin_themes
         prime_tldr_cache
         set_login_shell
     fi

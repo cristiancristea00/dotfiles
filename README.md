@@ -395,12 +395,12 @@ an unknown key without an error, so a typo shows up only here:
 ./install.sh --dry-run                                # what the installer would do
 shellcheck install.sh                                 # the installer itself
 /bin/bash -n install.sh                               # bash 3.2 syntax, on macOS
-ghostty +validate-config                              # Ghostty syntax
+ghostty +validate-config                              # Ghostty syntax; silent means valid
 ghostty +show-config | grep macos-option-as-alt       # Ghostty resolved values
 git config --file git/.config/git/config --list       # Git
 fish --no-execute fish/.config/fish/**/*.fish         # fish
 python3 -c "import tomllib,sys;tomllib.load(open(sys.argv[1],'rb'))" <file>   # TOML
-nvim "+checkhealth vim.pack vim.lsp nvim-treesitter"  # Neovim
+nvim "+checkhealth vim.pack vim.lsp nvim-treesitter" +qa  # Neovim
 stow -n -v --target="$HOME" --dir="$PWD" <pkg>        # what stow would do
 ruby -c Brewfile                                      # Brewfile is Ruby
 ```

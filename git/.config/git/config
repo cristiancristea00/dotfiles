@@ -66,11 +66,6 @@
     #       are space-indented.
     whitespace = trailing-space,space-before-tab,tab-in-indent
 
-    # WHAT: Allow paths longer than 260 characters.
-    # WHY : A Git for Windows key; other builds ignore it. Kept so the file is
-    #       portable to a Windows machine.
-    longpaths = true
-
     # WHAT: Command used to connect to a remote over SSH.
     # WHY : Equal to the default, and outranked by $GIT_SSH_COMMAND. Stated so
     #       the per-repository override that pins one repository to one of
@@ -88,8 +83,8 @@
 # NOTE: The file is not in this repo; install.sh fetches it into
 #       ~/.config/git/ (see ../../../README.md § Fetched themes). Git resolves
 #       a relative `include.path` against the directory of the file being
-#       read, the deployed ~/.config/git/, not the repo, which is why a bare
-#       filename works beside the symlink. Git ignores an `include.path` that
+#       read, the deployed ~/.config/git/, not the repo, so a bare filename
+#       finds the fetched file beside the symlink. Git ignores an `include.path` that
 #       does not exist, so a machine that has not run the installer falls
 #       through to delta's own defaults.
 # HOW : Re-run `./install.sh` to refresh it.
@@ -315,12 +310,9 @@
 # --- Submodules -------------------------------------------------------------------
 [submodule]
     # WHAT: Clone and fetch up to eight submodules at once.
-    # WHY : The default for `fetchJobs` is 1.
-    # NOTE: The key `recursive` is not a Git key; the documented one is
-    #       `submodule.recurse`, so this line has no effect. Rename it to make
-    #       checkout, pull, and the other commands that support
-    #       `--recurse-submodules` recurse by default.
-    recursive = true
+    # WHY : The default is 1. Commands do not recurse into submodules by
+    #       default; `submodule.recurse = true` would make checkout, pull, and
+    #       the others that support `--recurse-submodules` do so.
     fetchJobs = 8
 
 [grep]

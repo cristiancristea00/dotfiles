@@ -78,11 +78,13 @@
     //       a Latte window. The four names come from the extension's own
     //       icon_themes/catppuccin-icons.json, which is where to look if one
     //       stops resolving.
-    // NOTE: Zed can do this and VS Code CANNOT. Its `workbench.iconTheme`
-    //       takes a single value with no light/dark pair, so
-    //       ../../../vscode/.config/Code/User/settings.json pins one flavour
-    //       and says so. This is the rare setting where the two editors are
-    //       not equivalent.
+    // NOTE: Zed expresses this natively; VS Code reaches the same result by a
+    //       different route. Its `workbench.iconTheme` takes a single value
+    //       with no light/dark pair, and the Catppuccin extension keeps it in
+    //       step by REWRITING the setting whenever the colour theme changes.
+    //       Same outcome, but Zed's is declarative while VS Code's mutates the
+    //       config file — see the note on `workbench.iconTheme` in
+    //       ../../../vscode/.config/Code/User/settings.json.
     // NOTE: Zed's settings UI writes this key as a plain string, and it wrote
     //       it into the middle of the buffer-font block above when it did.
     //       If it reappears there, move it back here rather than editing

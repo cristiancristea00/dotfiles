@@ -224,21 +224,31 @@ all do, so the stack flips together:
 | Neovide          | `theme = "auto"` (window chrome only)                                         |
 | fish             | `fish_config theme choose catppuccin-mocha` — the theme carries both variants |
 | eza              | A fish handler points `$EZA_CONFIG_DIR` at a Latte or Mocha directory         |
+| delta            | A fish handler sets `$DELTA_FEATURES` to `catppuccin-latte` or `-mocha`       |
 | tlrc             | Palette **names**, which resolve through the terminal's colours               |
 
-The last two follow the **terminal**, not the OS. Both key off fish's
-read-only `$fish_terminal_color_theme`, which holds `light`, `dark` or
-`unknown` and updates live when the terminal's background changes. That is
-usually the same thing as the system appearance, and it is what makes these
-two work identically on Linux, where there is no `AppleInterfaceStyle` to read.
+The last four follow the **terminal**, not the OS. fish, eza, and delta key off
+fish's read-only `$fish_terminal_color_theme`, which holds `light`, `dark`, or
+`unknown` and updates live when the terminal's background changes; tlrc needs
+no signal at all, since palette names resolve through whatever the terminal is
+already using. Keying off the terminal is what makes them work identically on
+Linux, where there is no `AppleInterfaceStyle` to read.
 
-Three tools **cannot** follow the appearance, and are pinned to Mocha:
+**delta is the one that degrades rather than fails.** Its flavour comes from an
+environment variable, so it only follows the appearance in a shell that sets
+one — which means fish. Run `git` from a bash or zsh script, or from a GUI
+tool, and nothing sets `$DELTA_FEATURES`; delta then detects the background
+itself (`--detect-dark-light`, default `auto`) and falls back to its own
+`Monokai Extended` or `GitHub`. Not Catppuccin, but right for the background,
+which is the better of the two failures. Nothing in `git/config` names a
+flavour, deliberately — a `features` line there would pin one and defeat this.
 
-| Tool       | Why it is fixed                                                     |
-| ---------- | ------------------------------------------------------------------- |
-| oh-my-posh | Takes a single config path; there is no light/dark form             |
-| delta      | `syntax-theme` takes one value; no pair syntax, no system detection |
-| Xcode      | One theme selection, stored in Xcode's own preferences              |
+Two tools **cannot** follow the appearance, and are pinned to Mocha:
+
+| Tool       | Why it is fixed                                          |
+| ---------- | -------------------------------------------------------- |
+| oh-my-posh | Takes a single config path; there is no light/dark form  |
+| Xcode      | One theme selection, stored in Xcode's own preferences   |
 
 ### Themes that are fetched, not committed
 

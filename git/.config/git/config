@@ -76,18 +76,20 @@
 # HOW : `n` / `N` jump between files when navigate is on. Run
 #       `delta --show-syntax-themes` to preview alternatives.
 # WHAT: Pull in the Catppuccin theme definitions for delta.
-# WHY : The `syntax-theme` below colours the CODE inside a diff, but not
-#       delta's own chrome — the line-number columns, hunk headers, file
-#       headers, and the backgrounds behind added and removed lines. Those come
-#       from a set of named features, which this file defines.
+# WHY : These define the named features — `catppuccin-latte`,
+#       `catppuccin-frappe`, `catppuccin-macchiato`, `catppuccin-mocha` — that
+#       $DELTA_FEATURES selects between. Each one sets the syntax theme, the
+#       chrome (line-number columns, hunk headers, file headers, and the
+#       backgrounds behind added and removed lines), and the matching `light`
+#       or `dark` flag.
 # NOTE: The path is NOT in this repo. `install.sh` fetches it from
 #       github.com/catppuccin/delta into the deployed config directory, which
 #       is why this include sits beside a real path rather than a relative one.
 #       Git IGNORES an `include.path` that does not exist — verified, no error
-#       and no warning — so a machine that has never run the installer, or ran
-#       it offline, simply gets an unthemed delta chrome.
-# HOW : Re-run `./install.sh` to refresh it. To drop the theme entirely, remove
-#       this include and the `features` line below.
+#       and no warning — and delta ignores a feature name it cannot resolve, so
+#       a machine that has never run the installer falls through to the
+#       behaviour described under [delta] below rather than breaking.
+# HOW : Re-run `./install.sh` to refresh it.
 [include]
     path = catppuccin.gitconfig
 
@@ -96,35 +98,33 @@
     side-by-side = true
     line-numbers = true
 
-    # WHAT: Which named feature from the include above to apply.
-    # WHY : Selects the Mocha flavour's chrome, matching the dark flavour the
-    #       rest of the stack uses.
-    # NOTE: Like the include, this fails soft. The delta tool silently ignores a
-    #       `features` name it cannot resolve — verified: no stderr, exit 0 —
-    #       so this line is inert rather than broken when the fetch has not run.
-    # HOW : Valid names are catppuccin-latte, catppuccin-frappe,
-    #       catppuccin-macchiato and catppuccin-mocha. Read the fetched file to
-    #       see what each one sets.
-    features = catppuccin-mocha
-
-    # WHAT: The syntax highlighting theme for code inside diffs.
-    # WHY : delta uses bat's theme names but does NOT read bat's config, so
-    #       leaving this unset meant diffs rendered in Monokai Extended while
-    #       `bat` rendered Catppuccin — the same file looked different
-    #       depending on which tool showed it. Naming the flavour explicitly
-    #       makes them agree.
-    # HOW : Unlike bat, this takes a SINGLE value: delta has no
-    #       `light:…,dark:…` form and no system detection, so the diff colours
-    #       do not follow the appearance. List alternatives with
+    # --- Theme: chosen elsewhere, on purpose ---------------------------------
+    # WHAT: Neither `features` nor `syntax-theme` is set here, and that is the
+    #       whole mechanism rather than an omission.
+    # WHY : The delta pager takes ONE value for each, with no `light:…,dark:…`
+    #       form the way bat has. So the flavour is chosen outside this file,
+    #       by $DELTA_FEATURES, which
+    #       ../../../fish/.config/fish/conf.d/25-theme.fish sets from the
+    #       terminal's background — `catppuccin-latte` in a light terminal,
+    #       `catppuccin-mocha` in a dark one. That variable REPLACES a
+    #       `features` written here, so leaving it unset is what lets the shell
+    #       decide.
+    #       Where nothing sets it — a bash or zsh script, a GUI tool, any shell
+    #       that cannot report its background — delta detects the terminal
+    #       itself (`--detect-dark-light`, default `auto`) and uses its own
+    #       defaults: `Monokai Extended` when dark, `GitHub` when light. Not
+    #       Catppuccin, but correct for the appearance, which is the better
+    #       failure than a flavour pinned to the wrong one.
+    # NOTE: DO NOT ADD `syntax-theme` BACK HERE. Options written directly in
+    #       [delta] outrank ones inherited from a feature, so a value here
+    #       silently half-breaks the switching: the chrome would keep following
+    #       the terminal while the code colours stayed frozen. That was the bug
+    #       this arrangement fixes, and it looks like nothing is wrong.
+    # HOW : To pin one flavour regardless of appearance, add
+    #       `features = catppuccin-mocha` here — $DELTA_FEATURES still wins
+    #       wherever the shell sets it, so also delete the delta handler in
+    #       25-theme.fish. List the syntax themes delta knows with
     #       `delta --list-syntax-themes`.
-    # NOTE: The catppuccin-mocha feature above sets this too, so it looks
-    #       redundant. It is not, for two reasons. Options written directly in
-    #       [delta] outrank those inherited from a feature, so this is the one
-    #       that wins; and it is the only one that survives when the fetched
-    #       include is absent, which keeps code inside diffs correctly coloured
-    #       on a machine where only the chrome is unthemed. Keep the two values
-    #       in step if you change flavour.
-    syntax-theme = Catppuccin Mocha
 
 [interactive]
     # WHAT: Also route `git add -p` hunks through delta.

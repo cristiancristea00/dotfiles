@@ -27,21 +27,41 @@ repo.
 | `.config/git/ignore`      | Global ignore patterns — Git's native XDG path, no `core.excludesFile` needed |
 | `.config/git/catppuccin.gitconfig` | **Not in this repo.** Fetched by `install.sh` from [catppuccin/delta](https://github.com/catppuccin/delta); themes delta's chrome |
 
-### The delta theme is in two halves
+### delta's theme is chosen outside this file
 
-`syntax-theme` colours the **code** inside a diff. The `features` line colours
-delta's own **chrome** — line-number columns, hunk headers, and file headers, and the
-backgrounds behind added and removed lines — and those definitions come from
-the fetched `catppuccin.gitconfig`.
+`[delta]` sets **neither** `features` nor `syntax-theme`, and that is the
+mechanism rather than an omission.
 
-Both name Mocha, so `syntax-theme` looks redundant next to the feature. It is
-not, for two reasons: options written directly in `[delta]` outrank ones
-inherited from a feature, so it is the value that actually wins; and it is the
-only half that survives when the fetch has not run, which keeps code correctly
-coloured on a machine where just the chrome is plain. **Change both together.**
+delta takes one value for each, with no `light:…,dark:…` form the way bat has.
+So the flavour comes from `$DELTA_FEATURES`, which
+[`../fish/.config/fish/conf.d/25-theme.fish`](../fish/.config/fish/conf.d/25-theme.fish)
+sets from the terminal's background — `catppuccin-latte` in a light terminal,
+`catppuccin-mocha` in a dark one. That variable **replaces** a `features` line
+written in git config, so leaving it unset here is what hands the choice to the
+shell. The names themselves are defined in the fetched `catppuccin.gitconfig`,
+and each one carries the syntax theme, the chrome, and the matching `light` or
+`dark` flag together.
 
-Both halves fail soft — Git ignores an `include.path` that does not exist, and
-delta ignores a `features` name it cannot resolve, neither with any warning.
+| Where delta runs | What it uses |
+| ---------------- | ------------ |
+| fish, light terminal | `catppuccin-latte` |
+| fish, dark terminal | `catppuccin-mocha` |
+| fish, terminal will not say | Nothing set — delta detects and uses its own default |
+| bash, zsh, a script, a GUI tool | The same: delta detects for itself |
+
+Outside fish that means `Monokai Extended` or `GitHub` rather than Catppuccin
+— correct for the background, which is the better failure than a flavour
+pinned to the wrong one.
+
+> **Do not add `syntax-theme` back to `[delta]`.** Options written directly
+> there outrank ones inherited from a feature, so a value would half-break the
+> switching: the chrome would keep following the terminal while the code
+> colours stayed frozen. That is the bug this arrangement exists to fix, and
+> nothing about it looks wrong.
+
+Everything here fails soft. Git ignores an `include.path` that does not exist,
+delta ignores a `features` name it cannot resolve, and an unset
+`$DELTA_FEATURES` is the normal state rather than an error — none of them warn.
 Re-run `./install.sh` to fetch the file.
 
 ## Identity switching

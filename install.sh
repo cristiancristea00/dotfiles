@@ -840,17 +840,47 @@ install_editor_extensions() {
     return 0
 }
 
-# WHAT: Feed one editor's CLI every id from the given lists.
+# WHAT: Feed one editor's CLI the ids it does not already have.
 # WHY : Split out so the two editors share the parsing, and so a failure in one
 #       cannot stop the other.
+# NOTE: The installed set is read ONCE, with --list-extensions, and every id is
+#       checked against it in the shell. The obvious alternative — calling
+#       --install-extension for everything and letting --force make it a no-op
+#       — costs about 0.76s per id whether or not anything happens, which at
+#       73 declared ids across the two editors is roughly 55 seconds of every
+#       install spent reinstalling what is already there. One --list-extensions
+#       costs 0.22s.
+# NOTE: The consequence is that this step no longer UPGRADES anything, since it
+#       no longer touches an extension that is present. That is deliberate and
+#       safe here only because `extensions.autoUpdate` is "on" in
+#       vscode/.config/Code/User/settings.json, so both editors update
+#       themselves. Turn that off and extensions freeze at whatever version
+#       they were installed at.
 install_extension_list() {
-    local cli="$1" list path id failed=0 count=0
+    local cli="$1" list path id lower installed
+    local declared=0 present=0 added=0 failed=0
     shift
 
     command -v "$cli" >/dev/null 2>&1 || {
         warn "$cli is not on \$PATH; skipping its extensions"
         return 1
     }
+
+    # WHY: The surrounding spaces are load-bearing, not tidiness. The test
+    #      below is a substring match, and this repo declares BOTH
+    #      `ms-python.python` and `ms-python.vscode-python-envs`. Without the
+    #      padding the shorter id would match inside the longer one and a
+    #      genuinely missing extension would be skipped forever.
+    # WHY: Both sides are lower-cased because Marketplace ids are
+    #      case-insensitive and are DISPLAYED capitalised
+    #      (`Catppuccin.catppuccin-vsc`) while both CLIs report them lowercase.
+    #      Everything here is lowercase today, so this is insurance: paste an id
+    #      as the Marketplace shows it and without this the check would miss on
+    #      every run. `tr` rather than ${var,,} — bash 3.2 has no case
+    #      conversion.
+    # NOTE: If --list-extensions fails, this is empty, every id looks missing
+    #       and all of them are installed. That is the safe way round.
+    installed=" $("$cli" --list-extensions 2>/dev/null | tr '[:upper:]' '[:lower:]' | tr '\n' ' ')"
 
     for list in "$@"; do
         path="$DOTFILES_DIR/$list"
@@ -860,19 +890,41 @@ install_extension_list() {
         #      and `set -e` would end the script there.
         while IFS= read -r id; do
             [ -n "$id" ] || continue
-            count=$((count + 1))
-            # --force makes this idempotent and upgrades in place.
-            run "$cli" --install-extension "$id" --force >/dev/null 2>&1 \
-                || { warn "$cli could not install $id"; failed=$((failed + 1)); }
+            declared=$((declared + 1))
+
+            lower="$(printf '%s' "$id" | tr '[:upper:]' '[:lower:]')"
+            case "$installed" in
+                *" $lower "*)
+                    present=$((present + 1))
+                    continue
+                    ;;
+            esac
+
+            if [ "$DRY_RUN" -eq 1 ]; then
+                info "[dry-run] would install $id"
+                added=$((added + 1))
+                continue
+            fi
+
+            # --force suppresses prompts and makes a retry after a partial
+            # failure idempotent.
+            if "$cli" --install-extension "$id" --force >/dev/null 2>&1; then
+                added=$((added + 1))
+            else
+                warn "$cli could not install $id"
+                failed=$((failed + 1))
+            fi
         done <<EOF
 $(grep -v -e '^[[:space:]]*#' -e '^[[:space:]]*$' "$path" 2>/dev/null || true)
 EOF
     done
 
-    if [ "$failed" -eq 0 ]; then
-        ok "$cli: $count extensions"
+    if [ "$failed" -gt 0 ]; then
+        warn "$cli: $declared declared, $present present, $added installed, $failed failed"
+    elif [ "$added" -eq 0 ]; then
+        ok "$cli: $declared declared, all present"
     else
-        warn "$cli: $((count - failed)) of $count installed, $failed failed"
+        ok "$cli: $declared declared, $present present, $added installed"
     fi
     return 0
 }
@@ -1180,10 +1232,14 @@ main() {
     #      in $HOME and touches nothing. The rest are slow or network-heavy and
     #      have nothing useful to say in a dry run.
     install_catppuccin_themes
+    # WHY: Outside the guard for the same reason as the themes above — now that
+    #      it reads each editor's installed set instead of reinstalling
+    #      everything, a preview costs two --list-extensions calls and can name
+    #      exactly what a real run would add.
+    install_editor_extensions
 
     if [ "$DRY_RUN" -eq 0 ]; then
         bootstrap_neovim
-        install_editor_extensions
         prime_tldr_cache
         set_login_shell
     fi

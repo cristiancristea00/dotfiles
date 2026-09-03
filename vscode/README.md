@@ -124,13 +124,32 @@ curl -s -X POST \
 ```
 
 ```sh
-code   --install-extension <id> --force
-cursor --install-extension <id> --force
+code   --list-extensions                      # read the installed set, once
+code   --install-extension <id> --force       # only for ids not in it
 ```
 
-`--force` makes it idempotent and upgrades in place. The `code` CLI reaches
-`$PATH` through the palette action *Shell Command: Install 'code' command in
-PATH*; `install.sh` warns rather than fails when it is missing.
+**`install.sh` installs only what is missing.** It reads each editor's
+installed set with one `--list-extensions` call and skips every id already
+there. The obvious alternative — calling `--install-extension` for everything
+and letting `--force` make it a no-op — costs about 0.76s per id whether or
+not anything happens, which across the 73 ids these three lists declare is
+roughly 55 seconds of every install doing nothing. Measured: the step went
+from 71.9s to 3.5s.
+
+The consequence is worth knowing: **the installer no longer upgrades
+extensions**, because it does not touch one that is present. That is safe here
+only because `extensions.autoUpdate` is `"on"` in
+[`.config/Code/User/settings.json`](.config/Code/User/settings.json), so both
+editors update themselves. Turn that off and extensions freeze at whatever
+version they were installed at.
+
+`--force` is still passed on the calls that do run — it suppresses prompts and
+makes a retry after a partial failure idempotent. `./install.sh --dry-run`
+names the ids it would add without installing anything.
+
+The `code` CLI reaches `$PATH` through the palette action *Shell Command:
+Install 'code' command in PATH*; `install.sh` warns rather than fails when it
+is missing.
 
 ## Known gaps
 

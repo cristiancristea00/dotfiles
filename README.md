@@ -121,7 +121,7 @@ stow --no-folding --ignore='Library'  --target="$HOME" --dir="$PWD" vscode curso
 ```
 
 Keeping this separate is not tidiness. Adding these two to the `--no-folding`
-list above would apply `--ignore='\.config'` to **fish, ghostty, git and zed**
+list above would apply `--ignore='\.config'` to **fish, ghostty, git, and zed**
 as well, and erase their entire trees.
 
 The no-fold directories are also what make local overlays possible:
@@ -187,7 +187,7 @@ statusline, file tree and diagnostic gutter never break column alignment. The
 plain Nerd Font build draws icons at double width.
 
 Why ligatures split: editors fuse `!=` and `->` because they are pleasant to
-read in code; terminals do not, because logs, diffs and hex output must show
+read in code; terminals do not, because logs, diffs, and hex output must show
 exactly the characters that are there. **Consequence:** Neovim has ligatures in
 Neovide but not in a Ghostty terminal.
 
@@ -201,7 +201,7 @@ Changing the font means changing it in five places: `ghostty/`, `zed/` (twice
 
 VS Code needs the extra care: it does **not** inherit `editor.fontFamily` into
 its other surfaces, so the CodeLens, inlay-hint, inline-suggestion, debug
-console, SCM input, notebook and chat fonts each carry their own key. That is
+console, SCM input, notebook, and chat fonts each carry their own key. That is
 product fragmentation, not preference — they are all set to the same family and
 must move together.
 

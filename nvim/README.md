@@ -207,7 +207,7 @@ Leader = **Space**. `<leader>fk` fuzzy-searches this whole list at runtime.
   running goimports over a `go.mod` would mangle it. Merging them re-introduces
   that bug silently.
 * **XML has no language server here.** The entry gives treesitter
-  highlighting, indent and folds, but no completion, no schema validation and
+  highlighting, indent, and folds, but no completion, no schema validation, and
   no formatting. The only XML server `nvim-lspconfig` knows is `lemminx`, and
   it has **no Homebrew formula** — every other dependency in this repo comes
   from the Brewfile, and a hand-downloaded Java binary would be the sole

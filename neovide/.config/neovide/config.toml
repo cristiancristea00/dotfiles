@@ -6,13 +6,13 @@
 #   Neovide reads this file at STARTUP, before it even launches Neovim
 #   (location: ~/.config/neovide/config.toml, overridable with the
 #   $NEOVIDE_CONFIG environment variable). It controls process- and
-#   window-level behavior that Lua inside Neovim cannot: window frame style,
-#   the font used from the very first frame, GPU/vsync/color behavior, and
+#   window-level behaviour that Lua inside Neovim cannot: window frame style,
+#   the font used from the very first frame, GPU/vsync/colour behaviour, and
 #   how the process launches.
 #
 #   Division of responsibilities with the Neovim config:
 #     neovide/config.toml         -> process + window creation (this file)
-#     nvim/lua/core/neovide.lua   -> runtime behavior: animations, macOS
+#     nvim/lua/core/neovide.lua   -> runtime behaviour: animations, macOS
 #                                    cmd-key bindings, live zoom, etc.
 #                                    (vim.g.neovide_* variables)
 #
@@ -47,11 +47,11 @@ fork = true
 
 # --- Window -------------------------------------------------------------------
 # WHAT: Titlebar style. "transparent" keeps the macOS traffic-light buttons but
-#       paints the titlebar in the editor's background color, so the window
+#       paints the titlebar in the editor's background colour, so the window
 #       reads as one seamless surface.
 # WHY : Chosen look. It also happens to match Ghostty, whose
 #       macos-titlebar-style defaults to transparent.
-# HOW : "full" (standard gray macOS titlebar), "buttonless" (transparent with
+# HOW : "full" (standard grey macOS titlebar), "buttonless" (transparent with
 #       no traffic lights), "none" (no titlebar, no drag area).
 # default: "full"
 frame = "transparent"
@@ -77,11 +77,11 @@ maximized = false
 system-native-tabs = true
 
 # --- Rendering ------------------------------------------------------------------
-# WHAT: Request an sRGB color surface from the OS.
-# WHY : Set to `false`, the macOS default. Enabling it made colors render
+# WHAT: Request an sRGB colour surface from the OS.
+# WHY : Set to `false`, the macOS default. Enabling it made colours render
 #       differently from every other app on this machine; the default matches
 #       what Ghostty and Zed show.
-# HOW : Flip to true and compare if colors ever look washed out.
+# HOW : Flip to true and compare if colours ever look washed out.
 # default on macOS: false
 srgb = false
 

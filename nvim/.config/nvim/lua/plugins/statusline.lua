@@ -8,7 +8,7 @@
      │ MODE │ branch │ path/to/file  │ ...... │ line:col │ filetype │
      └─ a ──┴── b ───┴───── c ───────┘        └──── y ───┴──── z ───┘
 
-  ── CUSTOMIZE / REORDER / EXTEND ────────────────────────────────────────────
+  ── CUSTOMISE / REORDER / EXTEND ────────────────────────────────────────────
   The six lists below ARE the layout: a/b/c render left-to-right on the left,
   x/y/z render left-to-right on the right. Reordering components = reordering
   list entries; adding one = inserting a string ("encoding", "progress",
@@ -22,7 +22,7 @@
 
 require("lualine").setup({
     options = {
-        -- WHAT: "auto" derives colors from the active colorscheme — so switching
+        -- WHAT: "auto" derives colours from the active colorscheme — so switching
         --       themes in lua/theme.lua restyles the statusline automatically.
         theme = "auto",
         -- WHAT: One global statusline (matches laststatus=3 in core/options.lua).

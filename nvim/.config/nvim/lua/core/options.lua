@@ -100,7 +100,7 @@ vim.o.linebreak = true
 -- WHAT: `ignorecase` + `smartcase` = case-insensitive search unless the
 --       pattern contains an uppercase letter. `inccommand = "split"` live-
 --       previews :substitute (and friends) in a split while you type.
--- WHY : Smart-case is the least-surprise behavior. Highlighting all search
+-- WHY : Smart-case is the least-surprise behaviour. Highlighting all search
 --       matches (hlsearch) is Neovim's default and is kept — <Esc> is mapped in
 --       core/keymaps.lua to clear the highlight instead of disabling the
 --       feature entirely.
@@ -110,7 +110,7 @@ vim.o.inccommand = "split"
 
 -- Splits ----------------------------------------------------------------------
 -- WHAT: Where new windows open relative to the current one.
--- WHY : Right/below matches reading order and every other editor's behavior;
+-- WHY : Right/below matches reading order and every other editor's behaviour;
 --       Vim's default (left/above) surprises everyone.
 vim.o.splitright = true
 vim.o.splitbelow = true
@@ -203,8 +203,8 @@ vim.o.winborder = "rounded"
 vim.o.foldlevel = 99
 vim.o.foldlevelstart = 99
 
--- True color ------------------------------------------------------------------
--- WHAT: 24-bit RGB colors in the terminal.
+-- True colour -----------------------------------------------------------------
+-- WHAT: 24-bit RGB colours in the terminal.
 -- WHY : Neovim auto-detects this on modern terminals (and Neovide always has
 --       it); set explicitly for predictability on odd $TERM values.
 vim.o.termguicolors = true

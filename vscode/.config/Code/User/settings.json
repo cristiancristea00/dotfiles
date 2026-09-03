@@ -274,7 +274,7 @@
     // WHAT: Ligatures in the terminal.
     // WHY : OFF — a separate key from `editor.fontLigatures`, which is exactly
     //       what makes the editor-on / terminal-off split expressible. Command
-    //       output, diffs and hex dumps should show the characters that are
+    //       output, diffs, and hex dumps should show the characters that are
     //       actually there.
     "terminal.integrated.fontLigatures.enabled": false,
 

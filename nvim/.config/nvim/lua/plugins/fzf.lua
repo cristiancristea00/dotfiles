@@ -3,7 +3,7 @@
   ============================================================================
 
   fzf-lua drives everything through the fzf binary (Brewfile), using your
-  installed ripgrep for grepping and fd for file listing — so results honor
+  installed ripgrep for grepping and fd for file listing — so results honour
   .gitignore automatically.
 
   All pickers share the same keys inside the picker window:

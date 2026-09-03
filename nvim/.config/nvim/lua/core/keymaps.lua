@@ -43,7 +43,7 @@ map("n", "<C-Right>", "<cmd>vertical resize +2<CR>", { desc = "Increase window w
 
 -- Stay in visual mode while indenting ------------------------------------------
 -- WHAT: After indenting a visual selection with < or >, re-select it so you
---       can keep hitting the key. Vanilla behavior drops the selection after
+--       can keep hitting the key. Vanilla behaviour drops the selection after
 --       one shift.
 map("v", "<", "<gv", { desc = "Indent left, keep selection" })
 map("v", ">", ">gv", { desc = "Indent right, keep selection" })

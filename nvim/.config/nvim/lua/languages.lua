@@ -174,7 +174,7 @@ return {
         -- NO Homebrew formula — `brew search lemminx` finds nothing. Every
         -- other dependency in this repo comes from the Brewfile, and a
         -- hand-downloaded Java binary would be the only exception.
-        -- Consequence: highlighting, indent and folds work; completion,
+        -- Consequence: highlighting, indent, and folds work; completion,
         -- validation against a schema and formatting do not. Zed (the `xml`
         -- extension) and VS Code (redhat.vscode-xml, which embeds lemminx)
         -- both have the full experience.

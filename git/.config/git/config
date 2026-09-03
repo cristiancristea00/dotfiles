@@ -39,7 +39,7 @@
     email = cristiancristea00@gmail.com
     signingKey = D76E05349B9D14CE0888E5247B7B2BF9EF9E63F9
 
-# --- Core behavior ------------------------------------------------------------
+# --- Core behaviour -----------------------------------------------------------
 [core]
     # WHAT: Editor launched for commit messages, interactive rebase, etc.
     editor = nvim

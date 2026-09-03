@@ -30,7 +30,7 @@ repo.
 ### The delta theme is in two halves
 
 `syntax-theme` colours the **code** inside a diff. The `features` line colours
-delta's own **chrome** — line-number columns, hunk and file headers, and the
+delta's own **chrome** — line-number columns, hunk headers, and file headers, and the
 backgrounds behind added and removed lines — and those definitions come from
 the fetched `catppuccin.gitconfig`.
 
@@ -54,7 +54,7 @@ The personal identity is the default. `config` ends with:
 ```
 
 Includes are evaluated in order and the last value wins, so any repository
-under `~/work/` picks up the work name, email and signing key. Verify:
+under `~/work/` picks up the work name, email, and signing key. Verify:
 
 ```sh
 cd ~/work/anything && git config --get user.email   # work

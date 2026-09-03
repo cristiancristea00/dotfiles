@@ -52,7 +52,20 @@ Rules that matter:
 * Cross-reference by relative path when two files are coupled, and say so in
   **both** files.
 * Prose style: em-dashes for asides, sentence case in headings, inline code for
-  every path, command and key.
+  every path, command, and key.
+* **British English, and the Oxford comma.** Write `colour`, `behaviour`,
+  `initialise`, `grey`, `honour`, `customise`; and `a, b, and c` rather than
+  `a, b and c`.
+  **This applies to PROSE ONLY, and the exception is the important half.**
+  Identifiers keep whatever spelling their author gave them, because changing
+  one breaks the config: `colorcolumn`, `colorscheme`, `termguicolors` and the
+  `ColorColumn` highlight group are Vim's own names; `--color` and
+  `--color-theme` are CLI flags; `color = "magenta"` in tlrc's config and
+  `"color"` in VS Code's ruler objects are keys; `catalog.json` is a filename.
+  Where a sentence would have to begin with such a word, rephrase it — the
+  same rule already used for capitalising after `WHAT: `.
+  Established computing terms are not Americanisms and stay as they are: a
+  `dialog` box, a `program`, a schema `catalog`.
 * **Indent every file with 4 spaces**, never tabs — Lua included, despite the
   2-space convention common in Neovim configs. The prose inside `--[[ … ]]--`
   header blocks keeps its own alignment and is not code indentation.
@@ -88,7 +101,7 @@ of the per-OS selector symlinks below (bat, ghostty).
 
 **The `--ignore` trap.** That third invocation must stay separate. `--ignore`
 is a per-run flag, so merging `vscode cursor` into the `--no-folding` call
-would apply `--ignore='\.config'` to **fish, ghostty, git and zed** and erase
+would apply `--ignore='\.config'` to **fish, ghostty, git, and zed** and erase
 their entire trees. `install.sh` keeps the two lists apart for this reason, and
 `backup_conflicts` takes a matching skip-prefix that must likewise never be
 passed for the other packages.

@@ -67,7 +67,7 @@ vim.api.nvim_create_autocmd("VimResized", {
 --       neo-tree sidebar. Four vertical bars over a help page or a running
 --       shell say nothing about line length.
 --       Testing 'buftype' rather than listing filetypes is what makes one
---       check cover all of them: every scratch, help, terminal and plugin
+--       check cover all of them: every scratch, help, terminal, and plugin
 --       buffer sets a non-empty buftype, while a real file's is always "".
 -- NOTE: The branch assigns in BOTH directions on purpose. Only clearing would
 --       be a one-way trip — a window that had shown `:help` would keep its

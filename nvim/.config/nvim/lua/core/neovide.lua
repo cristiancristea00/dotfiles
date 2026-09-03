@@ -2,7 +2,7 @@
   core/neovide.lua — font + everything Neovide-specific
   ============================================================================
 
-  Neovide reads its behavior from `vim.g.neovide_*` variables set anywhere in
+  Neovide reads its behaviour from `vim.g.neovide_*` variables set anywhere in
   the config (:h neovide, https://neovide.dev/configuration.html). It also
   sets `vim.g.neovide = true`, which this file uses as a guard so terminal
   Neovim skips the GUI-only parts.
@@ -18,7 +18,7 @@
   information about where the cursor/viewport went) but shortened so the
   editor never feels like it is waiting for an effect to finish. Every value
   is annotated with Neovide's own default so you can dial back toward stock
-  behavior.
+  behaviour.
 ===========================================================================]]--
 
 -- Font ------------------------------------------------------------------------

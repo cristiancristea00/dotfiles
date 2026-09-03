@@ -89,6 +89,60 @@ return {
         formatters = { "rustfmt" },
     },
     {
+        name = "Go",
+        -- Only the `go` filetype belongs here, NOT gomod/gosum/gowork. See the
+        -- entry below for why splitting them apart is load-bearing.
+        filetypes = { "go" },
+        parsers = { "go" },
+        servers = { "gopls" }, -- brew install gopls; also needs the `go` toolchain at runtime
+        -- The goimports tool applies gofmt's layout rules AND adds or removes
+        -- import lines to match what the file actually uses, which is the half
+        -- of Go formatting that is tedious by hand. Plain "gofmt" and the
+        -- stricter "gofumpt" are the alternatives; neither touches imports.
+        formatters = { "goimports" },
+    },
+    {
+        name = "Go module and workspace files",
+        -- SPLIT FROM THE ENTRY ABOVE ON PURPOSE — do not merge them.
+        -- plugins/conform.lua maps a formatter onto EVERY filetype in an entry:
+        --     for _, ft in ipairs(lang.filetypes) do
+        --         formatters_by_ft[ft] = lang.formatters
+        --     end
+        -- so listing these filetypes beside `go` would route goimports at
+        -- go.mod and go.sum, which are not Go source and would be mangled or
+        -- rejected. Two entries is what keeps the formatter on .go files only.
+        filetypes = { "gomod", "gosum", "gowork", "gotmpl" },
+        parsers = { "gomod", "gosum", "gowork", "gotmpl" },
+        -- Empty is correct and not an oversight: gopls attaches to gomod,
+        -- gowork and gotmpl through ITS OWN filetype list, so declaring it once
+        -- in the Go entry above is what turns it on everywhere. Note gopls does
+        -- not claim gosum — go.sum gets highlighting only, which is all a
+        -- checksum file needs.
+        servers = {},
+        formatters = {},
+    },
+    {
+        name = "Zig",
+        -- The zls server also claims the `zir` filetype (Zig IR), which is
+        -- deliberately not listed: no `zir` treesitter parser exists and
+        -- `zig fmt` cannot format it, so naming it here would attach a missing
+        -- parser and route a formatter that would fail. Leaving it out costs
+        -- nothing — zls still attaches to .zir through its own config.
+        filetypes = { "zig" },
+        parsers = { "zig" },
+        -- NOTE: The zls server and the zig compiler are VERSION-LOCKED. Its
+        --       README is explicit: "When upgrading Zig, make sure to update
+        --       ZLS to keep them in sync." A `brew upgrade` that moves one
+        --       without the other leaves zls failing to start, with no obvious
+        --       cause. Check with `zig version` and `zls --version`.
+        servers = { "zls" }, -- brew install zls (which pulls zig as a dependency)
+        -- The zigfmt formatter runs `zig fmt`, which ships with the compiler
+        -- that zls already requires, so this adds no dependency. Running it
+        -- through conform rather than leaving it to zls means <leader>F still
+        -- formats when the server has not attached.
+        formatters = { "zigfmt" },
+    },
+    {
         name = "Python",
         filetypes = { "python" },
         parsers = { "python" },

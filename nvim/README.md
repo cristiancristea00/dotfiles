@@ -194,6 +194,18 @@ Leader = **Space**. `<leader>fk` fuzzy-searches this whole list at runtime.
 * **Swift and Objective-C on Linux** — the entries stay, but sourcekit-lsp only
   exists if you install the swift.org toolchain. If it is absent the server
   simply never starts; nothing else is affected.
+* **zls and the zig compiler are version-locked.** The zls README is explicit:
+  "When upgrading Zig, make sure to update ZLS to keep them in sync." A
+  `brew upgrade` that moves one and not the other leaves zls refusing to start,
+  and the symptom is a server that silently stops attaching rather than an
+  error naming the cause. Compare `zig version` with `zls --version`; Homebrew
+  makes zig a hard dependency of zls, so a normal install keeps them matched.
+* **Go's language table entry is split in two on purpose.** `Go` covers the
+  `go` filetype and carries `goimports`; `Go module and workspace files` covers
+  `gomod`/`gosum`/`gowork`/`gotmpl` and carries no formatter, because
+  `plugins/conform.lua` maps a formatter onto *every* filetype in an entry and
+  running goimports over a `go.mod` would mangle it. Merging them re-introduces
+  that bug silently.
 * **XML has no language server here.** The entry gives treesitter
   highlighting, indent and folds, but no completion, no schema validation and
   no formatting. The only XML server `nvim-lspconfig` knows is `lemminx`, and

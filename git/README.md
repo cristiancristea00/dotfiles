@@ -25,6 +25,24 @@ repo.
 | `.config/git/config`      | Everything: identity, delta, diff/merge, aliases, signing                     |
 | `.config/git/config.work` | Work identity, applied under `~/work/` via `includeIf`                        |
 | `.config/git/ignore`      | Global ignore patterns — Git's native XDG path, no `core.excludesFile` needed |
+| `.config/git/catppuccin.gitconfig` | **Not in this repo.** Fetched by `install.sh` from [catppuccin/delta](https://github.com/catppuccin/delta); themes delta's chrome |
+
+### The delta theme is in two halves
+
+`syntax-theme` colours the **code** inside a diff. The `features` line colours
+delta's own **chrome** — line-number columns, hunk and file headers, and the
+backgrounds behind added and removed lines — and those definitions come from
+the fetched `catppuccin.gitconfig`.
+
+Both name Mocha, so `syntax-theme` looks redundant next to the feature. It is
+not, for two reasons: options written directly in `[delta]` outrank ones
+inherited from a feature, so it is the value that actually wins; and it is the
+only half that survives when the fetch has not run, which keeps code correctly
+coloured on a machine where just the chrome is plain. **Change both together.**
+
+Both halves fail soft — Git ignores an `include.path` that does not exist, and
+delta ignores a `features` name it cannot resolve, neither with any warning.
+Re-run `./install.sh` to fetch the file.
 
 ## Identity switching
 

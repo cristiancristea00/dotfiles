@@ -75,10 +75,37 @@
 # WHAT: The delta pager reformats Git's diff output.
 # HOW : `n` / `N` jump between files when navigate is on. Run
 #       `delta --show-syntax-themes` to preview alternatives.
+# WHAT: Pull in the Catppuccin theme definitions for delta.
+# WHY : The `syntax-theme` below colours the CODE inside a diff, but not
+#       delta's own chrome — the line-number columns, hunk headers, file
+#       headers, and the backgrounds behind added and removed lines. Those come
+#       from a set of named features, which this file defines.
+# NOTE: The path is NOT in this repo. `install.sh` fetches it from
+#       github.com/catppuccin/delta into the deployed config directory, which
+#       is why this include sits beside a real path rather than a relative one.
+#       Git IGNORES an `include.path` that does not exist — verified, no error
+#       and no warning — so a machine that has never run the installer, or ran
+#       it offline, simply gets an unthemed delta chrome.
+# HOW : Re-run `./install.sh` to refresh it. To drop the theme entirely, remove
+#       this include and the `features` line below.
+[include]
+    path = catppuccin.gitconfig
+
 [delta]
     navigate = true
     side-by-side = true
     line-numbers = true
+
+    # WHAT: Which named feature from the include above to apply.
+    # WHY : Selects the Mocha flavour's chrome, matching the dark flavour the
+    #       rest of the stack uses.
+    # NOTE: Like the include, this fails soft. The delta tool silently ignores a
+    #       `features` name it cannot resolve — verified: no stderr, exit 0 —
+    #       so this line is inert rather than broken when the fetch has not run.
+    # HOW : Valid names are catppuccin-latte, catppuccin-frappe,
+    #       catppuccin-macchiato and catppuccin-mocha. Read the fetched file to
+    #       see what each one sets.
+    features = catppuccin-mocha
 
     # WHAT: The syntax highlighting theme for code inside diffs.
     # WHY : delta uses bat's theme names but does NOT read bat's config, so
@@ -90,6 +117,13 @@
     #       `light:…,dark:…` form and no system detection, so the diff colours
     #       do not follow the appearance. List alternatives with
     #       `delta --list-syntax-themes`.
+    # NOTE: The catppuccin-mocha feature above sets this too, so it looks
+    #       redundant. It is not, for two reasons. Options written directly in
+    #       [delta] outrank those inherited from a feature, so this is the one
+    #       that wins; and it is the only one that survives when the fetched
+    #       include is absent, which keeps code inside diffs correctly coloured
+    #       on a machine where only the chrome is unthemed. Keep the two values
+    #       in step if you change flavour.
     syntax-theme = Catppuccin Mocha
 
 [interactive]

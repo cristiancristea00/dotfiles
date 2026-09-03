@@ -39,3 +39,22 @@ set -g COMMON_OPTIONS_FD --hidden --color always --follow --prune
 # WHY : Left off because Neovim already owns fuzzy finding here and the
 #       bindings override fish's own Ctrl-R history search. Uncomment to try.
 # fzf --fish | source
+
+# WHAT: The Catppuccin theme for fzf (github.com/catppuccin/fzf), which sets
+#       $FZF_DEFAULT_OPTS to a list of --color flags.
+# WHY : Deliberately NOT applied, and worth stating because every other tool in
+#       this setup is themed. Applying it would make fzf look worse, not better:
+#         * Left to itself, fzf draws with the terminal's ANSI colours, which
+#           Ghostty's Catppuccin theme already sets. So fzf is Catppuccin today
+#           AND follows light/dark for free.
+#         * The port hardcodes hex values for one flavour, which would pin it
+#           and lose that.
+#         * Inside Neovim it would change nothing anyway — fzf-lua derives its
+#           colours from the active colorscheme, which is Catppuccin.
+#       With the shell integration above off, the only thing left for it to
+#       affect is a bare `… | fzf` typed by hand.
+# NOTE: If you ever do apply it, translate the snippet. Upstream uses
+#       `set -Ux`, which writes to fish's UNIVERSAL variables — machine state
+#       that survives outside this repo and cannot be undone by removing a
+#       line here. Use `set -gx` instead, the same trap documented for
+#       fish_add_path in conf.d/00-path.fish.

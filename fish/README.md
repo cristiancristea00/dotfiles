@@ -27,6 +27,7 @@ must match the function name inside it**.
 | `conf.d/00-path.fish`        | Homebrew (`brew shellenv`, probing both prefixes) and Rust (`~/.cargo/env.fish`) |
 | `conf.d/10-environment.fish` | `EDITOR`/`VISUAL`, `MANPAGER` through bat, Homebrew hints off                    |
 | `conf.d/20-options.fish`     | Greeting, prompt path length, and the shared `$COMMON_OPTIONS_*` flag sets       |
+| `conf.d/25-theme.fish`       | Catppuccin for fish's own colours and for eza, following the terminal           |
 | `conf.d/30-prompt.fish`      | oh-my-posh, guarded for interactivity and terminal type                          |
 | `config.fish`                | Almost empty by design — documents the load order                                |
 | `functions/`                 | `ll` `la` `lt` `lta` (eza) · `ff` `fx` `fd` (fd) · `coffee` · `signed`           |
@@ -90,3 +91,32 @@ fish's own fast prompt.
 ### Enable fzf key bindings
 Uncomment `fzf --fish | source` in `conf.d/20-options.fish`. Note it overrides
 fish's own `Ctrl-R` history search.
+
+### Change the colour flavour
+Edit the one line in `conf.d/25-theme.fish`:
+
+```fish
+fish_config theme choose catppuccin-mocha
+```
+
+Naming a dark flavour also selects Latte automatically — each Catppuccin theme
+carries a light and a dark variant, and fish applies the one matching
+`$fish_terminal_color_theme`, re-applying it live whenever the terminal's
+background changes. Append `--color-theme=dark` to pin one appearance. Preview
+with `fish_config theme demo`, and list what is available with
+`fish_config theme list` — since fish 4.4 the Catppuccin flavours ship with
+fish, so nothing needs installing.
+
+**Never use `fish_config theme save`.** It writes the colours into fish's
+universal variables, which is machine state this repo keeps out of version
+control and which a line removed here would not undo. `choose` loads into the
+session, which is why it belongs in `conf.d`.
+
+`eza` rides on the same signal: an `--on-variable` handler in that file points
+`$EZA_CONFIG_DIR` at `~/.config/eza-latte` or `~/.config/eza-mocha`. Those two
+directories are fetched by `install.sh`, not committed — if they are missing,
+eza just uses its own colours. The handler must live in `conf.d`; an autoloaded
+function in `functions/` would never register the event.
+
+`fzf` is deliberately left unthemed — see the reasoning in
+`conf.d/20-options.fish`.

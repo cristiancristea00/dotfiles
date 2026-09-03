@@ -47,14 +47,17 @@
 
 # --- Decorations ----------------------------------------------------------------
 # WHAT: Which parts of bat's chrome to draw.
-# WHY : The `numbers,changes,header` trio is the useful subset: line numbers to refer
-#       to, Git modification marks in the gutter, and a filename header so you
-#       know what you are looking at. The default `full` adds a grid of box
-#       lines around everything, which mostly wastes width.
-# HOW : Other components: grid, rule, snip, header-filename, header-filesize.
+# WHY : Line numbers to refer to, Git modification marks in the gutter, a
+#       filename header so you know what you are looking at, and the grid that
+#       separates them. The grid earns its column: it draws the vertical rule
+#       between the number gutter and the code, which is what stops a line
+#       number reading as part of the line, and frames the file top and bottom
+#       so consecutive `bat` calls do not run together. The cost is one column
+#       of width and three horizontal rules.
+# HOW : Other components: rule, snip, header-filename, header-filesize.
 #       `--style=plain` turns all of it off. Use -p on the command line for a
 #       one-off plain view.
---style=numbers,changes,header
+--style=numbers,changes,header,grid
 
 # --- Text rendering ---------------------------------------------------------------
 # WHAT: Render italics in themes that use them (comments, mostly).

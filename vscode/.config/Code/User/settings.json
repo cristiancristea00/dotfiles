@@ -348,14 +348,20 @@
     // WHY : The Catppuccin set, so the icons share the palette with the colour
     //       theme rather than sitting beside it in unrelated colours. It
     //       replaced pkief.material-icon-theme, which is no longer installed.
-    // NOTE: The id is `catppuccin-mocha` — one flavour, fixed. Unlike
-    //       `workbench.preferredLight/DarkColorTheme` above, icon themes have
-    //       no light/dark pair, so this one does NOT follow the system
-    //       appearance. The Latte icons are a separate id
-    //       (`catppuccin-latte`) if you work mostly in light mode.
+    // NOTE: EXPECT THIS VALUE TO CHANGE UNDER YOU, and do not "fix" it. Each
+    //       flavour is a separate id with no light/dark pair of its own, so
+    //       this key can only ever name one. What makes it follow the
+    //       appearance anyway is the COLOUR theme extension: when the active
+    //       colour theme is a Catppuccin flavour and the icon theme is also a
+    //       Catppuccin one, it rewrites this key to the matching flavour and
+    //       saves it globally. So whatever is committed here is a seed, and
+    //       the value you see is whichever appearance was last active — which
+    //       is why this line turns up in `git status` on its own.
     // HOW : Ships in `Catppuccin.catppuccin-vsc-icons`, declared in
     //       extensions.txt. Run "Preferences: File Icon Theme" to switch.
-    "workbench.iconTheme": "catppuccin-mocha",
+    //       To stop the rewriting, pick a non-Catppuccin icon theme: the
+    //       extension only syncs while BOTH themes are Catppuccin.
+    "workbench.iconTheme": "catppuccin-latte",
 
     // WHAT: Product icons — the toolbar, activity-bar and status-bar glyphs.
     // WHY : Catppuccin does not provide a product icon theme, so this stays

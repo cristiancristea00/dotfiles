@@ -60,9 +60,10 @@ frame = "transparent"
 title-hidden = false
 
 # WHAT: Start maximised.
-# WHY : The window opens at its remembered size instead. That size is restored
-#       by the runtime setting vim.g.neovide_remember_window_size in
-#       core/neovide.lua; the two settings are independent.
+# WHY : The window opens at its remembered size instead, restored by the
+#       runtime setting vim.g.neovide_remember_window_size in core/neovide.lua.
+#       With maximized on, that remembered size would not be applied at
+#       startup (Neovide's src/window/mod.rs, determine_window_size).
 # default: false
 maximized = false
 

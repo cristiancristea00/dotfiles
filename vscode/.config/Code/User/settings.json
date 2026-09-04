@@ -452,6 +452,58 @@
         "editor.defaultFormatter": "yzhang.markdown-all-in-one"
     },
 
+    // --- Lua ----------------------------------------------------------------
+    // WHAT: Per-language override: the formatter for Lua files.
+    // WHY : The Lua extension (extensions.txt) embeds lua-language-server,
+    //       which is the only Lua formatter installed. Naming it means a
+    //       second one, if installed later, does not trigger VS Code's
+    //       choose-a-formatter prompt. Same reasoning as `[markdown]` above.
+    // NOTE: `Lua.format.defaultConfig` is deliberately not set, so the
+    //       formatter keeps its own defaults. Its schema declares
+    //       `additionalProperties: false` with no properties, so any key
+    //       inside it is flagged by the JSONC schema, and formatting here is
+    //       manual anyway (see "On save" above).
+    "[lua]": {
+        "editor.defaultFormatter": "sumneko.lua"
+    },
+
+    // WHAT: Which Lua the server type-checks against.
+    // WHY : Neovim embeds LuaJIT, which is 5.1 plus extensions. The default is
+    //       "Lua 5.4", under which `unpack`, `loadstring`, and the `bit`
+    //       library are reported as undefined and 5.4-only syntax is accepted
+    //       that Neovim would reject.
+    // HOW : Values: Lua 5.1 to 5.5, and LuaJIT.
+    "Lua.runtime.version": "LuaJIT",
+
+    // WHAT: Names the server treats as defined globals.
+    // WHY : The default is empty, so every `vim.*` call in nvim/ is reported
+    //       as an undefined global. `vim` is injected by Neovim rather than
+    //       declared in any file the server can see.
+    "Lua.diagnostics.globals": [
+        "vim"
+    ],
+
+    // WHAT: Directories whose Lua the server reads for definitions without
+    //       treating them as workspace files to lint.
+    // WHY : Neovim's own runtime, which is what makes `vim.api` and `vim.fn`
+    //       complete with signatures rather than resolving to nothing. The
+    //       default is empty.
+    // NOTE: Four paths for one machine each, because this file is shared by
+    //       both editors and both platforms and JSONC has no conditionals:
+    //       Homebrew on Apple Silicon, Homebrew on Intel, Homebrew on Linux,
+    //       and a distribution package. The server skips a path that does not
+    //       exist, so listing all four costs nothing, which is the same
+    //       approach fish takes when it probes the Homebrew prefixes.
+    // HOW : `Lua.runtime.path` would additionally need "lua/?.lua" to resolve
+    //       this repo's own `require` calls between files under
+    //       nvim/.config/nvim/lua/; it is left at its default.
+    "Lua.workspace.library": [
+        "/opt/homebrew/share/nvim/runtime",
+        "/usr/local/share/nvim/runtime",
+        "/home/linuxbrew/.linuxbrew/share/nvim/runtime",
+        "/usr/share/nvim/runtime"
+    ],
+
     // --- YAML ---------------------------------------------------------------
     // WHAT: Glob patterns whose YAML files Red Hat's YAML extension will not
     //       try to match against a schema.

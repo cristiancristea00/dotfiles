@@ -76,6 +76,7 @@ stow -R --no-folding --ignore='\.config' --target="$HOME" --dir="$PWD" vscode cu
 | Telemetry      | `"off"` + `redhat.telemetry.enabled: false`                    | The Red Hat extensions have their own switch                                                                        |
 | Terminal shell | fish, on both `.osx` and `.linux`                              | Each platform reads only its own key                                                                                |
 | YAML schemas   | Detection off for six workflow globs                           | `github.vscode-github-actions` owns workflow files; Gitea and Forgejo use the same format on unclaimed paths        |
+| Lua            | `LuaJIT` runtime, `vim` global, Neovim's runtime on the library path | Editing `nvim/` otherwise reports every `vim.*` call as an undefined global and completes nothing                   |
 
 ## Extensions
 

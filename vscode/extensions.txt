@@ -68,6 +68,11 @@ ziglang.vscode-zig
 tamasfe.even-better-toml
 redhat.vscode-yaml
 bmalehorn.vscode-fish
+# Embeds lua-language-server, so no Homebrew formula is needed and the Lua
+# entry in ../nvim/.config/nvim/lua/languages.lua stays treesitter-only. The
+# settings that make it read Neovim's runtime are in
+# .config/Code/User/settings.json.
+sumneko.lua
 # Embeds lemminx, the Eclipse XML language server, which has no Homebrew
 # formula, so the XML entry in ../nvim/.config/nvim/lua/languages.lua is
 # treesitter-only.

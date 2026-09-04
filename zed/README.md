@@ -70,6 +70,7 @@ documentation.
 | Minimap          | `auto`                                                         | Shown whenever the scrollbar is visible                                                        |
 | Panels           | navigation left, agent right                                   | The two do not share one dock                                                                  |
 | Telemetry        | off                                                            | Both metrics and diagnostics                                                                   |
+| File types       | Objective-C as C++, this repo's `.json` files as JSONC         | Zed's own JSONC defaults miss `settings.darwin.json` and both editors' `User/` trees           |
 
 Not enabled: `vim_mode` and `relative_line_numbers`.
 

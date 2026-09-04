@@ -348,10 +348,43 @@
     // WHY : Zed has no Objective-C language support, and C++ gives the closest
     //       highlighting and bracket handling. Neovim handles objc and objcpp
     //       as their own filetypes with clangd.
+    //
+    // WHAT: Treat this repo's commented .json files as JSONC.
+    // WHY : Zed's own defaults name
+    //       `**/{zed,Zed}/{settings,keymap,tasks,debug}.json`, whose
+    //       alternation requires the base name to be exactly `settings.json`.
+    //       The per-OS split renamed this pair, so neither variant matched any
+    //       longer and both opened as strict JSON with every comment line
+    //       flagged; `**/zed/settings*.json` covers all three names. The other
+    //       two globs cover the VS Code and Cursor settings this repo also
+    //       ships, which Zed's defaults do not name at all.
+    // NOTE: Three globs rather than six, because a user's `file_types` extends
+    //       Zed's defaults instead of replacing them. The setting is
+    //       `HashMap<Arc<str>, ExtendingSet<String>>`, a `HashMap` merges per
+    //       key, and `ExtendingSet::merge_from` extends the list, all in
+    //       crates/settings_content/src/. So Zed's `**/.zed/*.json`,
+    //       `**/.vscode/**/*.json`, and `tsconfig*.json` survive and must not
+    //       be restated, and the `C++` entry above has never cost this machine
+    //       Zed's own defaults. None of that is on zed.dev, hence the
+    //       citation.
+    //       What the rename broke was opening the repo copy.
+    //       ../../../install.sh links a `settings.json` selector into
+    //       ~/.config/zed/, and that name still matches Zed's default glob, so
+    //       loading the config was never affected.
+    // HOW : A key is the language name exactly as Zed spells it, `JSONC` here.
+    //       A value entry may be an extension, a bare file name, or a path
+    //       glob, because Zed tests all three candidates per file. A path glob
+    //       runs against the worktree root's name joined to the relative path,
+    //       never an absolute path, which is why each begins with `**/`.
     "file_types": {
         "C++": [
             "mm",
             "m"
+        ],
+        "JSONC": [
+            "**/Code/User/*.json",
+            "**/Cursor/User/*.json",
+            "**/zed/settings*.json"
         ]
     },
 

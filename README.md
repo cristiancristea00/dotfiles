@@ -103,8 +103,8 @@ machine-local has to live in it:
 * Runtime state the application writes beside its config: `fish_variables`,
   Zed's `conversations/`, whatever `git config --global` appends. None of it
   belongs in the repo.
-* A per-OS selector symlink (`bat`, `ghostty`, `neovide`; see below). In a
-  folded directory the selector would be created inside the repo.
+* A per-OS selector symlink (`bat`, `ghostty`, `neovide`, `zed`; see below).
+  In a folded directory the selector would be created inside the repo.
 
 **`--no-folding --ignore`** (`vscode cursor`), in a third invocation. Both
 editors read `~/.config` on Linux and `~/Library/Application Support` on
@@ -462,6 +462,7 @@ LC_ALL=C awk 'FNR==1{n=0} {n+=length($0)+1} n%2048==0 {print FILENAME": "FNR}' \
 git config --file git/.config/git/config --list       # Git
 fish --no-execute fish/.config/fish/**/*.fish         # fish
 python3 -c "import tomllib,sys;tomllib.load(open(sys.argv[1],'rb'))" <file>   # TOML
+neovide --help | grep NEOVIDE_FRAME                   # Neovide really read it
 nvim "+checkhealth vim.pack vim.lsp nvim-treesitter" +qa  # Neovim
 stow -n -v --target="$HOME" --dir="$PWD" <pkg>        # what stow would do
 ruby -c Brewfile                                      # Brewfile is Ruby
@@ -477,6 +478,14 @@ tail of the file arrived as well, with
 
 The `settings.json` files for Zed, VS Code, and Cursor are JSONC. `json.load`
 rejects their comments; strip them first or use a JSONC-tolerant parser.
+
+Valid TOML is not enough for Neovide. An unknown key is ignored, but a known
+key whose value the running build cannot parse fails the whole file: Neovide
+prints one line to stderr, falls back to its built-in defaults, and launches
+anyway, so every setting is lost at once. `neovide --help` prints the values it
+did read as `[env: …]` defaults, which is how to tell the two apart — a key
+missing from that output means the file was discarded, not that the key was
+ignored.
 
 Test Neovim against an empty XDG tree rather than the live config:
 

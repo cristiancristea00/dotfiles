@@ -144,10 +144,15 @@ The repo targets macOS and Linux. Three mechanisms, described in
    Brewfile uses `OS.mac?` and `OS.linux?`.
 2. **Per-OS files plus a selector symlink**, for formats with no conditionals:
    `bat` ships `config.darwin` and `config.linux`, `ghostty` ships
-   `os-darwin.ghostty` and `os-linux.ghostty`, and `install.sh` links the
-   right one.
-   The two variants stay in sync except for the settings that justify the
-   split; a new option goes in both.
+   `os-darwin.ghostty` and `os-linux.ghostty`, `neovide` ships
+   `config.darwin.toml` and `config.linux.toml`, `zed` ships
+   `settings.darwin.json` and `settings.linux.json`, and `install.sh` links
+   the right one of each.
+   Each pair stays in sync except for the settings that justify the split; a
+   new option goes in both. The Neovide and Zed variants mark theirs `PER-OS`,
+   because those files are too long to diff for them. A package that gains a
+   selector must also be in the `--no-folding` group, or the link is created
+   inside the repo.
 3. **A bridge symlink**, for `tlrc` only, whose config path is XDG on Linux
    and `~/Library/Application Support` on macOS.
 
@@ -284,8 +289,8 @@ Rules:
 ./install.sh --yes              # required for non-interactive runs
 
 # The three stow invocations install.sh runs, if you need them by hand
-stow --target="$HOME" --dir="$PWD" neovide nvim ruff tlrc
-stow --no-folding --target="$HOME" --dir="$PWD" bat fish ghostty git zed
+stow --target="$HOME" --dir="$PWD" nvim ruff tlrc
+stow --no-folding --target="$HOME" --dir="$PWD" bat fish ghostty git neovide zed
 stow --no-folding --ignore='\.config' --target="$HOME" --dir="$PWD" vscode cursor  # macOS
 stow --no-folding --ignore='Library'  --target="$HOME" --dir="$PWD" vscode cursor  # Linux
 

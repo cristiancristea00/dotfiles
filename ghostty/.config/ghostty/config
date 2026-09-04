@@ -25,13 +25,14 @@
 #       ghostty +show-config --default    lists every key and its default
 #
 # PLATFORM-SPECIFIC SETTINGS
-#   The macOS-only keys and the ⌘ keybinds live in os-darwin.conf, the
-#   Ctrl+Shift keybinds in os-linux.conf. The `config-file` line at the bottom
-#   of this file includes whichever one install.sh has linked as os.conf.
+#   The macOS-only keys and the ⌘ keybinds live in os-darwin.conf, the Linux
+#   ones and the Ctrl+Shift keybinds in os-linux.conf. The `config-file` line
+#   at the bottom of this file includes whichever one install.sh has linked as
+#   os.conf.
 #
 # FONTS
-#   Terminals get the Nerd Font build with ligatures off; editors get the
-#   opposite. See ../../../README.md § The font stack.
+#   Terminals get the Nerd Font build, editors the plain one; ligatures are on
+#   everywhere. See ../../../README.md § The font stack.
 # ==============================================================================
 
 # --- Font ---------------------------------------------------------------------
@@ -61,14 +62,18 @@ font-family = IBM Plex Mono
 # default: 13
 font-size = 14
 
-# WHAT: OpenType features. Repeatable; `-tag` disables, `+tag` enables.
-# WHY : Ligatures off in the terminal. `calt` (contextual alternates) fuses
-#       `!=`, `->`, and `===` in JetBrains Mono and Fira Code; `liga` is the
-#       standard ligature set. Logs, diffs, and hex output must show the exact
-#       characters.
-# HOW : Delete these two lines to get ligatures back.
-font-feature = -calt
-font-feature = -liga
+# WHAT: OpenType features. Repeatable; `+tag` enables, `-tag` disables.
+# WHY : Ligatures on, matching every other surface in the repo. The `calt`
+#       feature (contextual alternates) fuses `!=`, `->`, and `===` in
+#       JetBrains Mono and Fira Code; `liga` is the standard ligature set.
+#       Both are named rather than left to the font's defaults, so the same two
+#       features appear here, in the editors, and in Neovide.
+# NOTE: Ghostty applies these to every family in the chain, so Fira Code gets
+#       its ligatures without an entry of its own; Neovide needs one per
+#       family.
+# HOW : Set `-calt` and `-liga` to turn them off for command output.
+font-feature = +calt
+font-feature = +liga
 
 # --- Theme --------------------------------------------------------------------
 # WHAT: Colour scheme. The `light:NAME,dark:NAME` form selects by system
@@ -81,6 +86,24 @@ font-feature = -liga
 #       and `Catppuccin Macchiato`.
 theme = light:Catppuccin Latte,dark:Catppuccin Mocha
 
+# WHAT: Derive palette indices 16-255 from the base 16 ANSI colours, and
+#       reverse the generated ramp so it reads on a light background too.
+# WHY : The bundled Catppuccin themes set indices 0-15 only, so 16-255 are
+#       still xterm's and a 256-colour program draws colours from outside the
+#       flavour. Generating them keeps every colour a program can pick inside
+#       the palette. `palette-harmonious` reverses the ramp's direction, which
+#       is what lets one generated palette serve Latte and Mocha; it has no
+#       effect unless `palette-generate` is on.
+# NOTE: The defaults are off because a program that hardcodes the xterm 256
+#       cube — assuming indices 16-231 run darkest to lightest — renders wrong.
+#       Both keys arrived in Ghostty 1.3.0.
+# HOW : Compare with `ghostty +list-colors`. An index set explicitly with
+#       `palette` is never overwritten by the generator.
+# default: false
+palette-generate = true
+# default: false
+palette-harmonious = true
+
 # --- Window -------------------------------------------------------------------
 # WHAT: Initial size, in cells (not pixels).
 # WHY : The default, 0, lets Ghostty pick a size. 100×30 sets it for new
@@ -92,27 +115,34 @@ window-height = 30
 # WHAT: Padding between the text grid and the window edge, in points.
 # WHY : The 2pt default puts text almost against the frame.
 # default: 2
-window-padding-x = 8
+window-padding-x = 10
 # default: 2
-window-padding-y = 6
+window-padding-y = 8
 
 # WHAT: Window translucency (0 = invisible, 1 = opaque) and a blur behind it,
 #       so the background stays blurred behind the text.
 # WHY : Neovide stays fully opaque for text sharpness (the Transparency block
 #       in ../../../nvim/.config/nvim/lua/core/neovide.lua); this is the one
-#       translucent surface. Set 1 and remove the blur to match it.
+#       translucent surface. Set 1 and remove the blur to match it. `true` is
+#       blur intensity 20; os-darwin.conf raises it to the native macOS glass
+#       effect, which needs a value this file cannot use on Linux.
 # NOTE: The blur is supported on macOS and KDE Plasma. Other Linux desktops
-#       are unsupported, so under GNOME's Mutter it has no effect.
+#       are unsupported, so under GNOME's Mutter it has no effect, and KWin
+#       ignores the intensity because Plasma has one global blur setting.
 # default: 1
 background-opacity = 0.95
 # default: false
 background-blur = true
 
-# NOTE: macos-titlebar-style is left at its default, `transparent`, which
-#       matches `frame = "transparent"` in
-#       ../../../neovide/.config/neovide/config.toml.
+# WHAT: How opaque an unfocused split is, so the focused one stands out.
+# WHY : Ghostty fades unfocused splits by default, but at 0.7 against
+#       `background-opacity = 0.95` the difference is barely perceptible. 0.5
+#       makes which split has focus readable at a glance. Set 1 for no fade.
+# NOTE: Values below 0.15 are clamped to 0.15.
+# default: 0.7
+unfocused-split-opacity = 0.5
 
-# --- Cursor and mouse -----------------------------------------------------------
+# --- Cursor and mouse ---------------------------------------------------------
 # WHAT: Cursor shape.
 # WHY : A block, like every other tool here; see ../../../README.md § The
 #       cursor. Pairs with `no-cursor` in shell-integration-features below,
@@ -137,38 +167,137 @@ cursor-style-blink = true
 # default: false
 mouse-hide-while-typing = true
 
+# WHAT: Copy a selection as soon as it is made. `clipboard` writes both the
+#       selection clipboard and the system clipboard; `true` prefers the
+#       selection clipboard alone.
+# WHY : On Linux the two clipboards are separate, so `true` would put a
+#       selection where middle-click pastes it but Ctrl+Shift+V does not.
+#       Writing both makes every paste route see the same text.
+# NOTE: macOS has no selection clipboard, so there `clipboard` and `true` both
+#       mean the system clipboard, and every selection overwrites what ⌘C put
+#       there. Middle-click paste reads the selection clipboard whatever this
+#       is set to, including `false`.
+# default: true
+copy-on-select = clipboard
+
 # --- Shell --------------------------------------------------------------------
-# WHAT: Which shell Ghostty starts, and how it integrates with it. `command`
-#       is unset, so Ghostty starts the login shell, which install.sh offers
-#       to set to fish. `detect` picks the integration from the shell binary's
-#       filename.
-# WHY : An absolute `command` path breaks wherever fish lives elsewhere:
-#       /opt/homebrew, /usr/local, /home/linuxbrew/.linuxbrew, or a
-#       distribution's /usr/bin. This format has no conditionals.
-# HOW : To pin a shell, set `command = /path/to/shell`; `detect` still matches
-#       it by filename, or name the shell in `shell-integration`.
+# WHAT: The shell Ghostty runs. A bare name is looked up in PATH; an absolute
+#       path is used as given.
+# WHY : Pinned to fish by name, so the terminal is fish before install.sh's
+#       login-shell offer has been accepted and if it is declined. An absolute
+#       path cannot be used because fish lives under four prefixes —
+#       /opt/homebrew on Apple Silicon, /usr/local on Intel,
+#       /home/linuxbrew/.linuxbrew, and a distribution's /usr/bin — and this
+#       format has no conditionals, so one path cannot serve all four.
+# NOTE: A name that does not resolve is fatal for the surface; Ghostty does not
+#       fall back to a default shell. The lookup uses the PATH Ghostty
+#       inherits, which on macOS comes from /usr/bin/login running path_helper
+#       over /etc/paths and /etc/paths.d — Homebrew's entry is
+#       /etc/paths.d/homebrew. A distribution's fish is in /usr/bin, always on
+#       PATH.
+# HOW : Applies to new surfaces only, so a reload leaves running shells alone.
+#       Confirm with: ghostty +show-config | grep '^command'
+# default: (unset: $SHELL, then the passwd entry)
+command = fish
+
+# WHAT: How Ghostty integrates with the shell it started. `detect` picks the
+#       integration script from the shell binary's filename.
+# WHY : The default, and it matches `command = fish` above without naming fish
+#       twice. Integration is what supplies working-directory inheritance for
+#       new tabs, prompt marking, and the no-confirmation close at a prompt.
+# HOW : Name the shell (`fish`, `bash`, `zsh`, `elvish`, `nushell`) to force
+#       one scheme, or `none` to inject nothing.
 # default: detect
 shell-integration = detect
 
 # WHAT: Integration features to toggle; a `no-` prefix disables one. Features
-#       not listed keep their defaults.
+#       not listed keep their defaults, so this names only the four that differ
+#       from them.
 # WHY : `no-cursor` stops the shell changing the cursor shape per mode (see
-#       cursor-style above). `sudo` wraps sudo so it keeps the terminfo. `title`
-#       lets the shell set the window title to the running command.
+#       cursor-style above). `sudo` wraps sudo so it keeps the terminfo.
+#       `ssh-env` rewrites TERM from xterm-ghostty to xterm-256color when
+#       connecting to a remote host and forwards COLORTERM, TERM_PROGRAM, and
+#       TERM_PROGRAM_VERSION, so a host without Ghostty's terminfo still
+#       renders. `ssh-terminfo` instead installs that terminfo with `infocmp`
+#       and `tic` on first connection and caches the result. With both on,
+#       Ghostty installs the terminfo and uses xterm-ghostty, falling back to
+#       xterm-256color when the install fails.
+# NOTE: `title` and `path` are on by default and deliberately not listed, so
+#       the line reads as the set of deviations. `title` lets the shell set the
+#       window title to the running command; `path` adds Ghostty's own bin
+#       directory to PATH, so `ghostty` stays callable when a shell init script
+#       rewrites PATH.
+# HOW : `ghostty +ssh-cache` lists and clears the remote terminfo cache. The
+#       SSH features arrived in Ghostty 1.2.0.
 # default: cursor,no-sudo,title,no-ssh-env,no-ssh-terminfo,path
-shell-integration-features = no-cursor,sudo,title
+shell-integration-features = no-cursor,sudo,ssh-env,ssh-terminfo
 
-# --- Keybinds -------------------------------------------------------------------
+# --- Bell and notifications ---------------------------------------------------
+# WHAT: Which bell effects to enable; a `no-` prefix disables one, and effects
+#       not listed keep their defaults.
+# WHY : `system` hands the bell to the OS, which plays the macOS alert sound or
+#       triggers the desktop's own bell on Linux, so a bell is audible without
+#       this repo shipping a sound file. `border` draws a border round the
+#       alerted surface, the only one of the four effects visible while the
+#       window already has focus.
+# NOTE: `attention` and `title` are on by default and not listed: `attention`
+#       bounces the Dock icon once while Ghostty is unfocused, and `title`
+#       prefixes the surface title with a bell emoji until the terminal is
+#       touched again. `audio` stays off, its default, because it needs a sound
+#       file named by `bell-audio-path`, which this config does not set.
+# HOW : Which effect a Linux desktop produces for `system` depends on the
+#       desktop: GNOME's "Sound > Alert Sound", KDE's "Accessibility > System
+#       Bell". Available since Ghostty 1.2.0; `border` since 1.2.1 on macOS.
+# default: no-system,no-audio,attention,title,no-border
+bell-features = system,border
+
+# WHAT: Notify when a long-running command finishes, and how.
+# WHY : `unfocused` fires only when the surface running the command is not
+#       focused, which is the case worth interrupting; `always` would notify
+#       for every command typed in the foreground. The action adds `notify`, a
+#       desktop notification, to the `bell` that is on by default, so a
+#       finished build is visible as well as audible.
+# NOTE: Both keys need shell integration, or a shell that emits the OSC 133
+#       prompt marks itself. `shell-integration = detect` above provides it.
+#       `notify-on-command-finish-after` sets how long a command must run
+#       first; its default of 5s is kept, so short commands stay silent.
+#       Available since Ghostty 1.3.0.
+# default: never
+notify-on-command-finish = unfocused
+# default: bell,no-notify
+notify-on-command-finish-action = notify,bell
+
+# --- Quick terminal -----------------------------------------------------------
+# WHAT: Where the drop-down quick terminal appears.
+# WHY : Centred, so it is in the same place on every display size; `top` slides
+#       it out of the menu bar on macOS, which overlaps the notch on some
+#       displays.
+# NOTE: Ghostty binds no key to `toggle_quick_terminal`, so this does nothing
+#       on its own. The per-OS files bind it: ⌘` on macOS, Ctrl+` on Linux.
+#       Changing this value needs a full restart on macOS, not a reload.
+# HOW : `top`, `bottom`, `left`, `right`, or `center`. Linux adds
+#       `gtk-quick-terminal-layer` and `quick-terminal-keyboard-interactivity`;
+#       os-linux.conf documents both.
+# default: top
+quick-terminal-position = center
+
+# --- Keybinds -----------------------------------------------------------------
 # Keybinds live in the per-OS include. The Linux file explains why the
 # modifier differs: ⌘ on macOS, Ctrl+Shift on Linux.
 # See every default with: ghostty +list-keybinds --default
 
-# --- Documented extension points (inactive) ----------------------------------------
-# WHAT: Copy a selection to the clipboard as soon as it is made.
-# default: true
-# copy-on-select = true
+# --- Documented extension points (inactive) -----------------------------------
+# WHAT: Whether a program in the terminal may read the system clipboard
+#       through OSC 52. Writing is allowed unconditionally either way.
+# WHY : Left at `ask`, which prompts once per surface. `allow` removes the
+#       prompt, and with it the only signal that a program — including one on a
+#       remote host reached over SSH — is reading what was last copied.
+# default: ask
+# clipboard-read = allow
 #
 # WHAT: Scrollback kept per surface, in bytes.
+# NOTE: Bytes, not lines. The 10 MB default holds far more than the tens of
+#       thousands of lines it looks like, and is allocated lazily.
 # default: 10000000
 # scrollback-limit = 10000000
 #
@@ -184,8 +313,13 @@ shell-integration-features = no-cursor,sudo,title
 # --- Platform include ---------------------------------------------------------
 # WHAT: Include the OS-specific file. `?` makes the include optional, so
 #       Ghostty starts before install.sh has created the symlink.
-# WHY : Last line in the file because later values override earlier ones, so
-#       the per-OS file can adjust anything above it.
+# WHY : Values in the included file win over everything in this one, so the
+#       per-OS file can adjust anything above.
+# NOTE: That is not a consequence of the line's position. Ghostty loads an
+#       included file after the whole of the file that names it, wherever the
+#       `config-file` line sits, so moving this line changes nothing and a key
+#       added below it is still overridden by os.conf. The line stays last
+#       because the reader expects the override to be the last word.
 # HOW : install.sh points ~/.config/ghostty/os.conf at os-darwin.conf or
 #       os-linux.conf. Confirm what resolved with `ghostty +show-config`.
 config-file = ?os.conf

@@ -286,7 +286,7 @@
     "terminal.integrated.cursorBlinking": true,
     "terminal.integrated.cursorStyleInactive": "outline",
 
-    // WHAT: Which shell the integrated terminal launches.
+    // WHAT: Which profile the integrated terminal launches, by name.
     // WHY : The fish shell, matching the login shell the installer offers to
     //       set. Both keys are needed: VS Code takes the default profile per
     //       platform and has no shared key.
@@ -294,6 +294,40 @@
     //       applies to the other (see fish/conf.d/30-prompt.fish).
     "terminal.integrated.defaultProfile.osx": "fish",
     "terminal.integrated.defaultProfile.linux": "fish",
+
+    // WHAT: The `fish` profile the two keys above name, defined here rather
+    //       than detected, with the shell given as an absolute path.
+    // WHY : Left undefined, VS Code supplies a `fish` profile from whatever it
+    //       discovers, which on macOS means reading /etc/shells. That makes
+    //       the terminal depend on a file this repo does not own: a fish that
+    //       is installed but not listed there yields no profile, and the
+    //       default silently falls back to the system shell. Naming the paths
+    //       removes the discovery step.
+    // NOTE: `path` takes "a single path to a shell executable or an array of
+    //       paths that will be used as fallbacks when one fails", so one entry
+    //       per prefix covers both machines a platform can be: Homebrew on
+    //       Apple Silicon then Intel on macOS, Homebrew then a distribution
+    //       package on Linux. Ghostty's `command` cannot express this and
+    //       needs one path per per-OS file instead.
+    //       No `args` are set. fish reads its own config whether or not it is
+    //       a login shell, and VS Code hands the terminal its own environment
+    //       rather than one built by /etc/profile.
+    "terminal.integrated.profiles.osx": {
+        "fish": {
+            "path": [
+                "/opt/homebrew/bin/fish",
+                "/usr/local/bin/fish"
+            ]
+        }
+    },
+    "terminal.integrated.profiles.linux": {
+        "fish": {
+            "path": [
+                "/home/linuxbrew/.linuxbrew/bin/fish",
+                "/usr/bin/fish"
+            ]
+        }
+    },
 
     // WHAT: Which application "Open in External Terminal" launches.
     // WHY : Ghostty, the terminal this setup runs. The default is Terminal.app.

@@ -209,6 +209,22 @@ Linux the same actions are on Ctrl+Shift.
   reason: RuboCop is a gem rather than a Homebrew formula, so a conform entry
   would call whatever version happened to be on `$PATH` instead of the one the
   project pins.
+* **JSONC keeps JSON's trailing-comma rule.** No `jsonc` treesitter grammar
+  exists, so `jsonc` buffers reuse the `json` parser, whose `extras` rule
+  skips `//` and `/* */` comments but not a stray comma. A trailing comma is
+  therefore a parse error for treesitter and a warning from `jsonls`; under
+  the plain `json` filetype both the comma and every comment are errors.
+* **JSON gets no schema validation.** Fetching a schema is the editor's side
+  of the protocol, and `vim.lsp` does not implement it, so a schema named by
+  `https://` URL produces nothing at all — no diagnostic and no request in the
+  LSP log. The catalogue lookup VS Code performs lives in that editor's client
+  extension rather than in the binary `vscode-langservers-extracted` installs.
+  A `file://` URL does work; `after/lsp/jsonls.lua` carries the form and the
+  measurement.
+* **`<leader>F` does nothing in JSON and JSONC.** The files this repo keeps in
+  the format are hand-annotated, and the server's formatter would reflow them,
+  so `after/lsp/jsonls.lua` turns it off and the language table names no
+  conform formatter. This is deliberate, not a missing binary.
 
 ## Troubleshooting
 

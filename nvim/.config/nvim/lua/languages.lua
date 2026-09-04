@@ -163,6 +163,41 @@ return {
         servers = { "taplo" },
         formatters = { "taplo" },
     },
+    -- JSON and JSONC: one parser and one server for both filetypes; the
+    -- filetype is what decides whether comments are legal.
+    {
+        name = "JSON / JSONC",
+        filetypes = { "json", "jsonc" },
+        parsers = { "json" }, -- no jsonc parser exists; nvim-treesitter aliases it to json
+        servers = { "jsonls" }, -- vscode-json-language-server; see after/lsp/jsonls.lua
+        -- WHAT: The path shapes whose .json files carry `//` comments, mapped
+        --       to the `jsonc` filetype.
+        -- WHY : Neovim's runtime already maps `Code/User/*.json`, and
+        --       core/filetypes.lua registers only the rules Neovim lacks, so
+        --       these are the four trees left without one. The filetype is also
+        --       the only lever over the server: Neovim sends the filetype as
+        --       the LSP languageId, and vscode-json-language-server takes
+        --       `comments: ignore` from the id `jsonc` alone. Left at `json`,
+        --       every comment line in these files becomes an error diagnostic
+        --       rather than only a mis-highlighted one.
+        -- NOTE: The built-in Code/User rule is anchored at ${HOME}, so it stops
+        --       applying to a clone kept outside the home directory.
+        --       A trailing comma stays an error either way. The json grammar's
+        --       `extras` rule skips comments, not commas, so treesitter reports
+        --       a parse error there and the server a warning.
+        -- HOW : These are Lua patterns matched against the full path and
+        --       anchored at both ends, which is why each begins with `.*`. Add
+        --       a tree by appending a line. Genuine strict JSON must not match
+        --       one, which is what keeps nvim-pack-lock.json and any
+        --       package.json at `json`.
+        patterns = {
+            [".*/Cursor/User/.*%.json"] = "jsonc", -- Neovim's own rule covers Code/User only
+            [".*/zed/settings.*%.json"] = "jsonc", -- settings.json and both per-OS variants
+            [".*/%.vscode/.*%.json"] = "jsonc", -- a project's VS Code directory
+            [".*/%.zed/.*%.json"] = "jsonc", -- a project's Zed directory
+        },
+        formatters = {}, -- the server's formatter is off too; see after/lsp/jsonls.lua
+    },
     -- YAML: yaml-language-server with schemastore schemas, yamlfmt to format.
     {
         name = "YAML",

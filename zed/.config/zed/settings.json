@@ -12,9 +12,10 @@
 //   Zed's UI has the recovery command.
 //
 // FONTS
-//   The editor pane gets plain "JetBrains Mono" with ligatures on; the
-//   integrated terminal gets the Nerd Font Mono build with ligatures off. See
-//   ../../../README.md § The font stack.
+//   The editor pane gets plain "JetBrains Mono"; the integrated terminal gets
+//   the Nerd Font Mono build, because Neovim draws icons there. Ligatures are
+//   on in both, through two separate keys. See ../../../README.md § The font
+//   stack.
 //
 //   Every setting Zed accepts: https://zed.dev/docs/configuring-zed
 // ============================================================================
@@ -26,7 +27,11 @@
     //       build adds nothing in the code pane. Zed's default is its bundled
     //       ".ZedMono".
     "buffer_font_family": "JetBrains Mono",
-    "buffer_font_fallbacks": ["Fira Code", "Source Code Pro", "IBM Plex Mono"],
+    "buffer_font_fallbacks": [
+        "Fira Code",
+        "Source Code Pro",
+        "IBM Plex Mono"
+    ],
 
     // WHAT: Editor font size, in pixels.
     // WHY : 14 matches Ghostty, Neovim, Neovide, and VS Code; Zed's default is
@@ -41,7 +46,10 @@
     // NOTE: Zed applies these to every family in the stack, so Fira Code gets
     //       its ligatures without an entry of its own; Neovide needs one per
     //       family.
-    "buffer_font_features": { "calt": true, "liga": true },
+    "buffer_font_features": {
+        "calt": true,
+        "liga": true
+    },
 
     // WHAT: Line spacing: "standard", "comfortable", or { "custom": 1.4 }.
     // WHY : "comfortable" is the default; stated because VS Code's
@@ -116,6 +124,9 @@
         "xml": true,
         "toml": true,
         "zig": true,
+        // Ruby: the grammar plus ruby-lsp, solargraph, rubocop, and sorbet as
+        // selectable servers. The `languages` block at the bottom picks which.
+        "ruby": true,
 
         // Swift: `swift` is the language through sourcekit-lsp;
         // `package-swift-lsp` understands Package.swift manifests.
@@ -164,7 +175,7 @@
     "current_line_highlight": "all",
 
     // WHAT: Vertical guides at the given character columns.
-    // WHY : The same four columns Neovim and VS Code draw; see
+    // WHY : The same three columns Neovim and VS Code draw; see
     //       ../../../README.md § Column guides. Nothing wraps or reformats at
     //       them.
     // NOTE: A further guide appears at `preferred_line_length` (default 80)
@@ -174,10 +185,14 @@
     // HOW : Absolute column numbers, in any order. An empty list or
     //       `show_wrap_guides: false` turns them off. Both keys also work per
     //       language inside the `languages` block; the guides here are the
-    //       same for every file type. All four share the theme's
+    //       same for every file type. All three share the theme's
     //       `editor.wrap_guide` colour.
     // default: [] and true
-    "wrap_guides": [80, 120, 150, 200],
+    "wrap_guides": [
+        80,
+        120,
+        150
+    ],
     "show_wrap_guides": true,
 
     // WHAT: The editor cursor's shape and whether it blinks.
@@ -197,7 +212,9 @@
     // WHY : "auto" shows it whenever the scrollbar is visible; the default,
     //       "never", hides it.
     // HOW : "always" or "never".
-    "minimap": { "show": "auto" },
+    "minimap": {
+        "show": "auto"
+    },
 
     // WHAT: Inline type and parameter-name annotations from the language
     //       server.
@@ -221,11 +238,21 @@
     // WHAT: Which side each panel docks to.
     // WHY : Navigation panels on the left and the AI agent on the right, so
     //       they do not share one dock.
-    "project_panel": { "dock": "left" },
-    "outline_panel": { "dock": "left" },
-    "collaboration_panel": { "dock": "left" },
-    "git_panel": { "dock": "left" },
-    "agent": { "dock": "right" },
+    "project_panel": {
+        "dock": "left"
+    },
+    "outline_panel": {
+        "dock": "left"
+    },
+    "collaboration_panel": {
+        "dock": "left"
+    },
+    "git_panel": {
+        "dock": "left"
+    },
+    "agent": {
+        "dock": "right"
+    },
 
     // --- Terminal -----------------------------------------------------------
     // WHAT: Zed's integrated terminal: shell, cursor, and font.
@@ -233,15 +260,17 @@
     //       login shell), so the terminal is fish even where the login shell
     //       has not been changed, and $TERM_PROGRAM is "zed" inside it: the
     //       value to test for shell config only this terminal should get. The
-    //       font is the Nerd Font Mono build with ligatures off, the terminal
-    //       half of the font split (see ../../../README.md § The font stack):
-    //       Neovim draws icons here, and command output shows the exact
-    //       characters. FiraCode's Nerd build is the first fallback, so icons
-    //       survive one step; plain JetBrains Mono follows it.
+    //       font is the Nerd Font Mono build, because Neovim draws icons here
+    //       (see ../../../README.md § The font stack); FiraCode's Nerd build
+    //       is the first fallback, so icons survive one step, and plain
+    //       JetBrains Mono follows it. Ligatures are on, matching the editor
+    //       pane above and every other surface in the repo.
     // NOTE: The two cursor keys below are the terminal's own and do not
     //       inherit from the editor settings above.
     "terminal": {
-        "shell": { "program": "fish" },
+        "shell": {
+            "program": "fish"
+        },
         // WHAT: Cursor shape in the integrated terminal.
         // WHY : Block, matching the editor. Also the default.
         // HOW : "bar", "block", "underline", "hollow", or "inherit" to follow
@@ -254,9 +283,42 @@
         // HOW : "off", "terminal_controlled", or "on".
         "blinking": "on",
         "font_family": "JetBrainsMono Nerd Font Mono",
-        "font_fallbacks": ["FiraCode Nerd Font Mono", "JetBrains Mono", "Fira Code", "Source Code Pro", "IBM Plex Mono"],
-        "font_features": { "calt": false, "liga": false },
+        "font_fallbacks": [
+            "FiraCode Nerd Font Mono",
+            "JetBrains Mono",
+            "Fira Code",
+            "Source Code Pro",
+            "IBM Plex Mono"
+        ],
+        "font_features": {
+            "calt": true,
+            "liga": true
+        },
         "font_size": 14
+    },
+
+    // --- Per-language settings ----------------------------------------------
+    // WHAT: Which language servers Zed runs for Ruby, in priority order. A
+    //       `!` prefix disables one.
+    // WHY : The `ruby` extension enables solargraph by default. ruby-lsp is
+    //       Shopify's, the actively developed one, and the server named in
+    //       ../../../nvim/.config/nvim/lua/languages.lua, so naming it here
+    //       keeps both editors on one server, as they are for every other
+    //       language. solargraph is disabled explicitly: without the `!` it
+    //       would run alongside ruby-lsp and both would answer a hover.
+    // NOTE: This is the only entry in `languages`. The other extensions need
+    //       none, because the server each one enables by default is already
+    //       the server languages.lua names.
+    // HOW : `rubocop`, `sorbet`, and `steep` are the extension's other
+    //       servers; add one to the list to enable it. ruby-lsp comes from
+    //       `brew install ruby-lsp` (root Brewfile) and must be on $PATH.
+    "languages": {
+        "Ruby": {
+            "language_servers": [
+                "ruby-lsp",
+                "!solargraph"
+            ]
+        }
     },
 
     // --- File type associations ---------------------------------------------
@@ -265,7 +327,10 @@
     //       highlighting and bracket handling. Neovim handles objc and objcpp
     //       as their own filetypes with clangd.
     "file_types": {
-        "C++": ["mm", "m"]
+        "C++": [
+            "mm",
+            "m"
+        ]
     },
 
     // --- Privacy and updates ------------------------------------------------

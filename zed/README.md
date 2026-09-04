@@ -28,19 +28,19 @@ documentation.
 
 ## What's configured
 
-| Area             | Choice                                                          | Why                                                                                          |
-| ---------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Editor font      | `JetBrains Mono` + fallbacks, 14pt, ligatures on                | The plain build: Zed draws its own UI icons; see [The font stack](../README.md#the-font-stack) |
-| Terminal font    | `JetBrainsMono Nerd Font Mono` + fallbacks, 14pt, ligatures off | Neovim runs in here and draws icon glyphs; command output shows the exact characters          |
-| Theme            | `system` → Catppuccin Latte / Catppuccin Mocha                  | Follows the system appearance; see [Light and dark](../README.md#light-and-dark)             |
-| Icon theme       | `system` → Catppuccin Latte / Catppuccin Mocha                  | Same object form as the theme, so the icons follow the appearance                            |
-| Indentation      | 4 spaces, no hard tabs                                          | Matches Neovim's `expandtab` + `shiftwidth = 4`                                              |
-| `format_on_save` | `off`, the default                                              | Neovim (`<leader>F`) and VS Code also format only on request                                 |
-| Inlay hints      | on                                                              | Matches VS Code; Neovim keeps them behind a `<leader>ti` toggle                              |
-| Cursor           | blinking block, editor and terminal                             | Same as every other tool; see [The cursor](../README.md#the-cursor)                          |
-| Minimap          | `auto`                                                          | Shown whenever the scrollbar is visible                                                      |
-| Panels           | navigation left, agent right                                    | The two do not share one dock                                                                |
-| Telemetry        | off                                                             | Both metrics and diagnostics                                                                 |
+| Area             | Choice                                                         | Why                                                                                            |
+| ---------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Editor font      | `JetBrains Mono` + fallbacks, 14pt, ligatures on               | The plain build: Zed draws its own UI icons; see [The font stack](../README.md#the-font-stack) |
+| Terminal font    | `JetBrainsMono Nerd Font Mono` + fallbacks, 14pt, ligatures on | Neovim runs in here and draws icon glyphs; ligatures match the editor pane                     |
+| Theme            | `system` → Catppuccin Latte / Catppuccin Mocha                 | Follows the system appearance; see [Light and dark](../README.md#light-and-dark)               |
+| Icon theme       | `system` → Catppuccin Latte / Catppuccin Mocha                 | Same object form as the theme, so the icons follow the appearance                              |
+| Indentation      | 4 spaces, no hard tabs                                         | Matches Neovim's `expandtab` + `shiftwidth = 4`                                                |
+| `format_on_save` | `off`, the default                                             | Neovim (`<leader>F`) and VS Code also format only on request                                   |
+| Inlay hints      | on                                                             | Matches VS Code; Neovim keeps them behind a `<leader>ti` toggle                                |
+| Cursor           | blinking block, editor and terminal                            | Same as every other tool; see [The cursor](../README.md#the-cursor)                            |
+| Minimap          | `auto`                                                         | Shown whenever the scrollbar is visible                                                        |
+| Panels           | navigation left, agent right                                   | The two do not share one dock                                                                  |
+| Telemetry        | off                                                            | Both metrics and diagnostics                                                                   |
 
 Not enabled: `vim_mode` and `relative_line_numbers`.
 
@@ -54,18 +54,19 @@ is why they carry `.txt` lists; see [Extensions](../vscode/README.md#extensions)
 Ten are declared. The ids are the directory names under
 `~/Library/Application Support/Zed/extensions/installed`:
 
-| Extension           | Provides                                                      |
-| ------------------- | ------------------------------------------------------------- |
-| `catppuccin`        | The four flavour themes the `theme` block names               |
-| `catppuccin-icons`  | The four icon themes the `icon_theme` block names             |
-| `dockerfile`        | Dockerfile grammar and `docker-language-server`               |
-| `neocmake`          | CMake grammar and `neocmakelsp`                               |
-| `xml`               | XML grammar                                                   |
-| `zig`               | Zig grammar and `zls`                                         |
-| `toml`              | TOML grammar                                                  |
-| `swift`             | Swift grammar and `sourcekit-lsp`                             |
-| `package-swift-lsp` | `Package.swift` manifests                                     |
-| `git-firefly`       | `.gitconfig`, `.gitattributes`, rebase todos, commit messages |
+| Extension           | Provides                                                         |
+| ------------------- | ---------------------------------------------------------------- |
+| `catppuccin`        | The four flavour themes the `theme` block names                  |
+| `catppuccin-icons`  | The four icon themes the `icon_theme` block names                |
+| `dockerfile`        | Dockerfile grammar and `docker-language-server`                  |
+| `neocmake`          | CMake grammar and `neocmakelsp`                                  |
+| `xml`               | XML grammar                                                      |
+| `zig`               | Zig grammar and `zls`                                            |
+| `toml`              | TOML grammar                                                     |
+| `swift`             | Swift grammar and `sourcekit-lsp`                                |
+| `package-swift-lsp` | `Package.swift` manifests                                        |
+| `ruby`              | Ruby grammar, and `ruby-lsp` once the `languages` block picks it |
+| `git-firefly`       | `.gitconfig`, `.gitattributes`, rebase todos, commit messages    |
 
 Go needs no extension: Zed's documentation states that Go support is built
 in, and the registry has no `go` entry. Zed does not bundle `gopls`, so it
@@ -74,6 +75,12 @@ uses the one on `$PATH`, which the Brewfile installs.
 The language extensions are the counterpart of entries in
 [`languages.lua`](../nvim/.config/nvim/lua/languages.lua). Zed covers C,
 Rust, Python, and Markdown built in, so those need no declaration.
+
+Ruby is the one extension whose default server differs from Neovim's. The
+`ruby` extension enables solargraph; `languages.lua` names `ruby_lsp`, so the
+`languages` block in `settings.json` selects `ruby-lsp` and disables
+solargraph with a `!` prefix. Every other extension's default server is
+already the one `languages.lua` names.
 
 ## Known gaps
 

@@ -229,8 +229,11 @@ Regular.
 [`zed/settings.json`](zed/.config/zed/settings.json) (editor and terminal),
 [`vscode/settings.json`](vscode/.config/Code/User/settings.json) (editor,
 terminal, and eight further keys),
-[`neovide/config.toml`](neovide/.config/neovide/config.toml), and Neovim's
-`guifont` in [`core/neovide.lua`](nvim/.config/nvim/lua/core/neovide.lua).
+[`neovide/config.darwin.toml`](neovide/.config/neovide/config.darwin.toml)
+and [`config.linux.toml`](neovide/.config/neovide/config.linux.toml), and
+Neovim's `guifont` in
+[`core/neovide.lua`](nvim/.config/nvim/lua/core/neovide.lua), which branches
+on `vim.uv.os_uname().sysname` and so needs no second file.
 VS Code does not inherit `editor.fontFamily` into CodeLens, inlay hints,
 inline suggestions, the debug console, the SCM input, notebooks, or chat.
 Those eight keys carry the same family and move with it.

@@ -126,6 +126,7 @@ idle = true
 # ==============================================================================
 
 # --- Font -----------------------------------------------------------------------
+# PER-OS: the size differs from config.linux.toml; the family does not.
 # WHAT: The font stack Neovide uses from the first rendered frame. `normal` is
 #       an ordered list: the first family is primary, the rest are fallbacks
 #       for codepoints it lacks.
@@ -133,8 +134,13 @@ idle = true
 #       columns stay aligned. The chain is shared with the other tools; see
 #       ../../../README.md § The font stack. This section prevents a
 #       wrong-font flash at startup: it covers the frames before init.lua
-#       runs, after which Neovim's `guifont` takes over. Family and size must
-#       match ../../../nvim/.config/nvim/lua/core/neovide.lua.
+#       runs, after which Neovim's `guifont` takes over. The family is shared;
+#       the size is PER-OS and differs from config.linux.toml, which sets 10.
+#       Both halves must move together: this covers the frames before
+#       core/neovide.lua runs, so a mismatch shows as a resize at startup.
+#       Keep it equal to the `guifont` size in
+#       ../../../nvim/.config/nvim/lua/core/neovide.lua, which branches on the
+#       same platform test.
 # HOW : Check that a family name resolves; Neovide falls back without a
 #       message. macOS: `ghostty +list-fonts | grep -i nerd`. Linux:
 #       `fc-list : family | grep -i nerd`. macOS also exposes JetBrains Mono's

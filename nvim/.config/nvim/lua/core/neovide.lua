@@ -14,6 +14,13 @@
   Animations are kept but shortened. Every value carries Neovide's default.
 ===========================================================================]]--
 
+-- WHAT: Whether this is macOS, used by the font size below, the blur further
+--       down, and the ⌘ bindings at the bottom of the file.
+-- WHY : Declared once here rather than tested three times. It sits above the
+--       `vim.g.neovide` guard because the font size needs it, and 'guifont'
+--       is set whether or not Neovide is the UI.
+local is_macos = vim.uv.os_uname().sysname == "Darwin"
+
 -- Font ------------------------------------------------------------------------
 -- WHAT: The GUI font, "<family>:h<size>", for all text Neovide renders. The
 --       remaining families are per-glyph fallbacks, comma-separated.
@@ -21,20 +28,19 @@
 --       unaffected. The Nerd Font Mono build supplies the icons the
 --       statusline, file tree, and diagnostic gutter draw, at one cell each;
 --       see ../../../../../README.md § The font stack.
--- HOW : Change the size after :h (e.g. :h16); ⌘= / ⌘- / ⌘0 zoom live (below).
---       Keep family and size equal to the [font] section in
---       neovide/config.toml, which covers the frames before this file runs.
-vim.o.guifont = "JetBrainsMono Nerd Font Mono,FiraCode Nerd Font Mono,Fira Code,Source Code Pro,IBM Plex Mono:h14"
+--       The size differs by platform: macOS scales the whole UI by the
+--       display's backing factor, and the Linux desktop runs unscaled, so the
+--       point size absorbs the difference there.
+-- HOW : Change a size below; ⌘= / ⌘- / ⌘0 zoom live (below). Keep each equal
+--       to the [font] size in the matching neovide/config.<os>.toml, which
+--       covers the frames before this file runs.
+vim.o.guifont = "JetBrainsMono Nerd Font Mono,FiraCode Nerd Font Mono,Fira Code,Source Code Pro,IBM Plex Mono:h"
+    .. (is_macos and 14 or 10)
 
 -- Everything below only applies inside Neovide --------------------------------
 if not vim.g.neovide then
     return
 end
-
--- WHAT: Whether this is macOS, used by the blur below and the ⌘ bindings at
---       the bottom of the file.
--- WHY : Declared once here rather than tested twice.
-local is_macos = vim.uv.os_uname().sysname == "Darwin"
 
 -- Cursor animation ---------------------------------------------------------------
 -- WHAT: How long, in seconds, the cursor takes to reach its new position, and

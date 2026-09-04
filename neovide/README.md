@@ -34,7 +34,7 @@ Settings precedence: command-line flags > this file > environment > defaults.
 | `title-hidden`       | `false`                                                        | The title labels each native tab                                                               |
 | `system-native-tabs` | `true`                                                         | macOS tabs, separate from Neovim's own `:tabnew` tabpages                                      |
 | `srgb`               | `false`                                                        | The default on macOS and Linux; matches what Ghostty and Zed show                              |
-| Font                 | `JetBrainsMono Nerd Font Mono` + fallbacks, 14pt, ligatures on | Mono build keeps Neovim's icons to one cell; see [The font stack](../README.md#the-font-stack) |
+| Font                 | `JetBrainsMono Nerd Font Mono` + fallbacks, 14pt on macOS and 10pt on Linux, ligatures on | Mono build keeps Neovim's icons to one cell; see [The font stack](../README.md#the-font-stack) |
 | `box-drawing`        | `native`                                                       | Draws `│ ─ ┌` geometrically so borders join without gaps                                       |
 
 The light/dark appearance of the window chrome is a Neovim global,
@@ -77,6 +77,8 @@ neovide --help | grep NEOVIDE_FRAME     # a missing `env:` line means discarded
 
 The `[font]` section prevents a wrong-font flash at startup: it covers the
 frames before `init.lua` runs, after which Neovim's own `guifont` takes over.
-Family and size must match `nvim/.config/nvim/lua/core/neovide.lua`. Ligatures
-are on here and in Ghostty, so Neovim shows fused `!=` and `->` either way;
-see [The font stack](../README.md#the-font-stack).
+Family and size must match `nvim/.config/nvim/lua/core/neovide.lua`, which
+branches on `vim.uv.os_uname().sysname` for the size and so stays one file.
+A mismatch shows as a resize a moment after the window appears. Ligatures are
+on here and in Ghostty, so Neovim shows fused `!=` and `->` either way; see
+[The font stack](../README.md#the-font-stack).

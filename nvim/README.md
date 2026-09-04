@@ -214,13 +214,13 @@ Linux the same actions are on Ctrl+Shift.
   skips `//` and `/* */` comments but not a stray comma. A trailing comma is
   therefore a parse error for treesitter and a warning from `jsonls`; under
   the plain `json` filetype both the comma and every comment are errors.
-* **JSON gets no schema validation.** Fetching a schema is the editor's side
-  of the protocol, and `vim.lsp` does not implement it, so a schema named by
-  `https://` URL produces nothing at all — no diagnostic and no request in the
-  LSP log. The catalogue lookup VS Code performs lives in that editor's client
-  extension rather than in the binary `vscode-langservers-extracted` installs.
-  A `file://` URL does work; `after/lsp/jsonls.lua` carries the form and the
-  measurement.
+* **JSON gets no schema validation.** Nothing supplies a schema, and only a
+  local schema could be supplied. A schema named by `https://` URL produces no
+  diagnostic, and at LSP log level `TRACE` the server issues no request for it
+  at all, although the `json.schemas` map does reach the server; a `file://`
+  URL validates. The catalogue lookup VS Code performs lives in that editor's
+  client extension rather than in the binary `vscode-langservers-extracted`
+  installs. `after/lsp/jsonls.lua` carries the form and the measurement.
 * **`<leader>F` does nothing in JSON and JSONC.** The files this repo keeps in
   the format are hand-annotated, and the server's formatter would reflow them,
   so `after/lsp/jsonls.lua` turns it off and the language table names no

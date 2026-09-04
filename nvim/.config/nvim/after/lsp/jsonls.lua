@@ -24,18 +24,19 @@ return {
     init_options = { provideFormatter = false }, -- nvim-lspconfig default: true
 
     -- NOTE: Schema validation is inactive because nothing supplies a schema,
-    --       and only a local one can be supplied. The catalogue lookup VS Code
-    --       performs belongs to its client extension rather than to this
-    --       binary: the strings `schemastore` and `catalog.json` occur in
+    --       and only a local schema can be supplied. The catalogue lookup
+    --       VS Code performs belongs to its client extension rather than to
+    --       this binary: the strings `schemastore` and `catalog.json` occur in
     --       json-language-features/client and nowhere in the server that
-    --       vscode-langservers-extracted ships. Neither does the server fetch
-    --       a schema URL of its own accord, because answering that request is
-    --       the editor's side of the protocol and vim.lsp does not implement
-    --       it. Measured with the form below: a `file://` schema validates,
-    --       while an `https://` one yields no diagnostic at all and no entry
-    --       in ~/.local/state/nvim/lsp.log. This is where jsonls differs from
-    --       after/lsp/yamlls.lua, which only has to turn
-    --       yaml-language-server's own schemaStore fetch on.
+    --       vscode-langservers-extracted ships. A schema named by URL does not
+    --       work either. Measured with the form below at LSP log level TRACE:
+    --       the map does reach the server, inside
+    --       `workspace/didChangeConfiguration`, but with an `https://` URL no
+    --       diagnostic follows and the server issues no request for the schema
+    --       at all, so there is nothing for the client to answer. Why it does
+    --       not ask was not established. A `file://` URL does validate. This
+    --       is where jsonls differs from after/lsp/yamlls.lua, which only has
+    --       to turn yaml-language-server's own schemaStore fetch on.
     -- HOW : Name a local schema to get validation, e.g.:
     --       settings = {
     --           json = {

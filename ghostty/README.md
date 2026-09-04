@@ -1,8 +1,7 @@
 # Ghostty
 
-[Ghostty](https://ghostty.org) is the terminal emulator. It starts the login
-shell, renders Neovim, and follows the system appearance. Runs on macOS and
-Linux.
+[Ghostty](https://ghostty.org) is the terminal emulator. It runs fish, renders
+Neovim, and follows the system appearance. Runs on macOS and Linux.
 
 ## Install
 
@@ -21,25 +20,41 @@ Reload a running Ghostty with `⌘⇧,` (macOS) or `Ctrl+Shift+,` (Linux).
 
 ## What's configured
 
-| Area               | Choice                                                                                                                   | Why                                                                                                           |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
-| Font               | `JetBrainsMono Nerd Font Mono` → `FiraCode Nerd Font Mono` → `JetBrains Mono` → Fira Code → Source Code Pro → IBM Plex Mono, 14pt | The Mono build keeps Neovim's icons to one cell; see [The font stack](../README.md#the-font-stack)     |
-| Ligatures          | off (`-calt -liga`)                                                                                                      | Logs and diffs must show the exact characters                                                                 |
-| Theme              | `light:Catppuccin Latte,dark:Catppuccin Mocha`                                                                           | Follows the system appearance with the rest of the stack; see [Light and dark](../README.md#light-and-dark)   |
-| Window             | 100×30 cells, 8/6pt padding, 0.95 opacity with blur                                                                      | Neovide stays opaque; this is the one translucent surface                                                     |
-| Cursor             | Blinking block                                                                                                           | Same as every other tool; see [The cursor](../README.md#the-cursor)                                           |
-| Shell              | `command` unset, `shell-integration = detect`                                                                            | The login shell starts on every platform; an absolute path breaks where fish lives elsewhere                  |
-| Option key (macOS) | `macos-option-as-alt = left`                                                                                             | Neovim's `<M-j>` / `<M-k>` work; the right Option key still composes é and ß                                  |
+| Area               | Choice                                                                                                                            | Why                                                                                                         |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Font               | `JetBrainsMono Nerd Font Mono` → `FiraCode Nerd Font Mono` → `JetBrains Mono` → Fira Code → Source Code Pro → IBM Plex Mono, 14pt | The Mono build keeps Neovim's icons to one cell; see [The font stack](../README.md#the-font-stack)          |
+| Ligatures          | on (`+calt +liga`)                                                                                                                | The same two features every other surface names; see [The font stack](../README.md#the-font-stack)          |
+| Theme              | `light:Catppuccin Latte,dark:Catppuccin Mocha`, palette 16-255 generated                                                          | Follows the system appearance with the rest of the stack; see [Light and dark](../README.md#light-and-dark) |
+| Window             | 100×30 cells, 10/8pt padding, 0.95 opacity with blur, unfocused splits at 0.5                                                     | Neovide stays opaque; this is the one translucent surface                                                   |
+| Titlebar           | Tab bar merged into it, on both platforms                                                                                         | Reclaims the row a separate tab bar takes                                                                   |
+| Cursor             | Blinking block                                                                                                                    | Same as every other tool; see [The cursor](../README.md#the-cursor)                                         |
+| Selection          | `copy-on-select = clipboard`                                                                                                      | Writes both clipboards, so middle-click and Ctrl+Shift+V see the same text                                  |
+| Shell              | `command = fish`, `shell-integration = detect`                                                                                    | fish by name, so the terminal is fish whatever the login shell is; a path breaks where fish lives elsewhere |
+| SSH                | `ssh-env` and `ssh-terminfo`                                                                                                      | Installs Ghostty's terminfo on a remote host, falling back to `xterm-256color`                              |
+| Bell               | `system` and `border` added                                                                                                       | An audible bell, and the only effect visible while the window has focus                                     |
+| Notifications      | `notify-on-command-finish = unfocused`                                                                                            | A command finishing in an unfocused surface is the case worth interrupting                                  |
+| Quick terminal     | Centred, on ⌘\` (macOS) or Ctrl+\` (Linux)                                                                                        | Ghostty binds no key to it by default, so without the binding it is unreachable                             |
+| Option key (macOS) | `macos-option-as-alt = left`                                                                                                      | Neovim's `<M-j>` / `<M-k>` work; the right Option key still composes é and ß                                |
+| Automation (macOS) | `macos-applescript = false`, `macos-shortcuts = deny`                                                                             | Between them they let any script run commands in a terminal; nothing here scripts Ghostty                   |
 
 ## Per-OS files
 
 `config-file = ?os.conf` at the bottom of `config` includes the file
-`install.sh` links:
+`install.sh` links. Values in the included file win over the whole of `config`,
+whatever line the `config-file` directive sits on.
 
-| File             | Contains                                                    |
-| ---------------- | ----------------------------------------------------------- |
-| `os-darwin.conf` | `macos-option-as-alt`, `font-thicken`, and ⌘-based keybinds |
-| `os-linux.conf`  | Ctrl+Shift keybinds, plus GTK extension points              |
+| File             | Contains                                                                                                                              |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `os-darwin.conf` | `macos-option-as-alt`, `font-thicken`, `background-blur` as native glass, `macos-titlebar-style`, the two automation keys, ⌘ keybinds |
+| `os-linux.conf`  | `font-style`, `gtk-titlebar-style`, Ctrl+Shift keybinds, GTK and quick-terminal extension points                                      |
+
+Each macOS-only setting has a Linux counterpart where Ghostty provides one:
+`font-thicken` pairs with `font-style = Medium`, and `macos-titlebar-style`
+with `gtk-titlebar-style`. The four that have no counterpart —
+`macos-option-as-alt`, `macos-applescript`, `macos-shortcuts`, and
+`macos-dock-drop-behavior` — are listed as such at the bottom of
+[`os-linux.conf`](.config/ghostty/os-linux.conf), so the pair reads without
+diffing the files.
 
 Binding `super` on Linux registers but never fires, because desktops reserve
 it; [`os-linux.conf`](.config/ghostty/os-linux.conf) has the reasoning.
@@ -52,13 +67,29 @@ it; [`os-linux.conf`](.config/ghostty/os-linux.conf) has the reasoning.
 * **Unknown keys are ignored.** `ghostty +validate-config` checks syntax;
   `ghostty +show-config | grep macos-option-as-alt` confirms the per-OS include
   loaded.
+* **A wrong `font-style` name is silent too.** Ghostty falls back to the
+  regular face, `+validate-config` still exits 0, and `+show-face` reports the
+  family rather than the face, so the only check is by eye.
 * **`background-blur`** is supported on macOS and KDE Plasma; under GNOME's
-  Mutter it has no effect.
+  Mutter it has no effect, and KWin ignores the intensity because Plasma has
+  one global blur setting.
+* **`global:` keybinds need permission.** macOS asks for accessibility access
+  the first time one loads; Linux needs the XDG GlobalShortcuts portal, which
+  wlroots compositors such as Sway have not implemented. Without it the quick
+  terminal binding works only while Ghostty has focus.
+* **`scrollback-limit` is bytes, not lines.** The 10 MB default holds far more
+  than the tens of thousands of lines the number suggests.
 
 ## Recipes
 
-* **Ligatures back on.** Delete the two `font-feature` lines.
+* **Ligatures off** for command output. Set the two `font-feature` lines to
+  `-calt` and `-liga`.
+* **A heavier font on Linux.** `font-style = SemiBold` with
+  `font-style-bold = ExtraBold` beside it, so bold stays distinguishable.
+  `ghostty +list-fonts --family="JetBrainsMono Nerd Font Mono"` lists the faces
+  a family advertises.
 * **Change the theme.** `ghostty +list-themes` lists the bundled themes. Keep
   the `light:…,dark:…` form to follow the appearance.
 * **Inspect defaults.** `ghostty +show-config --default` prints every key and
   its default; `ghostty +list-keybinds --default` does the same for bindings.
+  Add `--docs` to either for the documentation above each key.

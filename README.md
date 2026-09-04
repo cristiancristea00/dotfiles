@@ -147,7 +147,8 @@ Three formats have no conditionals but need different values per platform.
 | `~/Library/Application Support/tlrc/config.toml` | `~/.config/tlrc/config.toml` | tlrc reads XDG on Linux but Application Support on macOS; the bridge lets one file serve both |                                                                                                                        |
 
 The bat and Ghostty variants stay in sync apart from the settings that
-justify the split. Add a new option to both files of a pair.
+justify the split: the theme flag for bat, and the keybind modifier, the font
+weight, and `font-size` for Ghostty. Add a new option to both files of a pair.
 
 Everything else branches at runtime: fish probes all three Homebrew prefixes,
 Neovim checks `vim.uv.os_uname().sysname`, and the Brewfile uses `OS.mac?` and
@@ -172,7 +173,22 @@ The Nerd Font build goes wherever icons are drawn.
 Fallbacks, in order: `FiraCode Nerd Font Mono` (a second build with icons, so
 icons survive one step down the chain), then `JetBrains Mono` (terminals only:
 the same typeface without icons), `Fira Code`, `Source Code Pro`, `IBM Plex
-Mono`. The size is 14 everywhere. Zed's `ui_font_size` is 16 because it sizes
+Mono`.
+
+**Size.** 14 on macOS. The Linux sizes come down, because macOS scales the
+whole UI by the display's backing factor while the Linux desktop runs
+unscaled, so there the point size has to absorb the difference:
+
+| Surface                               | macOS | Linux |
+| ------------------------------------- | ----- | ----- |
+| Ghostty                               | 14    | 11    |
+| Neovide / Neovim                      | 14    | 10    |
+| Zed, editor and terminal              | 14    | 14    |
+| VS Code / Cursor, editor and terminal | 14    | 14    |
+
+Zed and VS Code hold one size for both platforms because their `settings.json`
+files are shared across them and the format has no conditionals; VS Code's is
+one real file behind four symlinks. Zed's `ui_font_size` is 16 because it sizes
 UI text, not code.
 
 **The Mono build.** Its icon glyphs occupy exactly one cell, so Neovim's
@@ -200,8 +216,11 @@ bold text stays clearly heavier. Both live in the per-OS Ghostty files. The
 editors are unaffected: only Ghostty renders at a weight other than the
 family's Regular.
 
-**Changing the font** means changing five files:
+**Changing the font** means changing five tools. Ghostty keeps the family in
+`config.ghostty` and the size in each of its two per-OS files:
 [`ghostty/config.ghostty`](ghostty/.config/ghostty/config.ghostty),
+[`os-darwin.ghostty`](ghostty/.config/ghostty/os-darwin.ghostty), and
+[`os-linux.ghostty`](ghostty/.config/ghostty/os-linux.ghostty);
 [`zed/settings.json`](zed/.config/zed/settings.json) (editor and terminal),
 [`vscode/settings.json`](vscode/.config/Code/User/settings.json) (editor,
 terminal, and eight further keys),

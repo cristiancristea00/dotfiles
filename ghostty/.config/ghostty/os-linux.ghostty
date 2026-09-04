@@ -1,5 +1,5 @@
 # ==============================================================================
-# os-linux.ghostty — Ghostty settings that only apply on Linux
+# os-linux.ghostty — Ghostty settings that apply on Linux
 # ==============================================================================
 #
 # Included by the `config-file = ?os.ghostty` line at the bottom of
@@ -7,13 +7,25 @@
 # include is last, so values here override the base config. Same format rules
 # as `config.ghostty`: no trailing comments.
 #
-# This file is the counterpart of os-darwin.ghostty. Where Ghostty gives Linux
-# an equivalent of a macOS-only key, it is set here with the same intent;
-# where it gives none, the "No Linux counterpart" note at the bottom says so,
-# rather than leaving the reader to compare the two files.
+# Two kinds of key live here. Most are the Linux counterpart of a macOS-only
+# key: where Ghostty gives Linux an equivalent, it is set here with the same
+# intent; where it gives none, the "No Linux counterpart" note at the bottom
+# says so, rather than leaving the reader to compare the two files. The rest
+# apply on both platforms and differ only in value, which is why they are not
+# in config.ghostty; font-size is the one such key today.
 # ==============================================================================
 
 # --- Rendering ----------------------------------------------------------------
+# WHAT: Point size. Fractional values are allowed (e.g. 14.5).
+# WHY : 11 here against 14 in os-darwin.ghostty. The two are matched by
+#       apparent size rather than by number: macOS scales the whole UI by the
+#       display's backing factor, and this desktop runs unscaled, so the point
+#       size absorbs the difference. Zed and VS Code keep 14 on both platforms;
+#       ../../../README.md § The font stack has the table.
+# HOW : Set it in both per-OS files, or the two platforms drift.
+# default: 13
+font-size = 11
+
 # WHAT: Which named face of the font family to use as the regular weight, and
 #       which as the italic. The name must match the style the font itself
 #       advertises.

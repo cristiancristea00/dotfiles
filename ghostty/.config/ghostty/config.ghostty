@@ -41,10 +41,12 @@
 #       ghostty +show-config --default    lists every key and its default
 #
 # PLATFORM-SPECIFIC SETTINGS
-#   The macOS-only keys and the ⌘ keybinds live in os-darwin.ghostty, the
-#   Linux ones and the Ctrl+Shift keybinds in os-linux.ghostty. The
-#   `config-file` line at the bottom of this file includes whichever one
-#   install.sh has linked as os.ghostty.
+#   Two kinds of key live in the per-OS files: ones only one platform has, and
+#   ones both platforms have at different values. The macOS-only keys and the
+#   ⌘ keybinds are in os-darwin.ghostty, the Linux ones and the Ctrl+Shift
+#   keybinds in os-linux.ghostty, and font-size is in both, at a different
+#   value in each. The `config-file` line at the end of this file includes
+#   whichever one install.sh has linked as os.ghostty.
 #
 # FONTS
 #   Terminals get the Nerd Font build, editors the plain one; ligatures are on
@@ -71,12 +73,6 @@ font-family = JetBrains Mono
 font-family = Fira Code
 font-family = Source Code Pro
 font-family = IBM Plex Mono
-
-# WHAT: Point size. Fractional values are allowed (e.g. 14.5).
-# WHY : 14 matches Neovim, Neovide, Zed, and VS Code. Changing it means
-#       changing all five files listed in ../../../README.md § The font stack.
-# default: 13
-font-size = 14
 
 # WHAT: OpenType features. Repeatable; `+tag` enables, `-tag` disables.
 # WHY : Ligatures on, matching every other surface in the repo. The `calt`

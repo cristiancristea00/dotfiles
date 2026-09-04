@@ -1,5 +1,5 @@
 # ==============================================================================
-# os-darwin.ghostty — Ghostty settings that only apply on macOS
+# os-darwin.ghostty — Ghostty settings that apply on macOS
 # ==============================================================================
 #
 # Included by the `config-file = ?os.ghostty` line at the bottom of
@@ -7,10 +7,14 @@
 # include is last, so values here override the base config. Same format rules
 # as `config.ghostty`: no trailing comments.
 #
-# Ghostty compiles every platform's keys on all platforms, so these would parse
-# on Linux too and do nothing. They live here so the config states where they
-# apply. os-linux.ghostty carries the counterpart of each key that has one, and
-# names the ones that do not.
+# Two kinds of key live here. Most apply only to macOS: Ghostty compiles every
+# platform's keys on all platforms, so those would parse on Linux too and do
+# nothing, and they sit here so the config states where they apply. The rest
+# apply on both platforms and differ only in value, which is why they are not
+# in config.ghostty; font-size is the one such key today.
+#
+# os-linux.ghostty carries the counterpart of each key that has one, and names
+# the ones that do not.
 # ==============================================================================
 
 # --- Keyboard -----------------------------------------------------------------
@@ -27,6 +31,16 @@
 macos-option-as-alt = left
 
 # --- Rendering ----------------------------------------------------------------
+# WHAT: Point size. Fractional values are allowed (e.g. 14.5).
+# WHY : 14 here against 11 in os-linux.ghostty. The two are matched by apparent
+#       size rather than by number: macOS scales the whole UI by the
+#       display's backing factor, and this desktop runs unscaled, so the point
+#       size absorbs the difference. Zed and VS Code keep 14 on both platforms;
+#       ../../../README.md § The font stack has the table.
+# HOW : Set it in both per-OS files, or the two platforms drift.
+# default: 13
+font-size = 14
+
 # WHAT: Render glyphs with a slightly thicker stroke. macOS-only.
 # WHY : Compensates for macOS's thin subpixel rendering on non-Retina and
 #       scaled displays. The Linux counterpart is `font-style = Medium` in

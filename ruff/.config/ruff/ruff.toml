@@ -50,7 +50,7 @@ extend-exclude = ["target", "build", "out", "output"] # default: []
 fix = true # default: false
 
 # WHAT: The line length the linter enforces and the formatter targets.
-# WHY : 120 is one of the four column guides every editor here draws; see
+# WHY : 120 is one of the three column guides every editor here draws; see
 #       ../../../README.md § Column guides.
 line-length = 120 # default: 88
 

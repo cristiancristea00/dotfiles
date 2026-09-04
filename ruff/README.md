@@ -19,10 +19,10 @@ walking up from the file being checked and ignores every parent; this file
 applies only when that search finds nothing. No Ruff setting can impose
 anything on a project that has its own configuration.
 
-| Situation                                                    | What applies                     |
-| ------------------------------------------------------------ | -------------------------------- |
-| Project has a `pyproject.toml`, `ruff.toml`, or `.ruff.toml` | That file; this one is ignored   |
-| A loose script, or a project with no Ruff configuration      | This file                        |
+| Situation                                                    | What applies                      |
+| ------------------------------------------------------------ | --------------------------------- |
+| Project has a `pyproject.toml`, `ruff.toml`, or `.ruff.toml` | That file; this one is ignored    |
+| A loose script, or a project with no Ruff configuration      | This file                         |
 | `ruff check --isolated`                                      | Neither: Ruff's built-in defaults |
 
 The header of [`ruff.toml`](.config/ruff/ruff.toml) explains why the file is
@@ -30,15 +30,15 @@ named `ruff.toml` and why the path is the same on macOS and Linux.
 
 ## What's configured
 
-| Setting        | Value       | Why                                                                   |
-| -------------- | ----------- | --------------------------------------------------------------------- |
-| `line-length`  | 120         | One of the four column guides every editor here draws; the default is 88 |
-| `indent-width` | 4           | The repo-wide 4-space rule                                            |
-| `quote-style`  | `single`    | The default is double                                                 |
-| `line-ending`  | `lf`        | Never CRLF, whatever the platform                                     |
-| `fix`          | `true`      | `ruff check` rewrites files; see below                                |
-| `preview`      | `true`      | Unstable rules on; see below                                          |
-| `select`       | 31 families | A broad selection; projects silence what does not fit                 |
+| Setting        | Value       | Why                                                                       |
+| -------------- | ----------- | ------------------------------------------------------------------------- |
+| `line-length`  | 120         | One of the three column guides every editor here draws; the default is 88 |
+| `indent-width` | 4           | The repo-wide 4-space rule                                                |
+| `quote-style`  | `single`    | The default is double                                                     |
+| `line-ending`  | `lf`        | Never CRLF, whatever the platform                                         |
+| `fix`          | `true`      | `ruff check` rewrites files; see below                                    |
+| `preview`      | `true`      | Unstable rules on; see below                                              |
+| `select`       | 31 families | A broad selection; projects silence what does not fit                     |
 
 Three settings need a note:
 

@@ -12,7 +12,7 @@
 # intent; where it gives none, the "No Linux counterpart" note at the bottom
 # says so, rather than leaving the reader to compare the two files. The rest
 # apply on both platforms and differ only in value, which is why they are not
-# in config.ghostty; font-size is the one such key today.
+# in config.ghostty; font-size and command are the two such keys today.
 # ==============================================================================
 
 # --- Shell --------------------------------------------------------------------

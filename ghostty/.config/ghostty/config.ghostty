@@ -44,8 +44,9 @@
 #   Two kinds of key live in the per-OS files: ones only one platform has, and
 #   ones both platforms have at different values. The macOS-only keys and the
 #   ⌘ keybinds are in os-darwin.ghostty, the Linux ones and the Ctrl+Shift
-#   keybinds in os-linux.ghostty, and font-size is in both, at a different
-#   value in each. The `config-file` line at the end of this file includes
+#   keybinds in os-linux.ghostty, and font-size and command are in both, at a
+#   different value in each. The `config-file` line at the end of this file
+#   includes
 #   whichever one install.sh has linked as os.ghostty.
 #
 # FONTS
@@ -303,7 +304,7 @@ bell-features = system,border
 #       desktop notification, to the `bell` that is on by default, so a
 #       finished build is visible as well as audible.
 # NOTE: Both keys need shell integration, or a shell that emits the OSC 133
-#       prompt marks itself. `shell-integration = detect` above provides it.
+#       prompt marks itself. `shell-integration = fish` above provides it.
 #       `notify-on-command-finish-after` sets how long a command must run
 #       first; its default of 5s is kept, so short commands stay silent.
 #       Available since Ghostty 1.3.0.

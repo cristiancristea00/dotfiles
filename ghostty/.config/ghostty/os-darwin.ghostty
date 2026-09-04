@@ -11,7 +11,7 @@
 # platform's keys on all platforms, so those would parse on Linux too and do
 # nothing, and they sit here so the config states where they apply. The rest
 # apply on both platforms and differ only in value, which is why they are not
-# in config.ghostty; font-size is the one such key today.
+# in config.ghostty; font-size and command are the two such keys today.
 #
 # os-linux.ghostty carries the counterpart of each key that has one, and names
 # the ones that do not.

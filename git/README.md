@@ -18,11 +18,11 @@ the committed file; the LFS block in it arrived that way. See
 
 ## Files
 
-| File                               | Purpose                                                                                                                                                     |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.config/git/config`               | Identity, delta, diff and merge, aliases, signing                                                                                                           |
-| `.config/git/config.work`          | Work identity, applied under `~/work/` through `includeIf`                                                                                                  |
-| `.config/git/ignore`               | Global ignore patterns                                                                                                                                      |
+| File                               | Purpose                                                                                                                                                   |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.config/git/config`               | Identity, delta, diff and merge, aliases, signing                                                                                                         |
+| `.config/git/config.work`          | Work identity, applied under `~/work/` through `includeIf`                                                                                                |
+| `.config/git/ignore`               | Global ignore patterns                                                                                                                                    |
 | `.config/git/catppuccin.gitconfig` | Not in this repo. Fetched by `install.sh` from [catppuccin/delta](https://github.com/catppuccin/delta); see [Fetched themes](../README.md#fetched-themes) |
 
 ## delta's theme
@@ -68,9 +68,9 @@ The types, the trailer block, and the sign-off rule are in
 
 ## Destructive aliases
 
-| Alias        | Does                                                                                                                                 |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Alias        | Does                                                                                                                               |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `fpush`      | `push --force`: overwrites the remote unconditionally. Prefer `spush` (`--force-with-lease`), which refuses if someone else pushed |
-| `fpushall`   | The same for every branch at once                                                                                                    |
-| `purge`      | `clean --quiet --force -d`: deletes all untracked files and directories. Preview with `git clean -nd`                                |
-| `obliterate` | `reset --hard`: discards every uncommitted change                                                                                    |
+| `fpushall`   | The same for every branch at once                                                                                                  |
+| `purge`      | `clean --quiet --force -d`: deletes all untracked files and directories. Preview with `git clean -nd`                              |
+| `obliterate` | `reset --hard`: discards every uncommitted change                                                                                  |

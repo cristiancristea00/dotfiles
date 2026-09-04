@@ -21,15 +21,15 @@ numeric prefixes. Functions are not sourced at startup: fish autoloads
 `functions/<name>.fish` on first call, so the file name must match the
 function name inside it.
 
-| Path                         | Purpose                                                                                                 |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Path                         | Purpose                                                                                                  |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------- |
 | `conf.d/00-path.fish`        | Homebrew (`brew shellenv`, probing all three prefixes), Rust (`~/.cargo/env.fish`), user bin directories |
-| `conf.d/10-environment.fish` | `EDITOR`/`VISUAL`, `MANPAGER` through bat, Homebrew hints off                                           |
-| `conf.d/20-options.fish`     | Greeting, prompt path length, the shared `$COMMON_OPTIONS_*` flag sets, and why fzf is unthemed         |
-| `conf.d/25-theme.fish`       | Catppuccin for fish, eza, and delta, following the terminal's appearance                                |
-| `conf.d/30-prompt.fish`      | oh-my-posh, guarded on interactivity, Homebrew, and terminal type                                       |
-| `config.fish`                | Empty; documents the load order                                                                         |
-| `functions/`                 | `ll` `la` `lt` `lta` (eza) · `ff` `fx` `fd` (fd) · `coffee` · `signed`                                  |
+| `conf.d/10-environment.fish` | `EDITOR`/`VISUAL`, `MANPAGER` through bat, Homebrew hints off                                            |
+| `conf.d/20-options.fish`     | Greeting, prompt path length, the shared `$COMMON_OPTIONS_*` flag sets, and why fzf is unthemed          |
+| `conf.d/25-theme.fish`       | Catppuccin for fish, eza, and delta, following the terminal's appearance                                 |
+| `conf.d/30-prompt.fish`      | oh-my-posh, guarded on interactivity, Homebrew, and terminal type                                        |
+| `config.fish`                | Empty; documents the load order                                                                          |
+| `functions/`                 | `ll` `la` `lt` `lta` (eza) · `ff` `fx` `fd` (fd) · `coffee` · `signed`                                   |
 
 ## Machine-local additions
 
@@ -40,13 +40,13 @@ overlays.
 
 ## Platform differences
 
-| Piece                        | Behaviour                                                                                                                 |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Piece                        | Behaviour                                                                                                                      |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `conf.d/00-path.fish`        | Probes `/opt/homebrew`, `/usr/local`, and `/home/linuxbrew/.linuxbrew`, so one file covers Apple Silicon, Intel Mac, and Linux |
-| `conf.d/10-environment.fish` | `$MANPAGER` is guarded on `col`, which Debian and Ubuntu ship in `bsdextrautils` and minimal images lack                   |
-| `conf.d/30-prompt.fish`      | Guarded on `brew` as well as `oh-my-posh`, because the theme path is resolved through `brew --prefix`                      |
-| `functions/signed.fish`      | Defined only on macOS; `codesign` has no Linux equivalent                                                                 |
-| `functions/coffee.fish`      | Passes `--greedy` only on macOS; the flag concerns casks, which Linux Homebrew lacks                                       |
+| `conf.d/10-environment.fish` | `$MANPAGER` is guarded on `col`, which Debian and Ubuntu ship in `bsdextrautils` and minimal images lack                       |
+| `conf.d/30-prompt.fish`      | Guarded on `brew` as well as `oh-my-posh`, because the theme path is resolved through `brew --prefix`                          |
+| `functions/signed.fish`      | Defined only on macOS; `codesign` has no Linux equivalent                                                                      |
+| `functions/coffee.fish`      | Passes `--greedy` only on macOS; the flag concerns casks, which Linux Homebrew lacks                                           |
 
 ## Gotchas
 

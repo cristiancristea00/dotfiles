@@ -30,13 +30,13 @@ that was rejected and the reason the cache directory is left unset.
 
 ## What's configured
 
-| Setting                                       | Value         | Why                                                                                                    |
-| --------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------ |
+| Setting                                       | Value         | Why                                                                                                       |
+| --------------------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------- |
 | `defer_auto_update`                           | `true`        | The two-weekly cache refresh runs after printing the page, so a routine lookup never waits on the network |
-| `languages`                                   | `["en"]`      | Left empty, tlrc would also download the languages `$LANG` implies; translated pages are less complete  |
-| `option_style`                                | `long`        | `--recursive` explains itself, `-r` does not                                                           |
-| `platform_title`, `show_hyphens`, `edit_link` | `false`       | The defaults; the platform is the machine's own, and the descriptions already read as a list           |
-| `[style.*]`                                   | palette names | Named colours resolve through the terminal palette, so styling follows Ghostty's light/dark switch     |
+| `languages`                                   | `["en"]`      | Left empty, tlrc would also download the languages `$LANG` implies; translated pages are less complete    |
+| `option_style`                                | `long`        | `--recursive` explains itself, `-r` does not                                                              |
+| `platform_title`, `show_hyphens`, `edit_link` | `false`       | The defaults; the platform is the machine's own, and the descriptions already read as a list              |
+| `[style.*]`                                   | palette names | Named colours resolve through the terminal palette, so styling follows Ghostty's light/dark switch        |
 
 Everything else in the file equals tlrc's default. The cache directory and
 the style booleans left at `false` are not written, so `--gen-config` shows

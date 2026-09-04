@@ -29,11 +29,11 @@ this invocation stays separate from the others.
 
 ## Cursor-specific keys in the shared file
 
-| Key                                          | Note                                                                                       |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `cursor.general.globalCursorIgnoreList`      | Paths Cursor must never send to a model: keys, PEM files, `.ssh/id_*`, and credential JSON |
-| `cursor.composer.shouldChimeAfterChatFinishes` | Play a sound when a long agent run finishes                                              |
-| `workbench.experimental.modernUI`            | A VS Code key. Cursor forked before VS Code 1.129 and does not register it                 |
+| Key                                            | Note                                                                                       |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `cursor.general.globalCursorIgnoreList`        | Paths Cursor must never send to a model: keys, PEM files, `.ssh/id_*`, and credential JSON |
+| `cursor.composer.shouldChimeAfterChatFinishes` | Play a sound when a long agent run finishes                                                |
+| `workbench.experimental.modernUI`              | A VS Code key. Cursor forked before VS Code 1.129 and does not register it                 |
 
 Each editor ignores keys it does not recognise.
 

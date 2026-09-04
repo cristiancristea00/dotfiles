@@ -41,22 +41,22 @@ a fresh machine installs.
 
 ## Map of the config
 
-| Path                                    | Purpose                                                                      |
-| --------------------------------------- | ---------------------------------------------------------------------------- |
-| `.config/nvim/init.lua`                 | Entry point: leader keys and module load order                               |
-| `.config/nvim/lua/core/options.lua`     | Editor options                                                               |
-| `.config/nvim/lua/core/keymaps.lua`     | Plugin-independent keymaps                                                   |
-| `.config/nvim/lua/core/autocmds.lua`    | Yank highlight, cursor restore, column guides, `q` to close utility windows  |
-| `.config/nvim/lua/core/diagnostics.lua` | How errors and warnings are displayed                                        |
-| `.config/nvim/lua/core/filetypes.lua`   | Filetype detection rules, from the language table                            |
-| `.config/nvim/lua/core/neovide.lua`     | Font, Neovide runtime settings, ⌘ keymaps                                    |
+| Path                                    | Purpose                                                                     |
+| --------------------------------------- | --------------------------------------------------------------------------- |
+| `.config/nvim/init.lua`                 | Entry point: leader keys and module load order                              |
+| `.config/nvim/lua/core/options.lua`     | Editor options                                                              |
+| `.config/nvim/lua/core/keymaps.lua`     | Plugin-independent keymaps                                                  |
+| `.config/nvim/lua/core/autocmds.lua`    | Yank highlight, cursor restore, column guides, `q` to close utility windows |
+| `.config/nvim/lua/core/diagnostics.lua` | How errors and warnings are displayed                                       |
+| `.config/nvim/lua/core/filetypes.lua`   | Filetype detection rules, from the language table                           |
+| `.config/nvim/lua/core/neovide.lua`     | Font, Neovide runtime settings, ⌘ keymaps                                   |
 | `../neovide/`                           | Neovide process and window settings; see its [README](../neovide/README.md) |
-| `.config/nvim/lua/theme.lua`            | Colorscheme                                                                  |
-| `.config/nvim/lua/languages.lua`        | The language table: add or remove languages here                             |
-| `.config/nvim/lua/plugins/init.lua`     | Plugin declarations (`vim.pack`) and load order                              |
-| `.config/nvim/lua/plugins/<name>.lua`   | One configuration module per plugin                                          |
-| `.config/nvim/after/lsp/<server>.lua`   | Per-server LSP overrides (`:h lsp-config-merge`)                             |
-| `../Brewfile`                           | External dependencies for every tool in the repo                             |
+| `.config/nvim/lua/theme.lua`            | Colorscheme                                                                 |
+| `.config/nvim/lua/languages.lua`        | The language table: add or remove languages here                            |
+| `.config/nvim/lua/plugins/init.lua`     | Plugin declarations (`vim.pack`) and load order                             |
+| `.config/nvim/lua/plugins/<name>.lua`   | One configuration module per plugin                                         |
+| `.config/nvim/after/lsp/<server>.lua`   | Per-server LSP overrides (`:h lsp-config-merge`)                            |
+| `../Brewfile`                           | External dependencies for every tool in the repo                            |
 
 Plugins (10): catppuccin (declared in `lua/theme.lua`), nvim-lspconfig
 (server config data), nvim-treesitter, fzf-lua, neo-tree (with plenary, nui,
@@ -100,6 +100,7 @@ nvim-web-devicons), blink.cmp, lualine, gitsigns, conform, indent-blankline.
 Leader is Space. `<leader>fk` fuzzy-searches this list at runtime.
 
 ### Find (fzf-lua)
+
 | Key                 | Action                          |
 | ------------------- | ------------------------------- |
 | `<leader>ff` / `fg` | find files / live grep          |
@@ -112,6 +113,7 @@ Leader is Space. `<leader>fk` fuzzy-searches this list at runtime.
 | `<leader>fR`        | resume last picker              |
 
 ### LSP (buffer-local, when a server is attached)
+
 | Key                   | Action                                              |
 | --------------------- | --------------------------------------------------- |
 | `K`                   | hover documentation *(built-in)*                    |
@@ -124,6 +126,7 @@ Leader is Space. `<leader>fk` fuzzy-searches this list at runtime.
 | `<leader>ch`          | clangd: switch source/header                        |
 
 ### Git (gitsigns, buffer-local in repositories)
+
 | Key                 | Action                                   |
 | ------------------- | ---------------------------------------- |
 | `]h` / `[h`         | next / previous hunk                     |
@@ -134,6 +137,7 @@ Leader is Space. `<leader>fk` fuzzy-searches this list at runtime.
 | `<leader>gd`        | diff buffer against index                |
 
 ### Editing and UI
+
 | Key                        | Action                                         |
 | -------------------------- | ---------------------------------------------- |
 | `<leader>e`                | toggle file explorer (neo-tree)                |
@@ -147,10 +151,12 @@ Leader is Space. `<leader>fk` fuzzy-searches this list at runtime.
 | `<Esc><Esc>` (terminal)    | leave terminal mode                            |
 
 ### Completion (blink.cmp)
+
 `<CR>` accept · `<Tab>`/`<S-Tab>` next/prev (or snippet fields) ·
 `<C-space>` open menu/docs · `<C-e>` cancel
 
 ### Neovide (⌘)
+
 `⌘C/⌘V` copy/paste · `⌘S` save · `⌘A` select all · `⌘=`/`⌘-`/`⌘0` zoom.
 Plain `y`/`p` also use the system clipboard (`clipboard=unnamedplus`). On
 Linux the same actions are on Ctrl+Shift.
@@ -195,6 +201,13 @@ Linux the same actions are on Ctrl+Shift.
   formatting. The only XML server nvim-lspconfig knows is lemminx, which has
   no Homebrew formula; Zed and VS Code bundle it in their XML extensions. The
   XML entry in `lua/languages.lua` says how to add it.
+* **Ruby formatting depends on the project.** `ruby-lsp` serves formatting by
+  delegating to RuboCop, Standard, or Syntax Tree from the project's own
+  bundle, so `<leader>F` does nothing in a Ruby project whose Gemfile has
+  none of them. The Ruby entry carries no conform formatter for the same
+  reason: RuboCop is a gem rather than a Homebrew formula, so a conform entry
+  would call whatever version happened to be on `$PATH` instead of the one the
+  project pins.
 
 ## Troubleshooting
 

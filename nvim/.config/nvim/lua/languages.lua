@@ -139,6 +139,22 @@ return {
         servers = { "ty", "ruff" },
         formatters = { "ruff_format" }, -- add "ruff_organize_imports" before it to sort imports too
     },
+    -- Ruby: ruby-lsp, which also formats.
+    {
+        name = "Ruby",
+        filetypes = { "ruby" },
+        parsers = { "ruby" },
+        -- Shopify's ruby-lsp, not solargraph, which is the older server and
+        -- the one Zed's `ruby` extension enables by default; zed/settings.json
+        -- names ruby-lsp explicitly so both editors use this one.
+        servers = { "ruby_lsp" }, -- brew install ruby-lsp (pulls the ruby formula)
+        -- No conform entry. The server formats through the LSP, delegating to
+        -- RuboCop, Standard, or Syntax Tree from the project's own bundle,
+        -- which is the version the project expects. A conform `rubocop` entry
+        -- would call whatever `rubocop` is on $PATH instead, and RuboCop is a
+        -- gem rather than a Homebrew formula, so the Brewfile cannot pin one.
+        formatters = {},
+    },
     -- TOML: taplo as server and formatter.
     {
         name = "TOML",

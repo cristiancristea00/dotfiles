@@ -70,6 +70,11 @@ it; [`os-linux.ghostty`](.config/ghostty/os-linux.ghostty) has the reasoning.
   `path_helper`, so the lookup sees only the PATH Ghostty was launched with.
   The reasoning is in the Shell section of
   [`config.ghostty`](.config/ghostty/config.ghostty).
+* **A line ending on a 2048-byte boundary truncates the file.** Ghostty 1.3.1
+  stops reading there and applies nothing below it. Nothing is reported and
+  `+validate-config` still exits 0, so a setting simply keeps its default.
+  Editing a comment is enough to move a file onto the boundary; see
+  [Verifying a change](../README.md#verifying-a-change) for the check.
 * **The pre-1.3.0 `config` is still read.** Ghostty 1.3.0 moved to
   `config.ghostty`; where `~/.config/ghostty/config` also exists both are
   loaded, the old name first, and Ghostty logs "both config files … exist".

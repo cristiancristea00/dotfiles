@@ -462,6 +462,7 @@ LC_ALL=C awk 'FNR==1{n=0} {n+=length($0)+1} n%2048==0 {print FILENAME": "FNR}' \
 git config --file git/.config/git/config --list       # Git
 fish --no-execute fish/.config/fish/**/*.fish         # fish
 python3 -c "import tomllib,sys;tomllib.load(open(sys.argv[1],'rb'))" <file>   # TOML
+python3 -c "import json,re,sys;json.loads(re.sub(r'^\s*//.*$','',open(sys.argv[1]).read(),flags=re.M))" <file>  # JSONC
 neovide --help | grep NEOVIDE_FRAME                   # Neovide really read it
 nvim "+checkhealth vim.pack vim.lsp nvim-treesitter" +qa  # Neovim
 stow -n -v --target="$HOME" --dir="$PWD" <pkg>        # what stow would do
@@ -476,8 +477,22 @@ not, which is the conservative check; silence means none does. Confirm the
 tail of the file arrived as well, with
 `ghostty +show-config | grep copy-on-select`.
 
-The `settings.json` files for Zed, VS Code, and Cursor are JSONC. `json.load`
-rejects their comments; strip them first or use a JSONC-tolerant parser.
+Ten of the eleven tracked `.json` files are JSONC, carrying the documentation
+every setting here has; only `nvim/.config/nvim/nvim-pack-lock.json` is strict
+JSON. The `json.load` function rejects comments, hence the strip above, or use
+a JSONC-tolerant parser.
+
+The editors are the other half of that check, and each finds JSONC by its own
+rule. This repo declares only what a rule misses:
+
+| Editor          | Finds JSONC by                                                         | What the repo adds                                                                                 |
+| --------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Neovim          | A runtime rule for `Code/User`, anchored at `$HOME`                    | Four path patterns in [`nvim/.config/nvim/lua/languages.lua`](nvim/.config/nvim/lua/languages.lua) |
+| VS Code, Cursor | The built-in `configuration-editing` extension, by bare file name      | One `files.associations` glob, for Zed's per-OS names                                              |
+| Zed             | Its default `file_types`, which wants the name `settings.json` exactly | A `JSONC` key in `file_types`, for both editors' `User` trees and Zed's own per-OS names           |
+
+Each entry carries its own reasoning. A comment shown as an error therefore
+means the path has no association, not that the file is malformed.
 
 Valid TOML is not enough for Neovide. An unknown key is ignored, but a known
 key whose value the running build cannot parse fails the whole file: Neovide

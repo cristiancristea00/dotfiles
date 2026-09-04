@@ -193,12 +193,13 @@ vim.o.termguicolors = true
 -- Column guides -----------------------------------------------------------------
 -- WHAT: Vertical lines at the given columns, drawn with the ColorColumn
 --       highlight group.
--- WHY : Four reference marks rather than one enforced limit; the same four are
---       set in Zed and VS Code. See ../../../../../README.md § Column guides.
+-- WHY : Three reference marks rather than one enforced limit; the same three
+--       are set in Zed and VS Code. See ../../../../../README.md § Column
+--       guides.
 -- NOTE: The option is window-local, so this value is the default new windows
 --       inherit. The autocmd in core/autocmds.lua limits it to real files
 --       and reads this value back, so the columns are written only here.
 -- HOW : A comma-separated list of columns; values relative to 'textwidth'
 --       (`+1`, `-2`) also work. "" turns the guides off. All columns share
 --       one highlight group, so `:hi ColorColumn` restyles them together.
-vim.o.colorcolumn = "80,120,150,200"
+vim.o.colorcolumn = "80,120,150"

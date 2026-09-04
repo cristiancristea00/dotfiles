@@ -125,11 +125,10 @@ size = 14
 
 # WHAT: OpenType features, keyed by family name. `+tag` enables, `-tag`
 #       disables.
-# WHY : Ligatures on, because Neovide is an editor. The `calt` and `liga`
-#       features fuse `!=`, `->`, and `=>` here and in the editors' panes; the
-#       terminals disable them so output shows the exact characters (see
-#       ../../../README.md § The font stack). Neovim therefore has ligatures in
-#       Neovide but not in Ghostty.
+# WHY : Ligatures on. The `calt` and `liga` features fuse `!=`, `->`, and `=>`
+#       here, in the editors' panes, and in the terminals, so Neovim renders
+#       the same text under Neovide and in Ghostty (see ../../../README.md
+#       § The font stack).
 # HOW : The table is keyed per family, and a family without an entry gets no
 #       features, so every font in `normal` needs its own line. Fira Code is
 #       a ligature-first typeface and renders without them if omitted. Source

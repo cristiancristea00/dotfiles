@@ -32,13 +32,13 @@ package, creates the per-OS selector symlinks, bootstraps Neovim, and offers
 to make fish the login shell. `./install.sh --dry-run` prints every action
 without changing anything.
 
-| Option           | Effect                                                                     |
-| ---------------- | -------------------------------------------------------------------------- |
-| `--dry-run`      | Print every action, change nothing                                         |
-| `--cli-only`     | Skip the GUI apps (Ghostty, Zed, Neovide, VS Code, Cursor) for servers and containers |
-| `--packages a,b` | Handle only the named packages                                             |
-| `--uninstall`    | Remove the symlinks, leave the software installed                          |
-| `--yes`          | Never prompt; implied when stdin is not a terminal                         |
+| Option           | Effect                                                                                                |
+| ---------------- | ----------------------------------------------------------------------------------------------------- |
+| `--dry-run`      | Print every action, change nothing                                                                    |
+| `--cli-only`     | Skip the GUI apps (Ghostty, Zed, Neovide, VS Code, Cursor) for servers and containers                 |
+| `--packages a,b` | Handle only the named packages                                                                        |
+| `--uninstall`    | Remove the symlinks, leave the software installed                                                     |
+| `--yes`          | Answer yes to every prompt; required when stdin is not a terminal, where the script refuses to prompt |
 
 ### What the installer cannot do
 
@@ -63,19 +63,19 @@ identity only under `~/work/`, so the personal identity applies here.
 
 ## Packages
 
-| Package                         | Installs to                                  | What it is                                               |
-| ------------------------------- | -------------------------------------------- | -------------------------------------------------------- |
-| [`bat/`](bat/README.md)         | `~/.config/bat/`                             | `cat` with syntax highlighting; also the `$MANPAGER`     |
-| [`fish/`](fish/README.md)       | `~/.config/fish/`                            | The shell: PATH, environment, prompt, functions          |
-| [`ghostty/`](ghostty/README.md) | `~/.config/ghostty/`                         | Terminal emulator                                        |
-| [`git/`](git/README.md)         | `~/.config/git/`                             | Global Git config, with work/personal identity switching |
-| [`neovide/`](neovide/README.md) | `~/.config/neovide/`                         | Neovim's GUI: window and startup font                    |
-| [`nvim/`](nvim/README.md)       | `~/.config/nvim/`                            | The editor: LSP, treesitter, plugins, keymaps            |
-| [`ruff/`](ruff/README.md)       | `~/.config/ruff/`                            | Python lint and format rules, as a user-level fallback   |
-| [`tlrc/`](tlrc/README.md)       | `~/.config/tlrc/`                            | `tldr` client; macOS gets a bridge symlink (see below)   |
-| [`vscode/`](vscode/README.md)   | `~/.config/Code/` \| `~/Library/…/Code/`     | GUI editor. Holds the settings file **Cursor also uses** |
-| [`zed/`](zed/README.md)         | `~/.config/zed/`                             | GUI editor, configured as a non-modal editor             |
-| [`cursor/`](cursor/README.md)   | `~/.config/Cursor/` \| `~/Library/…/Cursor/` | Symlinks into `vscode/`, nothing else                    |
+| Package                         | Installs to           | What it is                                               |                                                          |
+| ------------------------------- | --------------------- | -------------------------------------------------------- | -------------------------------------------------------- |
+| [`bat/`](bat/README.md)         | `~/.config/bat/`      | `cat` with syntax highlighting; also the `$MANPAGER`     |                                                          |
+| [`fish/`](fish/README.md)       | `~/.config/fish/`     | The shell: PATH, environment, prompt, functions          |                                                          |
+| [`ghostty/`](ghostty/README.md) | `~/.config/ghostty/`  | Terminal emulator                                        |                                                          |
+| [`git/`](git/README.md)         | `~/.config/git/`      | Global Git config, with work/personal identity switching |                                                          |
+| [`neovide/`](neovide/README.md) | `~/.config/neovide/`  | Neovim's GUI: window and startup font                    |                                                          |
+| [`nvim/`](nvim/README.md)       | `~/.config/nvim/`     | The editor: LSP, treesitter, plugins, keymaps            |                                                          |
+| [`ruff/`](ruff/README.md)       | `~/.config/ruff/`     | Python lint and format rules, as a user-level fallback   |                                                          |
+| [`tlrc/`](tlrc/README.md)       | `~/.config/tlrc/`     | `tldr` client; macOS gets a bridge symlink (see below)   |                                                          |
+| [`vscode/`](vscode/README.md)   | `~/.config/Code/` \   | `~/Library/…/Code/`                                      | GUI editor. Holds the settings file **Cursor also uses** |
+| [`zed/`](zed/README.md)         | `~/.config/zed/`      | GUI editor, configured as a non-modal editor             |                                                          |
+| [`cursor/`](cursor/README.md)   | `~/.config/Cursor/` \ | `~/Library/…/Cursor/`                                    | Symlinks into `vscode/`, nothing else                    |
 
 Root files are not packages and are never stowed: `install.sh`, `Brewfile`
 (every dependency), `AGENTS.md` (conventions for AI coding agents, symlinked
@@ -122,10 +122,10 @@ git, and zed and remove their entire trees.
 
 The real directories are also where machine-local files go:
 
-| Local file (uncommitted)             | Purpose                                                                 |
-| ------------------------------------ | ----------------------------------------------------------------------- |
+| Local file (uncommitted)             | Purpose                                                                             |
+| ------------------------------------ | ----------------------------------------------------------------------------------- |
 | `~/.config/fish/conf.d/99-work.fish` | Machine- or employer-specific shell helpers; fish sources it like any other snippet |
-| `~/.config/git/config.work`          | Committed here, but the same mechanism applies; see [git/README](git/README.md) |
+| `~/.config/git/config.work`          | Committed here, but the same mechanism applies; see [git/README](git/README.md)     |
 
 After adding a **new file** to a `--no-folding` package, re-link it:
 
@@ -140,11 +140,11 @@ stow -R --no-folding --target="$HOME" --dir="$PWD" fish
 Three formats have no conditionals but need different values per platform.
 `install.sh` creates a symlink for each, which stow cannot express:
 
-| Link                                             | Points at                           | Why                                                                                                          |
-| ------------------------------------------------ | ----------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `~/.config/bat/config`                           | `config.darwin` \| `config.linux`   | `--theme=auto:system` reads the macOS appearance and is macOS-only; Linux uses `--theme=auto`, which asks the terminal |
-| `~/.config/ghostty/os.conf`                      | `os-darwin.conf` \| `os-linux.conf` | macOS binds ⌘; on Linux `super` is the Windows key, which desktops reserve, so it binds Ctrl+Shift            |
-| `~/Library/Application Support/tlrc/config.toml` | `~/.config/tlrc/config.toml`        | tlrc reads XDG on Linux but Application Support on macOS; the bridge lets one file serve both                |
+| Link                                             | Points at                    | Why                                                                                           |                                                                                                                        |
+| ------------------------------------------------ | ---------------------------- | --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `~/.config/bat/config`                           | `config.darwin` \            | `config.linux`                                                                                | `--theme=auto:system` reads the macOS appearance and is macOS-only; Linux uses `--theme=auto`, which asks the terminal |
+| `~/.config/ghostty/os.conf`                      | `os-darwin.conf` \           | `os-linux.conf`                                                                               | macOS binds ⌘; on Linux `super` is the Windows key, which desktops reserve, so it binds Ctrl+Shift                     |
+| `~/Library/Application Support/tlrc/config.toml` | `~/.config/tlrc/config.toml` | tlrc reads XDG on Linux but Application Support on macOS; the bridge lets one file serve both |                                                                                                                        |
 
 The bat and Ghostty variants stay in sync apart from the settings that
 justify the split. Add a new option to both files of a pair.
@@ -160,14 +160,14 @@ Neovim checks `vim.uv.os_uname().sysname`, and the Brewfile uses `OS.mac?` and
 One typeface family everywhere, in two builds, with a shared fallback chain.
 The Nerd Font build goes wherever icons are drawn.
 
-| Surface                     | Primary font                   | Ligatures |
-| --------------------------- | ------------------------------ | --------- |
-| Ghostty                     | `JetBrainsMono Nerd Font Mono` | off       |
-| Neovide / Neovim            | `JetBrainsMono Nerd Font Mono` | on        |
-| Zed, editor pane            | `JetBrains Mono`               | on        |
-| Zed, integrated terminal    | `JetBrainsMono Nerd Font Mono` | off       |
-| VS Code / Cursor, editor    | `JetBrains Mono`               | on        |
-| VS Code / Cursor, terminal  | `JetBrainsMono Nerd Font Mono` | off       |
+| Surface                    | Primary font                   | Ligatures |
+| -------------------------- | ------------------------------ | --------- |
+| Ghostty                    | `JetBrainsMono Nerd Font Mono` | on        |
+| Neovide / Neovim           | `JetBrainsMono Nerd Font Mono` | on        |
+| Zed, editor pane           | `JetBrains Mono`               | on        |
+| Zed, integrated terminal   | `JetBrainsMono Nerd Font Mono` | on        |
+| VS Code / Cursor, editor   | `JetBrains Mono`               | on        |
+| VS Code / Cursor, terminal | `JetBrainsMono Nerd Font Mono` | on        |
 
 Fallbacks, in order: `FiraCode Nerd Font Mono` (a second build with icons, so
 icons survive one step down the chain), then `JetBrains Mono` (terminals only:
@@ -179,11 +179,26 @@ UI text, not code.
 statusline, file tree, and diagnostic gutter keep their column alignment. The
 plain Nerd Font build draws icons at double width.
 
-**Ligatures.** Editors fuse `!=` and `->`; terminals do not, because logs,
-diffs, and hex output must show the exact characters. Consequence: Neovim has
-ligatures in Neovide but not in Ghostty. Where ligatures are on they are
-enabled for every family in the chain. Fira Code is a ligature-first typeface
-and renders without them when only the primary family is listed.
+**Ligatures.** On everywhere: `!=`, `->`, and `=>` fuse in the editors and in
+the terminals alike, so Neovim renders the same text under Neovide and in
+Ghostty. Two OpenType features carry them, `calt` (contextual alternates,
+where JetBrains Mono and Fira Code put the coding ligatures) and `liga` (the
+standard set), and each surface names both rather than relying on the font's
+defaults. The terminal keys are separate from the editor keys in Zed and in VS
+Code, so the two can be set apart again if command output ever needs the exact
+characters. Ghostty, Zed, and VS Code apply the features to every family in
+the chain; Neovide needs one entry per family, and Fira Code is a
+ligature-first typeface that renders without them if its entry is missing.
+
+**Weight.** The body text is one step heavier than Regular in Ghostty, by two
+different mechanisms. On macOS `font-thicken = true` thickens the glyph
+strokes, which compensates for macOS's thin rendering on non-Retina and scaled
+displays. Thickening is a CoreText feature with no FreeType equivalent, so on
+Linux `font-style = Medium` picks the Medium face instead;
+`font-style-italic = Medium Italic` follows it, and bold is left at Bold so
+bold text stays clearly heavier. Both live in the per-OS Ghostty files. The
+editors are unaffected: only Ghostty renders at a weight other than the
+family's Regular.
 
 **Changing the font** means changing five files:
 [`ghostty/config`](ghostty/.config/ghostty/config),
@@ -208,18 +223,18 @@ boxes.
 Everything visual uses **Catppuccin**: Latte (light) and Mocha (dark). On
 macOS the tools that can follow the system appearance do:
 
-| Tool             | Mechanism                                                                 |
-| ---------------- | ------------------------------------------------------------------------- |
-| Ghostty          | `theme = light:Catppuccin Latte,dark:Catppuccin Mocha`                    |
-| Zed              | `"theme": { "mode": "system", … }`, Latte / Mocha                         |
-| VS Code / Cursor | `window.autoDetectColorScheme` + `preferredLight`/`DarkColorTheme`        |
-| bat              | `--theme=auto:system`, Latte / Mocha                                      |
-| Neovim           | `flavour = "auto"`, reading `background`                                  |
+| Tool             | Mechanism                                                                                |
+| ---------------- | ---------------------------------------------------------------------------------------- |
+| Ghostty          | `theme = light:Catppuccin Latte,dark:Catppuccin Mocha`                                   |
+| Zed              | `"theme": { "mode": "system", … }`, Latte / Mocha                                        |
+| VS Code / Cursor | `window.autoDetectColorScheme` + `preferredLight`/`DarkColorTheme`                       |
+| bat              | `--theme=auto:system`, Latte / Mocha                                                     |
+| Neovim           | `flavour = "auto"`, reading `background`                                                 |
 | Neovide          | `vim.g.neovide_theme`, default `auto` (window chrome only); config.toml has no theme key |
-| fish             | `fish_config theme choose catppuccin-mocha`; the theme carries both variants |
-| eza              | A fish handler points `$EZA_CONFIG_DIR` at a Latte or Mocha directory     |
-| delta            | A fish handler sets `$DELTA_FEATURES` to `catppuccin-latte` or `-mocha`   |
-| tlrc             | Palette names, which resolve through the terminal's colours               |
+| fish             | `fish_config theme choose catppuccin-mocha`; the theme carries both variants             |
+| eza              | A fish handler points `$EZA_CONFIG_DIR` at a Latte or Mocha directory                    |
+| delta            | A fish handler sets `$DELTA_FEATURES` to `catppuccin-latte` or `-mocha`                  |
+| tlrc             | Palette names, which resolve through the terminal's colours                              |
 
 The last four follow the **terminal**, not the OS. fish, eza, and delta read
 fish's `$fish_terminal_color_theme`, which holds `light`, `dark`, or
@@ -241,10 +256,10 @@ Catppuccin fzf port would pin one flavour's hex values. See
 
 Two tools cannot follow the appearance and are pinned to Mocha:
 
-| Tool       | Why it is fixed                                          |
-| ---------- | -------------------------------------------------------- |
-| oh-my-posh | Takes a single config path; there is no light/dark form  |
-| Xcode      | One theme selection, stored in Xcode's own preferences   |
+| Tool       | Why it is fixed                                         |
+| ---------- | ------------------------------------------------------- |
+| oh-my-posh | Takes a single config path; there is no light/dark form |
+| Xcode      | One theme selection, stored in Xcode's own preferences  |
 
 On **Linux**, Ghostty, Zed, and Neovide read the desktop's colour-scheme
 preference through the XDG portal and still switch. bat cannot:
@@ -279,14 +294,14 @@ neither a stow package nor a Brewfile entry.
 
 A **blinking block**, in every tool and every mode:
 
-| Surface                     | Shape                             | Blink                                |
-| --------------------------- | --------------------------------- | ------------------------------------ |
-| Ghostty                     | `cursor-style = block`            | `cursor-style-blink = true`          |
-| Neovim / Neovide            | `guicursor = a:block-…`           | in the same option                   |
-| Zed, editor                 | `cursor_shape`                    | `cursor_blink`                       |
-| Zed, terminal               | `terminal.cursor_shape`           | `terminal.blinking = "on"`           |
-| VS Code / Cursor, editor    | `editor.cursorStyle`              | `editor.cursorBlinking`              |
-| VS Code / Cursor, terminal  | `terminal.integrated.cursorStyle` | `terminal.integrated.cursorBlinking` |
+| Surface                    | Shape                             | Blink                                |
+| -------------------------- | --------------------------------- | ------------------------------------ |
+| Ghostty                    | `cursor-style = block`            | `cursor-style-blink = true`          |
+| Neovim / Neovide           | `guicursor = a:block-…`           | in the same option                   |
+| Zed, editor                | `cursor_shape`                    | `cursor_blink`                       |
+| Zed, terminal              | `terminal.cursor_shape`           | `terminal.blinking = "on"`           |
+| VS Code / Cursor, editor   | `editor.cursorStyle`              | `editor.cursorBlinking`              |
+| VS Code / Cursor, terminal | `terminal.integrated.cursorStyle` | `terminal.integrated.cursorBlinking` |
 
 Neovim's default varies the shape by mode (a vertical bar in insert, a
 horizontal one in replace); `a:` sets every mode at once.
@@ -305,17 +320,18 @@ horizontal one in replace); `a:` sets every mode at once.
 
 ## Column guides
 
-Vertical lines at **80, 120, 150, and 200**, in all three editors:
+Vertical lines at **80, 120, and 150**, in all three editors:
 
 | Editor           | Setting                            |
 | ---------------- | ---------------------------------- |
-| Neovim / Neovide | `colorcolumn = "80,120,150,200"`   |
+| Neovim / Neovide | `colorcolumn = "80,120,150"`       |
 | Zed              | `wrap_guides` + `show_wrap_guides` |
 | VS Code / Cursor | `editor.rulers`                    |
 
 They are reference marks. Nothing wraps or reformats at any of them, and no
-file type is exempt. Four columns cover the limits projects use (C's 80,
-ruff's 88, Rust's 100) without choosing one.
+file type is exempt. Three columns cover the limits this setup works to
+without choosing one: 80 is the C convention, 120 is ruff's `line-length`
+here, and 150 is the point past which a line stops fitting a split pane.
 
 * **Neovim needs an autocmd; the others do not.** `colorcolumn` is a window
   option, so the global value would also appear in `:help`, `:terminal`,

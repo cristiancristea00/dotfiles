@@ -81,7 +81,7 @@ PACKAGES_FOLD="nvim ruff tlrc"
 #       symlinks: runtime state the application writes (fish's fish_variables,
 #       Zed's conversations/, the theme file install.sh fetches for delta), or
 #       one of the OS selector symlinks created in step 7 (bat, ghostty,
-#       neovide).
+#       neovide, zed).
 PACKAGES_NOFOLD="bat fish ghostty git neovide zed"
 
 # WHAT: Packages stowed with --no-folding and a per-OS --ignore, in a third
@@ -805,6 +805,16 @@ link_os_selectors() {
         ok "neovide → config.$suffix.toml"
     fi
 
+    # WHY: Zed has no per-platform keys, and its terminal shell is an absolute
+    #      path whose Homebrew prefix differs, so the repo ships a variant per
+    #      platform. The link is two deep — selector to variant to repo — and
+    #      Zed's settings UI can replace either with a real file, which
+    #      README.md § Edit this file, not Zed's UI covers.
+    if [ -d "$HOME/.config/zed" ]; then
+        run ln -sfn "settings.$suffix.json" "$HOME/.config/zed/settings.json"
+        ok "zed → settings.$suffix.json"
+    fi
+
     # WHY: The tlrc client resolves its config through the Rust `dirs` crate, which gives
     #      ~/.config on Linux and ~/Library/Application Support on macOS. The
     #      repo ships the XDG path; this bridges the macOS one.
@@ -1096,7 +1106,7 @@ set_login_shell() {
 # 10. Uninstall
 # ==============================================================================
 # WHAT: Remove every symlink this script created, leaving software installed.
-# WHY : Stow unstows its own packages but knows nothing about the four OS
+# WHY : Stow unstows its own packages but knows nothing about the five OS
 #       selector links from step 8, which must be removed explicitly.
 uninstall() {
     step "Removing symlinks"
@@ -1105,6 +1115,7 @@ uninstall() {
     for link in "$HOME/.config/bat/config" \
         "$HOME/.config/ghostty/os.ghostty" \
         "$HOME/.config/neovide/config.toml" \
+        "$HOME/.config/zed/settings.json" \
         "$HOME/Library/Application Support/tlrc/config.toml"; do
         if [ -L "$link" ]; then
             run rm "$link"

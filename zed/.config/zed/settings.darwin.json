@@ -1,15 +1,24 @@
 // ============================================================================
-// zed/settings.json — Zed editor
+// zed/settings.darwin.json — Zed editor on macOS
 // ============================================================================
 //
 // WHAT THIS FILE IS
 //   Zed's user settings, read from ~/.config/zed/settings.json. The format is
 //   JSONC (JSON with // comments), and Zed reloads it on save.
 //
-//   The file is a symlink into the dotfiles repo. Changing a setting through
-//   Zed's settings UI rewrites the file, which can replace the symlink with a
-//   real file and strip these comments; ../../README.md § Edit this file, not
-//   Zed's UI has the recovery command.
+//   Zed has no per-platform keys, and one setting here needs a different value
+//   on each platform, so the repo ships a variant per platform and
+//   ../../../install.sh links this one as settings.json on macOS. Its
+//   counterpart is settings.linux.json. The two are identical apart from the
+//   settings marked PER-OS; there is one today. A new option goes in both
+//   files. See ../../../README.md § Per-OS configuration.
+//
+//   ~/.config/zed/settings.json is therefore two links deep: the selector
+//   points at settings.darwin.json in the same directory, which stow points into
+//   the repo. Changing a setting through Zed's settings UI rewrites the file,
+//   which can replace either link with a real file and strip these comments —
+//   and if it replaces the selector, an edit stops reaching the repo at all.
+//   ../../README.md § Edit this file, not Zed's UI has the recovery command.
 //
 // FONTS
 //   The editor pane gets plain "JetBrains Mono"; the integrated terminal gets
@@ -262,20 +271,27 @@
 
     // --- Terminal -----------------------------------------------------------
     // WHAT: Zed's integrated terminal: shell, cursor, and font.
-    // WHY : The shell is fish by name rather than the default, "system" (the
-    //       login shell), so the terminal is fish even where the login shell
-    //       has not been changed, and $TERM_PROGRAM is "zed" inside it: the
+    // WHY : The shell is fish rather than the default, "system" (the login
+    //       shell), so the terminal is fish even where the login shell has not
+    //       been changed, and $TERM_PROGRAM is "zed" inside it: the
     //       value to test for shell config only this terminal should get. The
     //       font is the Nerd Font Mono build, because Neovim draws icons here
     //       (see ../../../README.md § The font stack); FiraCode's Nerd build
     //       is the first fallback, so icons survive one step, and plain
     //       JetBrains Mono follows it. Ligatures are on, matching the editor
     //       pane above and every other surface in the repo.
+    // NOTE: An absolute path, not the name `fish`. A name is resolved against
+    //       the PATH Zed itself inherited, and a launch from Finder or
+    //       Spotlight inherits launchd's /usr/bin:/bin:/usr/sbin:/sbin, which
+    //       holds no Homebrew prefix. Zed offers no list of fallback paths, so
+    //       unlike VS Code's terminal profile this names one prefix only; an
+    //       Intel Mac or a distribution-packaged fish needs it edited.
     // NOTE: The two cursor keys below are the terminal's own and do not
     //       inherit from the editor settings above.
     "terminal": {
+        // PER-OS: the path differs from settings.linux.json.
         "shell": {
-            "program": "fish"
+            "program": "/opt/homebrew/bin/fish"
         },
         // WHAT: Cursor shape in the integrated terminal.
         // WHY : Block, matching the editor. Also the default.

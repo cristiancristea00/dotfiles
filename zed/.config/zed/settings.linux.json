@@ -1,0 +1,371 @@
+// ============================================================================
+// zed/settings.linux.json — Zed editor on Linux
+// ============================================================================
+//
+// WHAT THIS FILE IS
+//   Zed's user settings, read from ~/.config/zed/settings.json. The format is
+//   JSONC (JSON with // comments), and Zed reloads it on save.
+//
+//   Zed has no per-platform keys, and one setting here needs a different value
+//   on each platform, so the repo ships a variant per platform and
+//   ../../../install.sh links this one as settings.json on Linux. Its
+//   counterpart is settings.darwin.json. The two are identical apart from the
+//   settings marked PER-OS; there is one today. A new option goes in both
+//   files. See ../../../README.md § Per-OS configuration.
+//
+//   ~/.config/zed/settings.json is therefore two links deep: the selector
+//   points at settings.linux.json in the same directory, which stow points into
+//   the repo. Changing a setting through Zed's settings UI rewrites the file,
+//   which can replace either link with a real file and strip these comments —
+//   and if it replaces the selector, an edit stops reaching the repo at all.
+//   ../../README.md § Edit this file, not Zed's UI has the recovery command.
+//
+// FONTS
+//   The editor pane gets plain "JetBrains Mono"; the integrated terminal gets
+//   the Nerd Font Mono build, because Neovim draws icons there. Ligatures are
+//   on in both, through two separate keys. See ../../../README.md § The font
+//   stack.
+//
+//   Every setting Zed accepts: https://zed.dev/docs/configuring-zed
+// ============================================================================
+{
+    // --- Editor font --------------------------------------------------------
+    // WHAT: The font used in the code editor, with fallbacks consulted in
+    //       order for codepoints the primary font lacks.
+    // WHY : The plain build: Zed draws its own UI icons, so the Nerd Font
+    //       build adds nothing in the code pane. Zed's default is its bundled
+    //       ".ZedMono".
+    "buffer_font_family": "JetBrains Mono",
+    "buffer_font_fallbacks": [
+        "Fira Code",
+        "Source Code Pro",
+        "IBM Plex Mono"
+    ],
+
+    // WHAT: Editor font size, in pixels.
+    // WHY : 14 matches Ghostty, Neovim, Neovide, and VS Code; Zed's default is
+    //       15. Changing it means changing the five files listed in
+    //       ../../../README.md § The font stack.
+    "buffer_font_size": 14,
+
+    // WHAT: OpenType features for the editor font.
+    // WHY : Ligatures on: `calt` fuses `!=`, `->`, and `=>` in JetBrains Mono,
+    //       and `liga` is the standard set. The terminal below turns them off.
+    //       Unset, Zed leaves the font's defaults.
+    // NOTE: Zed applies these to every family in the stack, so Fira Code gets
+    //       its ligatures without an entry of its own; Neovide needs one per
+    //       family.
+    "buffer_font_features": {
+        "calt": true,
+        "liga": true
+    },
+
+    // WHAT: Line spacing: "standard", "comfortable", or { "custom": 1.4 }.
+    // WHY : "comfortable" is the default; stated because VS Code's
+    //       editor.lineHeight of 1.5 is set to approximate it.
+    "buffer_line_height": "comfortable",
+
+    // --- UI font ------------------------------------------------------------
+    // WHAT: Size and weight of Zed's own chrome (panels, tabs, menus). The
+    //       family is left unset, so Zed uses its bundled UI typeface.
+    // WHY : 16, larger than the code font, because UI labels are read at a
+    //       glance. 400 is the regular weight.
+    "ui_font_size": 16,
+    "ui_font_weight": 400,
+
+    // --- Theme --------------------------------------------------------------
+    // WHAT: "mode": "system" follows the OS appearance, picking "light" or
+    //       "dark" from the two named themes.
+    // WHY : Catppuccin Latte and Mocha, the pair the stack uses; see
+    //       ../../../README.md § Light and dark.
+    // NOTE: The themes come from an extension, declared below. Until it
+    //       installs, Zed uses its default theme.
+    "theme": {
+        "mode": "system",
+        "light": "Catppuccin Latte",
+        "dark": "Catppuccin Mocha"
+    },
+
+    // WHAT: The icon set for files and folders in the project panel and tabs,
+    //       in the same light/dark form as "theme".
+    // WHY : The object form follows the system appearance; a bare "Catppuccin
+    //       Mocha" would show dark icons in a Latte window. The four names are
+    //       in the extension's icon_themes/catppuccin-icons.json.
+    // NOTE: VS Code's icon theme has no light/dark pair; its Catppuccin
+    //       extension rewrites `workbench.iconTheme` instead (see
+    //       ../../../vscode/.config/Code/User/settings.json).
+    // HOW : Provided by the `catppuccin-icons` extension below. Set "mode" to
+    //       "light" or "dark" to pin one, or replace the object with one name.
+    "icon_theme": {
+        "mode": "system",
+        "light": "Catppuccin Latte",
+        "dark": "Catppuccin Mocha"
+    },
+
+    // WHAT: Extensions Zed installs on startup, as id → enabled.
+    // WHY : Zed's only declarative install mechanism, so a fresh machine needs
+    //       no manual step. Without the extensions, the "theme" and
+    //       "icon_theme" blocks resolve to nothing and the languages below are
+    //       edited as plain text. VS Code and Cursor have no equivalent, which
+    //       is why they need the .txt lists in ../../../vscode/.
+    // HOW : Ids come from the Zed extension registry and are the directory
+    //       names under Zed's extensions/installed/ directory; on macOS:
+    //         ls ~/Library/Application\ Support/Zed/extensions/installed
+    //       Zed merges this map over its defaults, so a key here never
+    //       disables a built-in; `false` keeps an extension declared but
+    //       uninstalled.
+    // NOTE: Zed ships C, Rust, Python, Markdown, and Go support built in. Go
+    //       has no registry entry, and Zed does not bundle gopls; the Brewfile
+    //       puts it on $PATH. Zig needs the extension below.
+    "auto_install_extensions": {
+        // Appearance. The theme extension ships the mauve accent only; other
+        // accents are theme files under ~/.config/zed/themes/, Zed-managed
+        // state outside this repo.
+        "catppuccin": true,
+        "catppuccin-icons": true,
+
+        // Languages Zed does not cover built in. Each provides a treesitter
+        // grammar; dockerfile, lua, neocmake, and zig also provide a language
+        // server. Each is the counterpart of an entry in
+        // ../../../nvim/.config/nvim/lua/languages.lua.
+        "dockerfile": true,
+        // Lua: the grammar, an EmmyLuaDoc grammar, and lua-language-server,
+        // which the extension downloads itself. This is the one language where
+        // the two editors do not share a server: languages.lua leaves Lua on
+        // treesitter alone, so Neovim has no lua_ls. VS Code and Cursor get
+        // the same server from sumneko.lua (../../../vscode/extensions.txt).
+        "lua": true,
+        "neocmake": true,
+        "xml": true,
+        "toml": true,
+        "zig": true,
+        // Ruby: the grammar plus ruby-lsp, solargraph, rubocop, and sorbet as
+        // selectable servers. The `languages` block at the bottom picks which.
+        "ruby": true,
+
+        // Swift: `swift` is the language through sourcekit-lsp;
+        // `package-swift-lsp` understands Package.swift manifests.
+        "swift": true,
+        "package-swift-lsp": true,
+
+        // Git file formats: .gitconfig, .gitattributes, rebase todo lists, and
+        // commit messages. Highlighting only, like Neovim's "Git files" entry.
+        "git-firefly": true
+    },
+
+    // --- Editing behaviour --------------------------------------------------
+    // WHAT: Indentation: 4 spaces, never hard tabs.
+    // WHY : Both are Zed's defaults, stated because they match Neovim's
+    //       expandtab and shiftwidth = 4 and VS Code's tabSize.
+    "tab_size": 4,
+    "hard_tabs": false,
+
+    // WHAT: Insert the closing bracket or quote when the opening one is typed.
+    // WHY : The default. Neovim has no autopairs plugin here, so the two
+    //       editors differ on this.
+    "use_autoclose": true,
+
+    // WHAT: Clean-ups applied on every save.
+    // WHY : Both defaults. They touch whitespace only and never reformat code.
+    "ensure_final_newline_on_save": true,
+    "remove_trailing_whitespace_on_save": true,
+
+    // WHAT: Run the language server's formatter on save.
+    // WHY : Off, the default, stated because Neovim (<leader>F) and VS Code
+    //       also format only on request, so saving a file in a shared codebase
+    //       does not reformat it.
+    // HOW : "on" formats every save; "language_server" names the formatter.
+    "format_on_save": "off",
+
+    // WHAT: Save automatically when the editor loses focus.
+    // WHY : The default is "off". Matches VS Code's files.autoSave, so
+    //       switching windows never leaves unsaved work.
+    "autosave": "on_focus_change",
+
+    // --- Display ------------------------------------------------------------
+    // WHAT: Highlight the line the cursor is on; "all" tints the gutter and
+    //       the line background.
+    // WHY : The default, stated because VS Code's renderLineHighlight is set
+    //       to match it.
+    "current_line_highlight": "all",
+
+    // WHAT: Vertical guides at the given character columns.
+    // WHY : The same three columns Neovim and VS Code draw; see
+    //       ../../../README.md § Column guides. Nothing wraps or reformats at
+    //       them.
+    // NOTE: A further guide appears at `preferred_line_length` (default 80)
+    //       only when `soft_wrap` is "preferred_line_length"; `soft_wrap` is
+    //       left at its default, "none". Setting it that way later would add
+    //       a second line at 80.
+    // HOW : Absolute column numbers, in any order. An empty list or
+    //       `show_wrap_guides: false` turns them off. Both keys also work per
+    //       language inside the `languages` block; the guides here are the
+    //       same for every file type. All three share the theme's
+    //       `editor.wrap_guide` colour.
+    // default: [] and true
+    "wrap_guides": [
+        80,
+        120,
+        150
+    ],
+    "show_wrap_guides": true,
+
+    // WHAT: The editor cursor's shape and whether it blinks.
+    // WHY : A blinking block, like every tool here; see ../../../README.md §
+    //       The cursor. Zed's default shape is a bar; blink defaults to true.
+    // HOW : Shapes are "bar", "block", "underline", and "hollow". The terminal
+    //       has its own pair of these keys below.
+    "cursor_shape": "block",
+    "cursor_blink": true,
+
+    // WHAT: Scroll the view when clicking near the edge of the window.
+    // WHY : On, so a line clicked at the bottom edge moves into the middle,
+    //       where the next lines are visible. Off by default.
+    "autoscroll_on_clicks": true,
+
+    // WHAT: The condensed code overview beside the scrollbar.
+    // WHY : "auto" shows it whenever the scrollbar is visible; the default,
+    //       "never", hides it.
+    // HOW : "always" or "never".
+    "minimap": {
+        "show": "auto"
+    },
+
+    // WHAT: Inline type and parameter-name annotations from the language
+    //       server.
+    // WHY : On (the default is off), matching VS Code. Neovim keeps them behind
+    //       a <leader>ti toggle because its display is denser.
+    // HOW : Set "enabled": false, or turn off individual categories.
+    "inlay_hints": {
+        "enabled": true,
+        "show_type_hints": true,
+        "show_parameter_hints": true,
+        "show_other_hints": true,
+        "show_background": false
+    },
+
+    // WHAT: Language servers, globally.
+    // WHY : The default. Set false to edit with grammar highlighting only, for
+    //       example on a machine without the servers installed.
+    "enable_language_server": true,
+
+    // --- Panels -------------------------------------------------------------
+    // WHAT: Which side each panel docks to.
+    // WHY : Navigation panels on the left and the AI agent on the right, so
+    //       they do not share one dock.
+    "project_panel": {
+        "dock": "left"
+    },
+    "outline_panel": {
+        "dock": "left"
+    },
+    "collaboration_panel": {
+        "dock": "left"
+    },
+    "git_panel": {
+        "dock": "left"
+    },
+    "agent": {
+        "dock": "right"
+    },
+
+    // --- Terminal -----------------------------------------------------------
+    // WHAT: Zed's integrated terminal: shell, cursor, and font.
+    // WHY : The shell is fish rather than the default, "system" (the login
+    //       shell), so the terminal is fish even where the login shell has not
+    //       been changed, and $TERM_PROGRAM is "zed" inside it: the
+    //       value to test for shell config only this terminal should get. The
+    //       font is the Nerd Font Mono build, because Neovim draws icons here
+    //       (see ../../../README.md § The font stack); FiraCode's Nerd build
+    //       is the first fallback, so icons survive one step, and plain
+    //       JetBrains Mono follows it. Ligatures are on, matching the editor
+    //       pane above and every other surface in the repo.
+    // NOTE: An absolute path, not the name `fish`. A name is resolved against
+    //       the PATH Zed itself inherited, and a launch from Finder or
+    //       Spotlight inherits launchd's /usr/bin:/bin:/usr/sbin:/sbin, which
+    //       holds no Homebrew prefix. Zed offers no list of fallback paths, so
+    //       unlike VS Code's terminal profile this names one prefix only; an
+    //       Intel Mac or a distribution-packaged fish needs it edited.
+    // NOTE: The two cursor keys below are the terminal's own and do not
+    //       inherit from the editor settings above.
+    "terminal": {
+        // PER-OS: the path differs from settings.darwin.json.
+        "shell": {
+            "program": "/home/linuxbrew/.linuxbrew/bin/fish"
+        },
+        // WHAT: Cursor shape in the integrated terminal.
+        // WHY : Block, matching the editor. Also the default.
+        // HOW : "bar", "block", "underline", "hollow", or "inherit" to follow
+        //       the editor's `cursor_shape`.
+        "cursor_shape": "block",
+        // WHAT: Whether the terminal cursor blinks.
+        // WHY : "on", always. The default, "terminal_controlled", blinks only
+        //       when the running program asks, so a fish prompt would sit
+        //       still while the editor beside it blinked.
+        // HOW : "off", "terminal_controlled", or "on".
+        "blinking": "on",
+        "font_family": "JetBrainsMono Nerd Font Mono",
+        "font_fallbacks": [
+            "FiraCode Nerd Font Mono",
+            "JetBrains Mono",
+            "Fira Code",
+            "Source Code Pro",
+            "IBM Plex Mono"
+        ],
+        "font_features": {
+            "calt": true,
+            "liga": true
+        },
+        "font_size": 14
+    },
+
+    // --- Per-language settings ----------------------------------------------
+    // WHAT: Which language servers Zed runs for Ruby, in priority order. A
+    //       `!` prefix disables one.
+    // WHY : The `ruby` extension enables solargraph by default. ruby-lsp is
+    //       Shopify's, the actively developed one, and the server named in
+    //       ../../../nvim/.config/nvim/lua/languages.lua, so naming it here
+    //       keeps both editors on one server, as they are for every other
+    //       language. solargraph is disabled explicitly: without the `!` it
+    //       would run alongside ruby-lsp and both would answer a hover.
+    // NOTE: This is the only entry in `languages`. The other extensions need
+    //       none, because the server each one enables by default is already
+    //       the server languages.lua names.
+    // HOW : `rubocop`, `sorbet`, and `steep` are the extension's other
+    //       servers; add one to the list to enable it. ruby-lsp comes from
+    //       `brew install ruby-lsp` (root Brewfile) and must be on $PATH.
+    "languages": {
+        "Ruby": {
+            "language_servers": [
+                "ruby-lsp",
+                "!solargraph"
+            ]
+        }
+    },
+
+    // --- File type associations ---------------------------------------------
+    // WHAT: Treat Objective-C (.m) and Objective-C++ (.mm) files as C++.
+    // WHY : Zed has no Objective-C language support, and C++ gives the closest
+    //       highlighting and bracket handling. Neovim handles objc and objcpp
+    //       as their own filetypes with clangd.
+    "file_types": {
+        "C++": [
+            "mm",
+            "m"
+        ]
+    },
+
+    // --- Privacy and updates ------------------------------------------------
+    // WHAT: Usage metrics and crash reports.
+    // WHY : Off; both default to on. VS Code's telemetryLevel is off for the
+    //       same reason.
+    "telemetry": {
+        "metrics": false,
+        "diagnostics": false
+    },
+
+    // WHAT: Let Zed update itself.
+    // WHY : The default. Zed is also a Homebrew cask (root Brewfile), so
+    //       `brew upgrade` updates it too; set false to let brew own updates.
+    "auto_update": true
+}

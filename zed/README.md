@@ -10,18 +10,47 @@ stow --no-folding --target="$HOME" --dir="$HOME/personal/dotfiles" zed
 ```
 
 Stow's `--no-folding` keeps `~/.config/zed/` a real directory, because Zed
-writes `conversations/`, `themes/`, and `prompts/` there. See
+writes `conversations/`, `themes/`, and `prompts/` there, and because
+`install.sh` puts a per-OS selector link in it. See
 [The stow model](../README.md#the-stow-model).
+
+## One file per platform
+
+Zed reads a single `settings.json` and has no per-platform keys, so the repo
+ships `settings.darwin.json` and `settings.linux.json` and `install.sh` links
+one as `settings.json`. The two are identical apart from the settings marked
+`PER-OS`; there is one today, the terminal's shell path, which is absolute and
+whose Homebrew prefix differs. **Add any new setting to both files.**
+
+That is the cost of the split, and it is higher here than for `bat` or
+`ghostty`, whose pairs are short. These two are the full settings file.
+Compare them before committing:
+
+```sh
+diff <(grep -v PER-OS .config/zed/settings.darwin.json) \
+     <(grep -v PER-OS .config/zed/settings.linux.json)
+```
+
+Zed offers no list of fallback paths for the shell, unlike VS Code's terminal
+profile, so each file names one prefix; an Intel Mac or a
+distribution-packaged fish needs the path edited.
 
 ## Edit this file, not Zed's UI
 
-`settings.json` is a symlink into this repo. Changing a setting through Zed's
-settings UI rewrites the file, which can replace the symlink with a real file
-and strip the comments. If that happens:
+`~/.config/zed/settings.json` is two links deep: the selector points at
+`settings.<os>.json` beside it, which stow points into this repo. Changing a
+setting through Zed's settings UI rewrites the file, which can replace either
+link with a real file and strip the comments. Replacing the selector is the
+worse case, because edits then stop reaching the repo and nothing says so. If
+either happens, restow and recreate the selector:
 
 ```sh
 stow -R --no-folding --target="$HOME" --dir="$HOME/personal/dotfiles" zed
+./install.sh --packages zed          # recreates the selector link
 ```
+
+Check which state it is in with `ls -l ~/.config/zed/settings.json`: a link to
+`settings.darwin.json` or `settings.linux.json` is correct.
 
 The file is JSONC (JSON with `//` comments), so it can carry its own
 documentation.

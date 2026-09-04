@@ -17,7 +17,7 @@ package is folded: nothing machine-local lives in `~/.config/neovide/`.
 | Where                                        | Controls                                                                                             |
 | -------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | `neovide/.config/neovide/config.toml` (here) | Process and window creation: frame style, the font used before Neovim loads, vsync/sRGB, native tabs |
-| `nvim/.config/nvim/lua/core/neovide.lua`     | Runtime behaviour: animations, macOS ⌘ keybindings, live zoom (`vim.g.neovide_*`)                    |
+| `nvim/.config/nvim/lua/core/neovide.lua`     | Runtime behaviour: animations, translucency and blur, macOS ⌘ keybindings, live zoom (`vim.g.neovide_*`) |
 
 Settings precedence: command-line flags > this file > environment > defaults.
 

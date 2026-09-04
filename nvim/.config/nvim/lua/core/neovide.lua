@@ -31,6 +31,11 @@ if not vim.g.neovide then
     return
 end
 
+-- WHAT: Whether this is macOS, used by the blur below and the ⌘ bindings at
+--       the bottom of the file.
+-- WHY : Declared once here rather than tested twice.
+local is_macos = vim.uv.os_uname().sysname == "Darwin"
+
 -- Cursor animation ---------------------------------------------------------------
 -- WHAT: How long, in seconds, the cursor takes to reach its new position, and
 --       how far the cursor block stretches while moving.
@@ -66,13 +71,21 @@ vim.g.neovide_cursor_vfx_mode = "" -- Neovide default: "" (off)
 vim.g.neovide_scroll_animation_length = 0.15 -- Neovide default: 0.3
 vim.g.neovide_position_animation_length = 0.10 -- Neovide default: 0.15
 
--- Transparency and blur (kept opaque) --------------------------------------------------
+-- Transparency and blur ----------------------------------------------------------
 -- WHAT: `neovide_opacity` below 1.0 makes the window translucent;
---       `neovide_window_blurred` adds a macOS background blur behind it.
--- WHY : Opaque for text sharpness; Ghostty is the one translucent surface
---       (ghostty/config.ghostty). Uncomment to change.
--- vim.g.neovide_opacity = 0.95
--- vim.g.neovide_window_blurred = true
+--       `neovide_window_blurred` blurs whatever shows through it.
+-- WHY : The same pair of values as `background-opacity` and
+--       `background-blur` in ghostty/config.ghostty, so the editor and the
+--       terminal sit at the same depth on the desktop.
+-- NOTE: The blur is macOS-only and Neovide ignores the variable elsewhere,
+--       hence the guard. Its strength follows the opacity value, so the two
+--       are changed together.
+-- HOW : Set the opacity to 1.0 for an opaque window; the blur then has
+--       nothing to show through and can go.
+vim.g.neovide_opacity = 0.95 -- Neovide default: 1.0
+if is_macos then
+    vim.g.neovide_window_blurred = true -- Neovide default: false
+end
 
 -- Quality of life ---------------------------------------------------------------
 -- WHAT: Hide the mouse pointer while typing; it reappears on movement.
@@ -96,7 +109,6 @@ vim.g.neovide_confirm_quit = true -- Neovide default: true
 --       key on Linux, which GNOME and KDE reserve, so those mappings would
 --       register and never fire there. The Linux Ghostty config
 --       (ghostty/os-linux.ghostty) makes the same choice.
-local is_macos = vim.uv.os_uname().sysname == "Darwin"
 local map = vim.keymap.set
 
 -- WHAT: Scale the UI by a factor, clamped between 0.5 and 3.0 so a held key

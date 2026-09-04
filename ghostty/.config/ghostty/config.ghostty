@@ -136,11 +136,12 @@ window-padding-y = 8
 
 # WHAT: Window translucency (0 = invisible, 1 = opaque) and a blur behind it,
 #       so the background stays blurred behind the text.
-# WHY : Neovide stays fully opaque for text sharpness (the Transparency block
-#       in ../../../nvim/.config/nvim/lua/core/neovide.lua); this is the one
-#       translucent surface. Set 1 and remove the blur to match it. `true` is
-#       blur intensity 20; os-darwin.ghostty raises it to the native macOS glass
-#       effect, which needs a value this file cannot use on Linux.
+# WHY : The same pair of values Neovide uses (the Transparency block in
+#       ../../../nvim/.config/nvim/lua/core/neovide.lua), so the terminal and
+#       the editor sit at the same depth on the desktop. Change both together
+#       or they diverge. `true` is blur intensity 20; os-darwin.ghostty raises
+#       it to the native macOS glass effect, which needs a value this file
+#       cannot use on Linux.
 # NOTE: The blur is supported on macOS and KDE Plasma. Other Linux desktops
 #       are unsupported, so under GNOME's Mutter it has no effect, and KWin
 #       ignores the intensity because Plasma has one global blur setting.

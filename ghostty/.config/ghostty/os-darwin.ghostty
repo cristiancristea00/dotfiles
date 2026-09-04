@@ -1,15 +1,15 @@
 # ==============================================================================
-# os-darwin.conf — Ghostty settings that only apply on macOS
+# os-darwin.ghostty — Ghostty settings that only apply on macOS
 # ==============================================================================
 #
-# Included by the `config-file = ?os.conf` line at the bottom of `config`,
-# through a symlink install.sh points here on macOS. The include is last, so
-# values here override the base config. Same format rules as `config`: no
-# trailing comments.
+# Included by the `config-file = ?os.ghostty` line at the bottom of
+# `config.ghostty`, through a symlink install.sh points here on macOS. The
+# include is last, so values here override the base config. Same format rules
+# as `config.ghostty`: no trailing comments.
 #
 # Ghostty compiles every platform's keys on all platforms, so these would parse
 # on Linux too and do nothing. They live here so the config states where they
-# apply. os-linux.conf carries the counterpart of each key that has one, and
+# apply. os-linux.ghostty carries the counterpart of each key that has one, and
 # names the ones that do not.
 # ==============================================================================
 
@@ -30,7 +30,7 @@ macos-option-as-alt = left
 # WHAT: Render glyphs with a slightly thicker stroke. macOS-only.
 # WHY : Compensates for macOS's thin subpixel rendering on non-Retina and
 #       scaled displays. The Linux counterpart is `font-style = Medium` in
-#       os-linux.conf, which picks a heavier face instead, because thickening
+#       os-linux.ghostty, which picks a heavier face instead, because thickening
 #       is a CoreText feature FreeType has no equivalent for.
 # NOTE: `font-thicken-strength` sets how much, 0 to 255, and is left at 255,
 #       the heaviest. It has no effect while `font-thicken` is false.
@@ -54,7 +54,7 @@ background-blur = macos-glass-regular
 #       matches the terminal background. This is the one place Ghostty's chrome
 #       diverges from `frame = "transparent"` in
 #       ../../../neovide/.config/neovide/config.toml: Neovide has no tabs to
-#       merge, so it has nothing to gain from the style. os-linux.conf sets
+#       merge, so it has nothing to gain from the style. os-linux.ghostty sets
 #       `gtk-titlebar-style = tabs`, the same choice under GTK.
 # NOTE: With `tabs` the titlebar cannot be dragged by a tab title, only by the
 #       empty area beside the tabs. It also makes `window-theme` inert for
@@ -93,8 +93,8 @@ macos-shortcuts = deny
 
 # --- Keybinds -----------------------------------------------------------------
 # These restate Ghostty's macOS defaults, so the bindings stay as documented
-# here if upstream defaults change. `super` is ⌘. os-linux.conf binds the same
-# actions to Ctrl+Shift and explains why.
+# here if upstream defaults change. `super` is ⌘. os-linux.ghostty binds the
+# same actions to Ctrl+Shift and explains why.
 #
 # Splits: new split to the right, new split below, zoom the focused split
 keybind = super+d=new_split:right
@@ -124,7 +124,7 @@ keybind = super+shift+comma=reload_config
 # first time a global keybind is loaded or reloaded; until it is granted in
 # System Settings > Privacy & Security > Accessibility, this binding does
 # nothing while another application has focus. It still works when Ghostty is
-# focused. os-linux.conf needs the equivalent portal instead.
+# focused. os-linux.ghostty needs the equivalent portal instead.
 #
 # `backquote` is the W3C physical key code for the ` key, which is what
 # `ghostty +list-keybinds` prints and what matches the key regardless of

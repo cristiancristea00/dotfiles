@@ -70,14 +70,17 @@
 
 # --- Syntax mappings ---------------------------------------------------------------
 # WHAT: Force a syntax for files bat cannot identify from their name.
-# WHY : The ghostty config has no extension and no built-in mapping, so it
-#       renders as plain text; INI is the closest match. bat maps the deployed
-#       ~/.config/git/config to its Git Config syntax on its own, but not the
-#       repo copy or `config.work`, so both are mapped here.
-# HOW : `--map-syntax='<glob>:<syntax name>'`. The glob is matched against the
-#       full path, and `*` does not cross `/`, so `**/` matches any parent
-#       directory. List syntax names with `bat --list-languages`.
---map-syntax=**/ghostty/config:INI
+# WHY : The Ghostty files carry a `.ghostty` extension that bat has no syntax
+#       for and no built-in mapping to, so they render as plain text; INI is
+#       the closest match. One rule covers config.ghostty and both per-OS
+#       includes. bat maps the deployed ~/.config/git/config to its Git Config
+#       syntax on its own, but not the repo copy or `config.work`, so both are
+#       mapped here.
+# HOW : `--map-syntax='<glob>:<syntax name>'`. A glob with no `/` is matched
+#       against the filename alone; one that contains `/` is matched against
+#       the full path, where `*` does not cross `/`, so `**/` matches any
+#       parent directory. List syntax names with `bat --list-languages`.
+--map-syntax=*.ghostty:INI
 --map-syntax="**/git/config:Git Config"
 --map-syntax="**/git/config.work:Git Config"
 

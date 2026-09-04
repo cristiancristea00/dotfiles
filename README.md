@@ -143,7 +143,7 @@ Three formats have no conditionals but need different values per platform.
 | Link                                             | Points at                    | Why                                                                                           |                                                                                                                        |
 | ------------------------------------------------ | ---------------------------- | --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `~/.config/bat/config`                           | `config.darwin` \            | `config.linux`                                                                                | `--theme=auto:system` reads the macOS appearance and is macOS-only; Linux uses `--theme=auto`, which asks the terminal |
-| `~/.config/ghostty/os.conf`                      | `os-darwin.conf` \           | `os-linux.conf`                                                                               | macOS binds ⌘; on Linux `super` is the Windows key, which desktops reserve, so it binds Ctrl+Shift                     |
+| `~/.config/ghostty/os.ghostty`                   | `os-darwin.ghostty` \        | `os-linux.ghostty`                                                                            | macOS binds ⌘; on Linux `super` is the Windows key, which desktops reserve, so it binds Ctrl+Shift                     |
 | `~/Library/Application Support/tlrc/config.toml` | `~/.config/tlrc/config.toml` | tlrc reads XDG on Linux but Application Support on macOS; the bridge lets one file serve both |                                                                                                                        |
 
 The bat and Ghostty variants stay in sync apart from the settings that
@@ -201,7 +201,7 @@ editors are unaffected: only Ghostty renders at a weight other than the
 family's Regular.
 
 **Changing the font** means changing five files:
-[`ghostty/config`](ghostty/.config/ghostty/config),
+[`ghostty/config.ghostty`](ghostty/.config/ghostty/config.ghostty),
 [`zed/settings.json`](zed/.config/zed/settings.json) (editor and terminal),
 [`vscode/settings.json`](vscode/.config/Code/User/settings.json) (editor,
 terminal, and eight further keys),
@@ -314,7 +314,7 @@ horizontal one in replace); `a:` sets every mode at once.
   block-shaped and is the only cue for which pane has keyboard focus.
 * **Ghostty's `cursor-style-blink = true` differs from leaving it unset.** An
   explicit value makes Ghostty ignore DEC Mode 12, so a program cannot stop
-  the blink. See [`ghostty/.config/ghostty/config`](ghostty/.config/ghostty/config).
+  the blink. See [`ghostty/.config/ghostty/config.ghostty`](ghostty/.config/ghostty/config.ghostty).
 
 ---
 
@@ -364,11 +364,15 @@ Each of these is documented in full in the file it affects.
 
 * **Ghostty** has no trailing comments: everything after `=` is the value,
   and a key with a comment appended is rejected
-  ([`ghostty/config`](ghostty/.config/ghostty/config)).
+  ([`ghostty/config.ghostty`](ghostty/.config/ghostty/config.ghostty)).
 * **Ghostty's `config-file` include must come last**, because later values
   win; `?` makes it optional. Check what resolved with `ghostty +show-config`,
   not only `+validate-config`, which checks syntax
-  ([`ghostty/config`](ghostty/.config/ghostty/config)).
+  ([`ghostty/config.ghostty`](ghostty/.config/ghostty/config.ghostty)).
+* **Ghostty still reads the pre-1.3.0 `config` name.** Where both it and
+  `config.ghostty` exist the two are loaded, the old name first, and
+  repeatable keys append twice
+  ([`ghostty/config.ghostty`](ghostty/.config/ghostty/config.ghostty)).
 * **Neovide (TOML)** binds every bare key to the nearest `[table]` above it,
   so top-level keys must come before any table
   ([`neovide/config.toml`](neovide/.config/neovide/config.toml)).

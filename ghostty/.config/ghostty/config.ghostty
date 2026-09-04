@@ -1,17 +1,24 @@
 # ==============================================================================
-# ghostty/config — Ghostty terminal emulator
+# ghostty/config.ghostty — Ghostty terminal emulator
 # ==============================================================================
 #
 # WHAT THIS FILE IS
-#   Ghostty's configuration, read from ~/.config/ghostty/config at startup.
-#   One `key = value` per line; `#` starts a comment. Some keys are repeatable:
-#   listing them more than once appends rather than overwrites, which is how
-#   font fallbacks and keybinds work.
+#   Ghostty's configuration, read from ~/.config/ghostty/config.ghostty at
+#   startup. One `key = value` per line; `#` starts a comment. Some keys are
+#   repeatable: listing them more than once appends rather than overwrites,
+#   which is how font fallbacks and keybinds work.
 #
 #   FORMAT TRAP: there are no trailing comments. Everything after `=` to the
 #   end of the line is the value, so `font-thicken = true  # default: false`
 #   sets the value to "true  # default: false" and the key is rejected. Every
 #   annotation below sits on its own line.
+#
+#   FORMAT TRAP: `config.ghostty` is the name Ghostty 1.3.0 moved to, and the
+#   pre-1.3.0 `~/.config/ghostty/config` is still read when it exists. Both
+#   are loaded, the old name first, and Ghostty logs "both config files …
+#   exist". A scalar set in both takes the value from this file, but the
+#   repeatable keys here — font-family, font-feature, keybind, and palette —
+#   append twice instead. Leave only one of the two in place.
 #
 # RELOADING
 #   ⌘⇧, (macOS) or Ctrl+Shift+, (Linux) reloads this file in place. A few keys,
@@ -25,10 +32,10 @@
 #       ghostty +show-config --default    lists every key and its default
 #
 # PLATFORM-SPECIFIC SETTINGS
-#   The macOS-only keys and the ⌘ keybinds live in os-darwin.conf, the Linux
-#   ones and the Ctrl+Shift keybinds in os-linux.conf. The `config-file` line
-#   at the bottom of this file includes whichever one install.sh has linked as
-#   os.conf.
+#   The macOS-only keys and the ⌘ keybinds live in os-darwin.ghostty, the
+#   Linux ones and the Ctrl+Shift keybinds in os-linux.ghostty. The
+#   `config-file` line at the bottom of this file includes whichever one
+#   install.sh has linked as os.ghostty.
 #
 # FONTS
 #   Terminals get the Nerd Font build, editors the plain one; ligatures are on
@@ -124,7 +131,7 @@ window-padding-y = 8
 # WHY : Neovide stays fully opaque for text sharpness (the Transparency block
 #       in ../../../nvim/.config/nvim/lua/core/neovide.lua); this is the one
 #       translucent surface. Set 1 and remove the blur to match it. `true` is
-#       blur intensity 20; os-darwin.conf raises it to the native macOS glass
+#       blur intensity 20; os-darwin.ghostty raises it to the native macOS glass
 #       effect, which needs a value this file cannot use on Linux.
 # NOTE: The blur is supported on macOS and KDE Plasma. Other Linux desktops
 #       are unsupported, so under GNOME's Mutter it has no effect, and KWin
@@ -285,7 +292,7 @@ notify-on-command-finish-action = notify,bell
 #       Changing this value needs a full restart on macOS, not a reload.
 # HOW : `top`, `bottom`, `left`, `right`, or `center`. Linux adds
 #       `gtk-quick-terminal-layer` and `quick-terminal-keyboard-interactivity`;
-#       os-linux.conf documents both.
+#       os-linux.ghostty documents both.
 # default: top
 quick-terminal-position = center
 
@@ -326,8 +333,9 @@ quick-terminal-position = center
 # NOTE: That is not a consequence of the line's position. Ghostty loads an
 #       included file after the whole of the file that names it, wherever the
 #       `config-file` line sits, so moving this line changes nothing and a key
-#       added below it is still overridden by os.conf. The line stays last
+#       added below it is still overridden by os.ghostty. The line stays last
 #       because the reader expects the override to be the last word.
-# HOW : install.sh points ~/.config/ghostty/os.conf at os-darwin.conf or
-#       os-linux.conf. Confirm what resolved with `ghostty +show-config`.
-config-file = ?os.conf
+# HOW : install.sh points ~/.config/ghostty/os.ghostty at os-darwin.ghostty
+#       or os-linux.ghostty. Confirm what resolved with
+#       `ghostty +show-config`.
+config-file = ?os.ghostty

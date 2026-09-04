@@ -20,14 +20,14 @@ README.
 
 ## What's configured
 
-| Setting                          | Value                                  | Why                                                                                     |
-| -------------------------------- | -------------------------------------- | --------------------------------------------------------------------------------------- |
-| `--theme`                        | `auto:system` (macOS) / `auto` (Linux) | Picks the light or dark theme below from the OS appearance or the terminal background   |
-| `--theme-dark` / `--theme-light` | Catppuccin Mocha / Latte               | The two flavours used across the stack                                                  |
-| `--style`                        | `numbers,changes,header,grid`          | Line numbers, Git gutter marks, filename header, and the grid that separates them       |
-| `--italic-text`                  | `always`                               | Ghostty renders real italics; bat's default is `never`                                  |
-| `--tabs`                         | `4`                                    | Matches Neovim's `shiftwidth` and Zed's `tab_size`                                      |
-| `--map-syntax`                   | 3 rules                                | INI for the extension-less `ghostty/config`; bat's Git Config syntax for `git/config` and `config.work` |
+| Setting                          | Value                                  | Why                                                                                            |
+| -------------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `--theme`                        | `auto:system` (macOS) / `auto` (Linux) | Picks the light or dark theme below from the OS appearance or the terminal background          |
+| `--theme-dark` / `--theme-light` | Catppuccin Mocha / Latte               | The two flavours used across the stack                                                         |
+| `--style`                        | `numbers,changes,header,grid`          | Line numbers, Git gutter marks, filename header, and the grid that separates them              |
+| `--italic-text`                  | `always`                               | Ghostty renders real italics; bat's default is `never`                                         |
+| `--tabs`                         | `4`                                    | Matches Neovim's `shiftwidth` and Zed's `tab_size`                                             |
+| `--map-syntax`                   | 3 rules                                | INI for the three `.ghostty` files; bat's Git Config syntax for `git/config` and `config.work` |
 
 ## Two files
 

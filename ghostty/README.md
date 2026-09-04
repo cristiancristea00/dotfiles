@@ -10,7 +10,7 @@ Linux.
 
 ```sh
 stow --no-folding --target="$HOME" --dir="$HOME/personal/dotfiles" ghostty
-ln -sfn os-darwin.conf ~/.config/ghostty/os.conf   # or os-linux.conf
+ln -sfn os-darwin.ghostty ~/.config/ghostty/os.ghostty   # or os-linux.ghostty
 ```
 
 Stow's `--no-folding` keeps `~/.config/ghostty/` a real directory for the
@@ -21,55 +21,63 @@ Reload a running Ghostty with `⌘⇧,` (macOS) or `Ctrl+Shift+,` (Linux).
 
 ## What's configured
 
-| Area               | Choice                                                                                                                            | Why                                                                                                         |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Font               | `JetBrainsMono Nerd Font Mono` → `FiraCode Nerd Font Mono` → `JetBrains Mono` → Fira Code → Source Code Pro → IBM Plex Mono, 14pt | The Mono build keeps Neovim's icons to one cell; see [The font stack](../README.md#the-font-stack)          |
-| Ligatures          | on (`+calt +liga`)                                                                                                                | The same two features every other surface names; see [The font stack](../README.md#the-font-stack)          |
-| Theme              | `light:Catppuccin Latte,dark:Catppuccin Mocha`, palette 16-255 generated                                                          | Follows the system appearance with the rest of the stack; see [Light and dark](../README.md#light-and-dark) |
-| Window             | 100×30 cells, 10/8pt padding, 0.95 opacity with blur, unfocused splits at 0.5                                                     | Neovide stays opaque; this is the one translucent surface                                                   |
-| Titlebar           | Tab bar merged into it, on both platforms                                                                                         | Reclaims the row a separate tab bar takes                                                                   |
-| Cursor             | Blinking block                                                                                                                    | Same as every other tool; see [The cursor](../README.md#the-cursor)                                         |
-| Selection          | `copy-on-select = clipboard`                                                                                                      | Writes both clipboards, so middle-click and Ctrl+Shift+V see the same text                                  |
+| Area               | Choice                                                                                                                            | Why                                                                                                                                       |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Font               | `JetBrainsMono Nerd Font Mono` → `FiraCode Nerd Font Mono` → `JetBrains Mono` → Fira Code → Source Code Pro → IBM Plex Mono, 14pt | The Mono build keeps Neovim's icons to one cell; see [The font stack](../README.md#the-font-stack)                                        |
+| Ligatures          | on (`+calt +liga`)                                                                                                                | The same two features every other surface names; see [The font stack](../README.md#the-font-stack)                                        |
+| Theme              | `light:Catppuccin Latte,dark:Catppuccin Mocha`, palette 16-255 generated                                                          | Follows the system appearance with the rest of the stack; see [Light and dark](../README.md#light-and-dark)                               |
+| Window             | 100×30 cells, 10/8pt padding, 0.95 opacity with blur, unfocused splits at 0.5                                                     | Neovide stays opaque; this is the one translucent surface                                                                                 |
+| Titlebar           | Tab bar merged into it, on both platforms                                                                                         | Reclaims the row a separate tab bar takes                                                                                                 |
+| Cursor             | Blinking block                                                                                                                    | Same as every other tool; see [The cursor](../README.md#the-cursor)                                                                       |
+| Selection          | `copy-on-select = clipboard`                                                                                                      | Writes both clipboards, so middle-click and Ctrl+Shift+V see the same text                                                                |
 | Shell              | `command` unset, `shell-integration = detect`                                                                                     | Ghostty starts the login shell, which `install.sh` offers to set to fish; a bare name cannot be resolved inside the macOS `login` wrapper |
-| SSH                | `ssh-env` and `ssh-terminfo`                                                                                                      | Installs Ghostty's terminfo on a remote host, falling back to `xterm-256color`                              |
-| Bell               | `system` and `border` added                                                                                                       | An audible bell, and the only effect visible while the window has focus                                     |
-| Notifications      | `notify-on-command-finish = unfocused`                                                                                            | A command finishing in an unfocused surface is the case worth interrupting                                  |
-| Quick terminal     | Centred, on ⌘\` (macOS) or Ctrl+\` (Linux)                                                                                        | Ghostty binds no key to it by default, so without the binding it is unreachable                             |
-| Option key (macOS) | `macos-option-as-alt = left`                                                                                                      | Neovim's `<M-j>` / `<M-k>` work; the right Option key still composes é and ß                                |
-| Automation (macOS) | `macos-applescript = false`, `macos-shortcuts = deny`                                                                             | Between them they let any script run commands in a terminal; nothing here scripts Ghostty                   |
+| SSH                | `ssh-env` and `ssh-terminfo`                                                                                                      | Installs Ghostty's terminfo on a remote host, falling back to `xterm-256color`                                                            |
+| Bell               | `system` and `border` added                                                                                                       | An audible bell, and the only effect visible while the window has focus                                                                   |
+| Notifications      | `notify-on-command-finish = unfocused`                                                                                            | A command finishing in an unfocused surface is the case worth interrupting                                                                |
+| Quick terminal     | Centred, on ⌘\` (macOS) or Ctrl+\` (Linux)                                                                                        | Ghostty binds no key to it by default, so without the binding it is unreachable                                                           |
+| Option key (macOS) | `macos-option-as-alt = left`                                                                                                      | Neovim's `<M-j>` / `<M-k>` work; the right Option key still composes é and ß                                                              |
+| Automation (macOS) | `macos-applescript = false`, `macos-shortcuts = deny`                                                                             | Between them they let any script run commands in a terminal; nothing here scripts Ghostty                                                 |
 
 ## Per-OS files
 
-`config-file = ?os.conf` at the bottom of `config` includes the file
-`install.sh` links. Values in the included file win over the whole of `config`,
-whatever line the `config-file` directive sits on.
+`config-file = ?os.ghostty` at the bottom of `config.ghostty` includes the file
+`install.sh` links. Values in the included file win over the whole of
+`config.ghostty`, whatever line the `config-file` directive sits on.
 
-| File             | Contains                                                                                                                              |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `os-darwin.conf` | `macos-option-as-alt`, `font-thicken`, `background-blur` as native glass, `macos-titlebar-style`, the two automation keys, ⌘ keybinds |
-| `os-linux.conf`  | `font-style`, `gtk-titlebar-style`, Ctrl+Shift keybinds, GTK and quick-terminal extension points                                      |
+| File                | Contains                                                                                                                              |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `os-darwin.ghostty` | `macos-option-as-alt`, `font-thicken`, `background-blur` as native glass, `macos-titlebar-style`, the two automation keys, ⌘ keybinds |
+| `os-linux.ghostty`  | `font-style`, `gtk-titlebar-style`, Ctrl+Shift keybinds, GTK and quick-terminal extension points                                      |
 
 Each macOS-only setting has a Linux counterpart where Ghostty provides one:
 `font-thicken` pairs with `font-style = Medium`, and `macos-titlebar-style`
 with `gtk-titlebar-style`. The four that have no counterpart —
 `macos-option-as-alt`, `macos-applescript`, `macos-shortcuts`, and
 `macos-dock-drop-behavior` — are listed as such at the bottom of
-[`os-linux.conf`](.config/ghostty/os-linux.conf), so the pair reads without
+[`os-linux.ghostty`](.config/ghostty/os-linux.ghostty), so the pair reads without
 diffing the files.
 
 Binding `super` on Linux registers but never fires, because desktops reserve
-it; [`os-linux.conf`](.config/ghostty/os-linux.conf) has the reasoning.
+it; [`os-linux.ghostty`](.config/ghostty/os-linux.ghostty) has the reasoning.
 
 ## Gotchas
 
 * **No trailing comments.** Everything after `=` is the value, and a key with
   a comment appended is rejected. Annotations go on their own line; see the
-  header of [`config`](.config/ghostty/config).
+  header of [`config.ghostty`](.config/ghostty/config.ghostty).
 * **A bare `command` name cannot be resolved on macOS.** Ghostty starts the
   command through `/usr/bin/login` and `bash --noprofile`, which never runs
   `path_helper`, so the lookup sees only the PATH Ghostty was launched with.
   The reasoning is in the Shell section of
-  [`config`](.config/ghostty/config).
+  [`config.ghostty`](.config/ghostty/config.ghostty).
+* **The pre-1.3.0 `config` is still read.** Ghostty 1.3.0 moved to
+  `config.ghostty`; where `~/.config/ghostty/config` also exists both are
+  loaded, the old name first, and Ghostty logs "both config files … exist".
+  A scalar takes the newer file's value, but repeatable keys append twice.
+* **macOS reads a second location.** Anything in
+  `~/Library/Application Support/com.mitchellh.ghostty/config.ghostty` is
+  loaded after the XDG file and wins over this repo. While that file exists,
+  `ghostty +edit-config` opens it rather than the config here.
 * **Unknown keys are ignored.** `ghostty +validate-config` checks syntax;
   `ghostty +show-config | grep macos-option-as-alt` confirms the per-OS include
   loaded.

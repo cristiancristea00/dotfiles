@@ -49,7 +49,7 @@ map("v", ">", ">gv", { desc = "Indent right, keep selection" })
 --       (`=gv` keeps the selection and fixes indentation).
 -- WHY : In Neovide the left Option key acts as Alt (core/neovide.lua); in a
 --       terminal the terminal must send Option as Meta (Ghostty's
---       os-darwin.conf does).
+--       os-darwin.ghostty does).
 map("v", "<M-j>", ":m '>+1<CR>gv=gv", { desc = "Move selection down" })
 map("v", "<M-k>", ":m '<-2<CR>gv=gv", { desc = "Move selection up" })
 

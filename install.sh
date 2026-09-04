@@ -790,8 +790,8 @@ link_os_selectors() {
     fi
 
     if [ -d "$HOME/.config/ghostty" ]; then
-        run ln -sfn "os-$suffix.conf" "$HOME/.config/ghostty/os.conf"
-        ok "ghostty → os-$suffix.conf"
+        run ln -sfn "os-$suffix.ghostty" "$HOME/.config/ghostty/os.ghostty"
+        ok "ghostty → os-$suffix.ghostty"
     fi
 
     # WHY: The tlrc client resolves its config through the Rust `dirs` crate, which gives
@@ -1092,7 +1092,7 @@ uninstall() {
 
     local link
     for link in "$HOME/.config/bat/config" \
-        "$HOME/.config/ghostty/os.conf" \
+        "$HOME/.config/ghostty/os.ghostty" \
         "$HOME/Library/Application Support/tlrc/config.toml"; do
         if [ -L "$link" ]; then
             run rm "$link"

@@ -70,13 +70,13 @@ vim.g.neovide_position_animation_length = 0.10 -- Neovide default: 0.15
 -- WHAT: `neovide_opacity` below 1.0 makes the window translucent;
 --       `neovide_window_blurred` adds a macOS background blur behind it.
 -- WHY : Opaque for text sharpness; Ghostty is the one translucent surface
---       (ghostty/config). Uncomment to change.
+--       (ghostty/config.ghostty). Uncomment to change.
 -- vim.g.neovide_opacity = 0.95
 -- vim.g.neovide_window_blurred = true
 
 -- Quality of life ---------------------------------------------------------------
 -- WHAT: Hide the mouse pointer while typing; it reappears on movement.
--- WHY : Matches mouse-hide-while-typing in ghostty/config. Off by default.
+-- WHY : Matches mouse-hide-while-typing in ghostty/config.ghostty. Off by default.
 vim.g.neovide_hide_mouse_when_typing = true -- Neovide default: false
 
 -- WHAT: Reopen with the window size and position of the last session.
@@ -95,7 +95,7 @@ vim.g.neovide_confirm_quit = true -- Neovide default: true
 -- WHY : `<D-…>` is Neovim's Command/Super modifier: ⌘ on macOS, the Windows
 --       key on Linux, which GNOME and KDE reserve, so those mappings would
 --       register and never fire there. The Linux Ghostty config
---       (ghostty/os-linux.conf) makes the same choice.
+--       (ghostty/os-linux.ghostty) makes the same choice.
 local is_macos = vim.uv.os_uname().sysname == "Darwin"
 local map = vim.keymap.set
 
@@ -116,7 +116,7 @@ if is_macos then
     --       maps work, while the right Option key keeps composing macOS special
     --       characters (é, ß, …).
     -- WHY : On Linux, Alt is already Meta, and this variable is never read.
-    --       Matches macos-option-as-alt in ghostty/os-darwin.conf.
+    --       Matches macos-option-as-alt in ghostty/os-darwin.ghostty.
     -- HOW : Values: "none" (default), "only_left", "only_right", "both".
     vim.g.neovide_input_macos_option_key_is_meta = "only_left" -- Neovide default: "none"
 

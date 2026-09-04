@@ -144,7 +144,8 @@ The repo targets macOS and Linux. Three mechanisms, described in
    Brewfile uses `OS.mac?` and `OS.linux?`.
 2. **Per-OS files plus a selector symlink**, for formats with no conditionals:
    `bat` ships `config.darwin` and `config.linux`, `ghostty` ships
-   `os-darwin.conf` and `os-linux.conf`, and `install.sh` links the right one.
+   `os-darwin.ghostty` and `os-linux.ghostty`, and `install.sh` links the
+   right one.
    The two variants stay in sync except for the settings that justify the
    split; a new option goes in both.
 3. **A bridge symlink**, for `tlrc` only, whose config path is XDG on Linux

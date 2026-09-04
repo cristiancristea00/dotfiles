@@ -1,28 +1,28 @@
 # ==============================================================================
-# os-linux.conf — Ghostty settings that only apply on Linux
+# os-linux.ghostty — Ghostty settings that only apply on Linux
 # ==============================================================================
 #
-# Included by the `config-file = ?os.conf` line at the bottom of `config`,
-# through a symlink install.sh points here on Linux. The include is last, so
-# values here override the base config. Same format rules as `config`: no
-# trailing comments.
+# Included by the `config-file = ?os.ghostty` line at the bottom of
+# `config.ghostty`, through a symlink install.sh points here on Linux. The
+# include is last, so values here override the base config. Same format rules
+# as `config.ghostty`: no trailing comments.
 #
-# This file is the counterpart of os-darwin.conf. Where Ghostty gives Linux an
-# equivalent of a macOS-only key, it is set here with the same intent; where it
-# gives none, the "No Linux counterpart" note at the bottom says so, rather
-# than leaving the reader to compare the two files.
+# This file is the counterpart of os-darwin.ghostty. Where Ghostty gives Linux
+# an equivalent of a macOS-only key, it is set here with the same intent;
+# where it gives none, the "No Linux counterpart" note at the bottom says so,
+# rather than leaving the reader to compare the two files.
 # ==============================================================================
 
 # --- Rendering ----------------------------------------------------------------
 # WHAT: Which named face of the font family to use as the regular weight, and
 #       which as the italic. The name must match the style the font itself
 #       advertises.
-# WHY : The counterpart of `font-thicken = true` in os-darwin.conf. Thickening
-#       is a CoreText feature and does nothing under FreeType, so Linux gets
-#       the weight from the font instead: Medium is one step above Regular,
-#       which is about what thickening adds. Bold and bold-italic are left
-#       alone, so bold text still steps up to Bold and stays clearly heavier
-#       than the body text.
+# WHY : The counterpart of `font-thicken = true` in os-darwin.ghostty.
+#       Thickening is a CoreText feature and does nothing under FreeType, so
+#       Linux gets the weight from the font instead: Medium is one step above
+#       Regular, which is about what thickening adds. Bold and bold-italic are
+#       left alone, so bold text still steps up to Bold and stays clearly
+#       heavier than the body text.
 # NOTE: A style name that does not match fails silently — Ghostty falls back to
 #       Regular, `+validate-config` still exits 0, and `+show-face` reports the
 #       family rather than the face, so there is no command that confirms this
@@ -44,7 +44,7 @@ font-style-italic = Medium Italic
 
 # --- Window -------------------------------------------------------------------
 # WHAT: The GTK titlebar style. `tabs` merges the tab bar into the titlebar.
-# WHY : The counterpart of `macos-titlebar-style = tabs` in os-darwin.conf,
+# WHY : The counterpart of `macos-titlebar-style = tabs` in os-darwin.ghostty,
 #       with the same two values and the same effect: it reclaims the row a
 #       separate tab bar takes below the titlebar.
 # NOTE: With `tabs` the titlebar cannot be dragged by a tab title, only by the
@@ -101,7 +101,7 @@ keybind = ctrl+shift+comma=reload_config
 keybind = global:ctrl+backquote=toggle_quick_terminal
 
 # --- No Linux counterpart -----------------------------------------------------
-# Four keys in os-darwin.conf have no Linux equivalent in Ghostty. They are
+# Four keys in os-darwin.ghostty have no Linux equivalent in Ghostty. They are
 # listed so the two files can be read as a pair without checking each key.
 #
 # macos-option-as-alt      Alt is already Meta on Linux; nothing to remap.

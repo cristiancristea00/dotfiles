@@ -206,15 +206,17 @@ characters. Ghostty, Zed, and VS Code apply the features to every family in
 the chain; Neovide needs one entry per family, and Fira Code is a
 ligature-first typeface that renders without them if its entry is missing.
 
-**Weight.** The body text is one step heavier than Regular in Ghostty, by two
-different mechanisms. On macOS `font-thicken = true` thickens the glyph
-strokes, which compensates for macOS's thin rendering on non-Retina and scaled
-displays. Thickening is a CoreText feature with no FreeType equivalent, so on
-Linux `font-style = Medium` picks the Medium face instead;
-`font-style-italic = Medium Italic` follows it, and bold is left at Bold so
-bold text stays clearly heavier. Both live in the per-OS Ghostty files. The
-editors are unaffected: only Ghostty renders at a weight other than the
-family's Regular.
+**Weight.** The body text is heavier than Regular in Ghostty, by two different
+mechanisms. On macOS `font-thicken = true` thickens the glyph strokes, which
+compensates for macOS's thin rendering on non-Retina and scaled displays.
+Thickening is a CoreText feature with no FreeType equivalent, so on Linux the
+weight comes from the font: `font-style = SemiBold` and
+`font-style-italic = SemiBold Italic`. Bold moves up with them, to
+`font-style-bold = ExtraBold` and `font-style-bold-italic = ExtraBold Italic`,
+because SemiBold against the family's Bold is one weight step and too little
+for bold to register. All four live in the per-OS Ghostty files. The editors
+are unaffected: only Ghostty renders at a weight other than the family's
+Regular.
 
 **Changing the font** means changing five tools. Ghostty keeps the family in
 `config.ghostty` and the size in each of its two per-OS files:

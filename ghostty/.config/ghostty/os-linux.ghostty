@@ -26,33 +26,41 @@
 # default: 13
 font-size = 11
 
-# WHAT: Which named face of the font family to use as the regular weight, and
-#       which as the italic. The name must match the style the font itself
-#       advertises.
+# WHAT: Which named faces of the font family to use, for the regular weight,
+#       the italic, the bold, and the bold italic. Each name must match the
+#       style the font itself advertises.
 # WHY : The counterpart of `font-thicken = true` in os-darwin.ghostty.
 #       Thickening is a CoreText feature and does nothing under FreeType, so
-#       Linux gets the weight from the font instead: Medium is one step above
-#       Regular, which is about what thickening adds. Bold and bold-italic are
-#       left alone, so bold text still steps up to Bold and stays clearly
-#       heavier than the body text.
+#       Linux gets the weight from the font instead. SemiBold is two steps
+#       above Regular, which reads at the smaller Linux size the way the
+#       thickened macOS text reads at 14.
+#       Bold moves with it. SemiBold body text against the family's Bold is one
+#       weight step, too little for bold to register, so bold goes to ExtraBold
+#       and keeps a two-step gap. All four faces are named rather than two,
+#       because Ghostty derives none of them from the others.
 # NOTE: A style name that does not match fails silently — Ghostty falls back to
 #       Regular, `+validate-config` still exits 0, and `+show-face` reports the
 #       family rather than the face, so there is no command that confirms this
 #       took effect. Check it by eye.
-#       The fallback families advertise their own spellings: `FiraCode Nerd
-#       Font Mono` calls this weight `Med`, not `Medium`, so a glyph served by
-#       a fallback renders at that family's regular weight. Only the primary
-#       family is thickened, which is where all but a few glyphs come from.
+#       The fallback families advertise their own spellings, and neither name
+#       here matches: `FiraCode Nerd Font Mono` offers Reg, Light, Ret, Med,
+#       SemBd, and Bold, so it abbreviates SemiBold to `SemBd` and has no
+#       ExtraBold at all. Only the primary family is restyled, which is where
+#       all but a few glyphs come from, so a glyph served by a fallback renders
+#       at that family's own weight.
 # HOW : List what a family advertises with:
 #           ghostty +list-fonts --family="JetBrainsMono Nerd Font Mono"
 #       JetBrainsMono NFM offers Thin, ExtraLight, Light, Regular, Medium,
-#       SemiBold, Bold, and ExtraBold, each with an italic. Set `font-style` to
-#       SemiBold for a heavier result, and `font-style-bold = ExtraBold` with
-#       it so bold stays distinguishable.
+#       SemiBold, Bold, and ExtraBold, each with an italic. Drop both pairs one
+#       step, to Medium and Bold, for a lighter result.
 # default: default
-font-style = Medium
+font-style = SemiBold
 # default: default
-font-style-italic = Medium Italic
+font-style-italic = SemiBold Italic
+# default: default
+font-style-bold = ExtraBold
+# default: default
+font-style-bold-italic = ExtraBold Italic
 
 # --- Window -------------------------------------------------------------------
 # WHAT: The GTK titlebar style. `tabs` merges the tab bar into the titlebar.

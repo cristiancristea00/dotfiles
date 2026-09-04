@@ -43,8 +43,8 @@ font-size = 14
 
 # WHAT: Render glyphs with a slightly thicker stroke. macOS-only.
 # WHY : Compensates for macOS's thin subpixel rendering on non-Retina and
-#       scaled displays. The Linux counterpart is `font-style = Medium` in
-#       os-linux.ghostty, which picks a heavier face instead, because thickening
+#       scaled displays. The Linux counterpart is `font-style = SemiBold` in
+#       os-linux.ghostty, which picks heavier faces instead, because thickening
 #       is a CoreText feature FreeType has no equivalent for.
 # NOTE: `font-thicken-strength` sets how much, 0 to 255, and is left at 255,
 #       the heaviest. It has no effect while `font-thicken` is false.

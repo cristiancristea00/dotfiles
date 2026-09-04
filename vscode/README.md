@@ -77,6 +77,7 @@ stow -R --no-folding --ignore='\.config' --target="$HOME" --dir="$PWD" vscode cu
 | Terminal shell | fish, on both `.osx` and `.linux`, as an absolute path with a fallback | Each platform reads only its own key; a defined profile does not depend on VS Code discovering fish in `/etc/shells` |
 | YAML schemas   | Detection off for six workflow globs                                   | `github.vscode-github-actions` owns workflow files; Gitea and Forgejo use the same format on unclaimed paths         |
 | Lua            | `LuaJIT` runtime, `vim` global, Neovim's runtime on the library path   | Editing `nvim/` otherwise reports every `vim.*` call as an undefined global and completes nothing                    |
+| Associations   | Zed's `settings*.json` opened as JSONC                                 | Both editors already claim their own settings and keybindings; the per-OS split gave Zed's a name neither list has   |
 
 ## Extensions
 

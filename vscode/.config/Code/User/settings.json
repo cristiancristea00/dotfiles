@@ -455,10 +455,11 @@
     "cursor.composer.shouldChimeAfterChatFinishes": true,
 
     // --- Objective-C --------------------------------------------------------
-    // NOTE: No `files.associations` entry. Zed maps .m and .mm to C++ because
-    //       it has no Objective-C support; VS Code ships `objective-c` and
-    //       `objective-cpp` languages with their own grammars, so the mapping
-    //       is not needed here.
+    // NOTE: No `files.associations` entry for Objective-C. Zed maps .m and .mm
+    //       to C++ because it has no Objective-C support; VS Code ships
+    //       `objective-c` and `objective-cpp` languages with their own
+    //       grammars, so the mapping is not needed here. The one entry the
+    //       setting does carry is under "File associations" below.
 
     // --- Modal editing ------------------------------------------------------
     // NOTE: No vim mode, as in Zed. VS Code has no built-in modal editing, so
@@ -537,6 +538,31 @@
         "/home/linuxbrew/.linuxbrew/share/nvim/runtime",
         "/usr/share/nvim/runtime"
     ],
+
+    // --- File associations --------------------------------------------------
+    // WHAT: Map a glob to a language id, for files whose language neither the
+    //       extension nor the file name identifies.
+    // WHY : One entry, for Zed's settings files. Both editors already open
+    //       their own settings and keybindings as JSONC: the built-in
+    //       `configuration-editing` extension registers the `jsonc` language
+    //       for ten file names in VS Code and eleven in Cursor, `settings.json`
+    //       and `keybindings.json` among them, wherever on disk they sit. That
+    //       is why this file has needed no entry for itself. The name
+    //       `settings.darwin.json` is not on either list, so the per-OS split
+    //       in ../../../../zed/.config/zed/ left both Zed variants opening as
+    //       strict JSON, with all 221 of their comment lines flagged.
+    // NOTE: Every key here is compiled as a glob and never matched as a
+    //       literal file name, which is what makes the `*` inside the base
+    //       name work. A key containing `/` is matched against the whole path
+    //       and a key without one against the base name alone, hence the
+    //       `**/` prefix. User entries are consulted before the ones
+    //       extensions register, so nothing can shadow this.
+    // HOW : Add `"<glob>": "<language id>"`, and keep the glob narrow. A bare
+    //       `"*.json"` would make comments legal in every JSON file and demote
+    //       a trailing comma in a `package.json` from an error to a warning.
+    "files.associations": {
+        "**/zed/settings*.json": "jsonc"
+    },
 
     // --- YAML ---------------------------------------------------------------
     // WHAT: Glob patterns whose YAML files Red Hat's YAML extension will not

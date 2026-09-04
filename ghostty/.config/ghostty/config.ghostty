@@ -214,15 +214,21 @@ copy-on-select = clipboard
 #       Apple Silicon, /usr/local on Intel, /home/linuxbrew/.linuxbrew, and a
 #       distribution's /usr/bin — and this format has no conditionals. Both
 #       fallbacks are absolute, so neither consults PATH.
-# NOTE: The $SHELL variable wins over the passwd entry, and a macOS GUI
-#       session is handed its $SHELL at login, so `chsh` reaches Ghostty at the
-#       next login rather than at the next window. The login shell is what
+# NOTE: The $SHELL variable wins over the passwd entry, but only when Ghostty
+#       judges it was started from a command line, which its
+#       probableCliEnvironment() decides. A launch from the Dock, Spotlight, or
+#       Finder is not one, and there $SHELL is skipped rather than preferred,
+#       because a desktop session holds the value its shell had at login. Such
+#       a launch therefore reads the passwd entry, and `chsh` reaches the next
+#       window rather than the next login. Typing `ghostty` at a prompt is a
+#       CLI launch and does take $SHELL, so one config starts two different
+#       shells depending on how it was opened. The passwd entry is what
 #       ../../../install.sh offers to change in set_login_shell.
 # HOW : To pin a shell anyway, give an absolute path and name the shell in
 #       shell-integration below, or the integration stops. The value applies
 #       to new surfaces only, so a reload leaves running shells alone. Confirm
 #       what resolved with: ghostty +show-config | grep '^command'
-# default: (unset: $SHELL, then the passwd entry)
+# default: (unset: $SHELL in a CLI environment, then the passwd entry)
 
 # WHAT: How Ghostty integrates with the shell it started. `detect` picks the
 #       integration script from the shell binary's filename.

@@ -22,7 +22,7 @@ Every file opens with a header block: the file's name and one-line purpose,
 what the file is, where its authority ends when two files govern one tool, and
 the traps of its format. Each setting is annotated:
 
-```
+```text
 # WHAT: What this option does.
 # WHY : Why this value: the default, the rejected alternative, or the failure
 #       it prevents.
@@ -32,14 +32,14 @@ the traps of its format. Each setting is annotated:
 Rules:
 
 * **Every sentence starts with a capital letter**, including the first word
-  after `WHAT: `, `WHY : `, `HOW : `, and `NOTE: `. Where that word would be a
+  after `WHAT:`, `WHY :`, `HOW :`, and `NOTE:`. Where that word would be a
   lowercase tool name (`bat`, `delta`, `eza`, `clangd`, `fzf`), a literal
   value (`true`, `false`), or an identifier (`copy-on-select`,
   `vim.lsp.config`), rephrase the sentence to lead with a real word: `The
   delta pager reformats…`, not `Delta is a pager…`. Do not capitalise after
   `e.g.`, `i.e.`, or `etc.`.
 * The space after `WHY` and `HOW` aligns the three colons. Continuation lines
-  indent to the first character after `WHAT: `.
+  indent to the first character after `WHAT:`.
 * `WHAT` is mandatory, `WHY` nearly always, `HOW` where it helps.
 * A `WHY` that restates the `WHAT` or the value is not a `WHY`. Cite the
   default, the alternative, or the failure the setting prevents.
@@ -96,6 +96,13 @@ Rules:
   `catalog`.
 * **Indent every file with 4 spaces**, never tabs, Lua included. The prose
   inside `--[[ … ]]--` header blocks keeps its own alignment.
+* **A blank line separates annotated blocks.** In every format, one setting's
+  `WHAT`/`WHY` block is separated from the next by a blank line, so the
+  comments do not run together. In the JSONC settings files, arrays and
+  objects are also expanded to one entry per line, which is what VS Code's own
+  formatter produces; a blank line still goes before each block and before
+  each `// --- Section ---` heading, but not between a `WHY` and the `NOTE` or
+  `HOW` that continues the same block.
 
 ## Repo map
 
@@ -176,13 +183,13 @@ Structure to know before editing:
 Commits follow [Conventional Commits v1.0.0](https://www.conventionalcommits.org/en/v1.0.0/):
 `<type>(<scope>): <description>`.
 
-| Type       | Use for                                                         |
-| ---------- | --------------------------------------------------------------- |
+| Type       | Use for                                                          |
+| ---------- | ---------------------------------------------------------------- |
 | `feat`     | A package gaining a capability: a new tool config, a new setting |
 | `fix`      | Correcting broken behaviour: a dead key, an ignored option       |
-| `docs`     | READMEs, comments, and this file, when no configuration changes |
-| `refactor` | Restructuring that changes no behaviour                         |
-| `chore`    | Repo-wide maintenance: scaffolding, dependencies, gitignore     |
+| `docs`     | READMEs, comments, and this file, when no configuration changes  |
+| `refactor` | Restructuring that changes no behaviour                          |
+| `chore`    | Repo-wide maintenance: scaffolding, dependencies, gitignore      |
 
 Rules:
 
@@ -201,7 +208,7 @@ Rules:
 * **Footers are one contiguous block** with no blank line between them, or
   git parses only the last paragraph as trailers:
 
-  ```
+  ```git
   Co-Authored-By: <Assistant Name> <assistant-email>
   Signed-off-by: Cristian Cristea <cristiancristea00@gmail.com>
   ```
@@ -228,25 +235,30 @@ Rules:
   it to `.gitignore`.
 * **Commit your work.** The agent handles Git in this repository: finishing a
   change means committing it under the convention above.
-  - One package per commit, in the order the packages are listed in the repo
+  * One package per commit, in the order the packages are listed in the repo
     map.
-  - **Never `push`.** Publishing is the user's.
-  - Never `--amend`, rebase, or reset a commit the user already has; rewriting
+  * **Never `push`.** Publishing is the user's.
+  * Never `--amend`, rebase, or reset a commit the user already has; rewriting
     their history is a separate, explicit request. The one exception is
     correcting your own mistake in a commit created this session and not yet
     handed over; say that you did it.
-  - **Stage per package, and check what is staged before committing.** A
+  * **Stage per package, and check what is staged before committing.** A
     `git mv` stages immediately, so a later `git add <other-package>` sweeps
     that rename into the wrong commit. `git diff --cached --name-only` is the
     check.
-  - Signing is automatic (`commit.gpgSign = true`). If GPG cannot sign, stop
+  * Signing is automatic (`commit.gpgSign = true`). If GPG cannot sign, stop
     and say so; do not commit with `--no-gpg-sign`.
 * **`install.sh` must stay bash 3.2-compatible**, the version macOS ships:
   no associative arrays, no `mapfile`, no `${var,,}`. Verify with
   `/bin/bash -n install.sh` on macOS, not only with a Linux bash.
 * **Nothing in `install.sh` may block on a password without a terminal.**
-  `chsh` and `sudo` prompt on their own and cannot be fed an answer, so they
-  are gated on `[ -t 0 ]`. `--yes` does not override that.
+  `chsh` and `sudo` prompt on their own and cannot be fed an answer, so a step
+  that reaches one is gated on `[ -t 0 ]`, and `--yes` does not override that.
+  `set_login_shell` is the only step gated that way today. The `sudo` calls in
+  `install_prerequisites` and `install_gui_apps_linux` are not, because a
+  Linux package install cannot proceed without them at all; a new one belongs
+  behind `confirm`, which refuses without a tty, rather than behind a bare
+  `sudo`.
 * **`confirm` never assumes consent.** It takes a per-call default (`yes` for
   backing files up, which destroys nothing; `no` for anything that changes
   the system) and, without a terminal, refuses. `--yes` is the way to say yes

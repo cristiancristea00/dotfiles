@@ -47,8 +47,10 @@
 #
 #   Prompts. `confirm` takes a per-call default and, without a terminal,
 #   refuses; `--yes` answers yes without a keyboard. `chsh` and `sudo` prompt
-#   on their own and cannot be fed an answer, so they are gated on `[ -t 0 ]`
-#   and `--yes` does not override that.
+#   on their own and cannot be fed an answer, so the login-shell step is gated
+#   on `[ -t 0 ]` and `--yes` does not override that. The `sudo` calls in the
+#   Linux package steps are not gated: those installs cannot proceed without
+#   them, and the one that is optional sits behind `confirm`.
 #
 #   The stow model, the per-OS mechanisms, and the font stack are documented
 #   in README.md; this file points at those sections rather than repeating
@@ -105,7 +107,11 @@ EDITOR_SKIP_PREFIX=""
 
 # WHAT: Fonts the configs reference, for the message printed when they cannot
 #       be installed automatically.
-FONTS_NEEDED="JetBrainsMono Nerd Font, FiraCode Nerd Font, JetBrains Mono, Fira Code, Source Code Pro, IBM Plex Mono"
+# WHY : The "Mono" suffix on the two Nerd builds is not decoration: those are
+#       the single-width builds the configs name, and FONT_SELECTION below
+#       fetches exactly those files. Naming the plain builds here would send
+#       the reader after the double-width ones, whose icons break the grid.
+FONTS_NEEDED="JetBrainsMono Nerd Font Mono, FiraCode Nerd Font Mono, JetBrains Mono, Fira Code, Source Code Pro, IBM Plex Mono"
 
 # WHAT: A private repository mirroring the fonts this setup uses, stored with
 #       Git LFS.

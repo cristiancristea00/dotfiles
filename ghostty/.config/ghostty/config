@@ -181,30 +181,38 @@ mouse-hide-while-typing = true
 copy-on-select = clipboard
 
 # --- Shell --------------------------------------------------------------------
-# WHAT: The shell Ghostty runs. A bare name is looked up in PATH; an absolute
-#       path is used as given.
-# WHY : Pinned to fish by name, so the terminal is fish before install.sh's
-#       login-shell offer has been accepted and if it is declined. An absolute
-#       path cannot be used because fish lives under four prefixes —
-#       /opt/homebrew on Apple Silicon, /usr/local on Intel,
-#       /home/linuxbrew/.linuxbrew, and a distribution's /usr/bin — and this
-#       format has no conditionals, so one path cannot serve all four.
-# NOTE: A name that does not resolve is fatal for the surface; Ghostty does not
-#       fall back to a default shell. The lookup uses the PATH Ghostty
-#       inherits, which on macOS comes from /usr/bin/login running path_helper
-#       over /etc/paths and /etc/paths.d — Homebrew's entry is
-#       /etc/paths.d/homebrew. A distribution's fish is in /usr/bin, always on
-#       PATH.
-# HOW : Applies to new surfaces only, so a reload leaves running shells alone.
-#       Confirm with: ghostty +show-config | grep '^command'
+# WHAT: The program Ghostty launches. Nothing is set, so Ghostty falls back to
+#       $SHELL and then to the passwd entry, both of them absolute paths.
+# WHY : A bare name is resolved against the PATH Ghostty itself inherited, and
+#       on macOS that resolution happens inside
+#           /usr/bin/login -flp <user> /bin/bash --noprofile --norc
+#               -c "exec -l <command>"
+#       where --noprofile keeps /etc/profile out of the run, so path_helper
+#       never adds /etc/paths.d and the PATH stays whatever the process was
+#       given. A launch from the Dock or Spotlight inherits launchd's
+#       /usr/bin:/bin:/usr/sbin:/sbin, which holds no Homebrew prefix, so a
+#       name such as `fish` is not found and the surface dies with "Ghostty
+#       failed to launch the requested command". An absolute path cannot serve
+#       either, because fish lives under four prefixes — /opt/homebrew on
+#       Apple Silicon, /usr/local on Intel, /home/linuxbrew/.linuxbrew, and a
+#       distribution's /usr/bin — and this format has no conditionals. Both
+#       fallbacks are absolute, so neither consults PATH.
+# NOTE: The $SHELL variable wins over the passwd entry, and a macOS GUI
+#       session is handed its $SHELL at login, so `chsh` reaches Ghostty at the
+#       next login rather than at the next window. The login shell is what
+#       ../../../install.sh offers to change in set_login_shell.
+# HOW : To pin a shell anyway, give an absolute path and name the shell in
+#       shell-integration below, or the integration stops. The value applies
+#       to new surfaces only, so a reload leaves running shells alone. Confirm
+#       what resolved with: ghostty +show-config | grep '^command'
 # default: (unset: $SHELL, then the passwd entry)
-command = fish
 
 # WHAT: How Ghostty integrates with the shell it started. `detect` picks the
 #       integration script from the shell binary's filename.
-# WHY : The default, and it matches `command = fish` above without naming fish
-#       twice. Integration is what supplies working-directory inheritance for
-#       new tabs, prompt marking, and the no-confirmation close at a prompt.
+# WHY : The default, and it follows whatever `command` resolves to, so the
+#       login shell gets its own integration without this file naming a shell.
+#       Integration is what supplies working-directory inheritance for new
+#       tabs, prompt marking, and the no-confirmation close at a prompt.
 # HOW : Name the shell (`fish`, `bash`, `zsh`, `elvish`, `nushell`) to force
 #       one scheme, or `none` to inject nothing.
 # default: detect

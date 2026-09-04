@@ -1,7 +1,8 @@
 # Ghostty
 
-[Ghostty](https://ghostty.org) is the terminal emulator. It runs fish, renders
-Neovim, and follows the system appearance. Runs on macOS and Linux.
+[Ghostty](https://ghostty.org) is the terminal emulator. It runs the login
+shell, renders Neovim, and follows the system appearance. Runs on macOS and
+Linux.
 
 ## Install
 
@@ -29,7 +30,7 @@ Reload a running Ghostty with `⌘⇧,` (macOS) or `Ctrl+Shift+,` (Linux).
 | Titlebar           | Tab bar merged into it, on both platforms                                                                                         | Reclaims the row a separate tab bar takes                                                                   |
 | Cursor             | Blinking block                                                                                                                    | Same as every other tool; see [The cursor](../README.md#the-cursor)                                         |
 | Selection          | `copy-on-select = clipboard`                                                                                                      | Writes both clipboards, so middle-click and Ctrl+Shift+V see the same text                                  |
-| Shell              | `command = fish`, `shell-integration = detect`                                                                                    | fish by name, so the terminal is fish whatever the login shell is; a path breaks where fish lives elsewhere |
+| Shell              | `command` unset, `shell-integration = detect`                                                                                     | Ghostty starts the login shell, which `install.sh` offers to set to fish; a bare name cannot be resolved inside the macOS `login` wrapper |
 | SSH                | `ssh-env` and `ssh-terminfo`                                                                                                      | Installs Ghostty's terminfo on a remote host, falling back to `xterm-256color`                              |
 | Bell               | `system` and `border` added                                                                                                       | An audible bell, and the only effect visible while the window has focus                                     |
 | Notifications      | `notify-on-command-finish = unfocused`                                                                                            | A command finishing in an unfocused surface is the case worth interrupting                                  |
@@ -64,6 +65,11 @@ it; [`os-linux.conf`](.config/ghostty/os-linux.conf) has the reasoning.
 * **No trailing comments.** Everything after `=` is the value, and a key with
   a comment appended is rejected. Annotations go on their own line; see the
   header of [`config`](.config/ghostty/config).
+* **A bare `command` name cannot be resolved on macOS.** Ghostty starts the
+  command through `/usr/bin/login` and `bash --noprofile`, which never runs
+  `path_helper`, so the lookup sees only the PATH Ghostty was launched with.
+  The reasoning is in the Shell section of
+  [`config`](.config/ghostty/config).
 * **Unknown keys are ignored.** `ghostty +validate-config` checks syntax;
   `ghostty +show-config | grep macos-option-as-alt` confirms the per-OS include
   loaded.

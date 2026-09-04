@@ -110,6 +110,7 @@ brew "fish-lsp"              # fish server                                   -> 
 brew "neocmakelsp"           # CMake server; the same one Zed's `neocmake` extension uses -> languages.lua
 brew "docker-language-server" # Dockerfile and Compose server (Docker's own)  -> languages.lua
 brew "gopls"                 # Go server; needs the `go` toolchain below     -> languages.lua, vscode extension golang.go, zed
+brew "ruby-lsp"              # Ruby server; also formats (pulls the ruby formula) -> languages.lua, zed `ruby` extension
 # WHAT: The Zig language server.
 # WHY : The zls server and the zig compiler are version-locked; zls's README: "When
 #       upgrading Zig, make sure to update ZLS to keep them in sync." A
@@ -121,6 +122,12 @@ brew "zls"                   # Zig server                                    -> 
 # NOTE: XML has no line here. Its server, lemminx, has no Homebrew formula, so
 #       the Neovim XML entry is treesitter-only; Zed and VS Code bundle
 #       lemminx in their extensions. See the XML entry in languages.lua.
+# NOTE: RuboCop has no line either, and no line among the formatters below.
+#       It is a gem, not a formula, so `brew search rubocop` finds nothing.
+#       ruby-lsp serves formatting itself and delegates to whichever of
+#       RuboCop, Standard, or Syntax Tree the project's own bundle carries,
+#       which is the version the project pins; a Homebrew RuboCop would be a
+#       second, unpinned one. See the Ruby entry in languages.lua.
 
 # --- Language toolchains -------------------------------------------------------------------
 # WHAT: The Go and Zig compilers.

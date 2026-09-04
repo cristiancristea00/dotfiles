@@ -30,7 +30,7 @@ Reload a running Ghostty with `⌘⇧,` (macOS) or `Ctrl+Shift+,` (Linux).
 | Titlebar           | Tab bar merged into it, on both platforms                                                                                         | Reclaims the row a separate tab bar takes                                                                                                 |
 | Cursor             | Blinking block                                                                                                                    | Same as every other tool; see [The cursor](../README.md#the-cursor)                                                                       |
 | Selection          | `copy-on-select = clipboard`                                                                                                      | Writes both clipboards, so middle-click and Ctrl+Shift+V see the same text                                                                |
-| Shell              | `command` unset, `shell-integration = detect`                                                                                     | Ghostty starts the login shell, which `install.sh` offers to set to fish; a bare name cannot be resolved inside the macOS `login` wrapper |
+| Shell              | `command` set per OS to the Homebrew fish, `shell-integration = fish`                                                             | One value for every launch route: unset, `$SHELL` wins for a CLI launch and the passwd entry for a desktop one. A bare name cannot be resolved inside the macOS `login` wrapper, so the path is absolute and lives in the per-OS files |
 | SSH                | `ssh-env` and `ssh-terminfo`                                                                                                      | Installs Ghostty's terminfo on a remote host, falling back to `xterm-256color`                                                            |
 | Bell               | `system` and `border` added                                                                                                       | An audible bell, and the only effect visible while the window has focus                                                                   |
 | Notifications      | `notify-on-command-finish = unfocused`                                                                                            | A command finishing in an unfocused surface is the case worth interrupting                                                                |
@@ -68,8 +68,14 @@ it; [`os-linux.ghostty`](.config/ghostty/os-linux.ghostty) has the reasoning.
 * **A bare `command` name cannot be resolved on macOS.** Ghostty starts the
   command through `/usr/bin/login` and `bash --noprofile`, which never runs
   `path_helper`, so the lookup sees only the PATH Ghostty was launched with.
-  The reasoning is in the Shell section of
+  This is why `command` is an absolute path, and why it lives in the two
+  per-OS files rather than here: the Homebrew prefix differs by platform. The
+  reasoning is in the Shell section of
   [`config.ghostty`](.config/ghostty/config.ghostty).
+* **Never prefix `command` with `direct:`.** That form skips the `bash -c
+  "exec -l …"` wrapper, and with it the leading hyphen on `argv[0]` that makes
+  fish a login shell, so `path_helper` no longer runs and `$PATH` is ordered
+  differently. An unprefixed value is the `shell:` form and keeps it.
 * **A comment or blank line ending on a 2048-byte boundary truncates the
   file.** Ghostty 1.3.1 stops reading there and applies nothing below it; a
   setting on the boundary is unaffected. Nothing is reported and

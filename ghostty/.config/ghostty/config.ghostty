@@ -194,10 +194,11 @@ mouse-hide-while-typing = true
 copy-on-select = clipboard
 
 # --- Shell --------------------------------------------------------------------
-# WHAT: The program Ghostty launches. Nothing is set, so Ghostty falls back to
-#       $SHELL and then to the passwd entry, both of them absolute paths.
-# WHY : A bare name is resolved against the PATH Ghostty itself inherited, and
-#       on macOS that resolution happens inside
+# WHAT: The program Ghostty launches. It is set, but not here: the per-OS
+#       files carry it, because the value is an absolute path and the path
+#       differs by platform.
+# WHY : A bare name cannot serve. It is resolved against the PATH Ghostty
+#       itself inherited, and on macOS that resolution happens inside
 #           /usr/bin/login -flp <user> /bin/bash --noprofile --norc
 #               -c "exec -l <command>"
 #       where --noprofile keeps /etc/profile out of the run, so path_helper
@@ -205,11 +206,21 @@ copy-on-select = clipboard
 #       given. A launch from the Dock or Spotlight inherits launchd's
 #       /usr/bin:/bin:/usr/sbin:/sbin, which holds no Homebrew prefix, so a
 #       name such as `fish` is not found and the surface dies with "Ghostty
-#       failed to launch the requested command". An absolute path cannot serve
-#       either, because fish lives under four prefixes — /opt/homebrew on
-#       Apple Silicon, /usr/local on Intel, /home/linuxbrew/.linuxbrew, and a
-#       distribution's /usr/bin — and this format has no conditionals. Both
-#       fallbacks are absolute, so neither consults PATH.
+#       failed to launch the requested command".
+#       Leaving it unset very nearly works, since both fallbacks are absolute
+#       and the passwd entry is what `chsh` sets. What it does not survive is a
+#       launch from a shell whose $SHELL is another shell, which Ghostty then
+#       prefers, and a Linux install where set_login_shell was skipped for want
+#       of a terminal, leaving the passwd entry at the distribution default.
+# NOTE: Four prefixes hold fish — /opt/homebrew on Apple Silicon, /usr/local on
+#       Intel, /home/linuxbrew/.linuxbrew, and a distribution's /usr/bin — and
+#       the two per-OS files cover one each. Apple Silicon and Homebrew on
+#       Linux are set; an Intel Mac or a distribution-packaged fish needs the
+#       path edited in the matching file, which is a one-line change.
+#       The `direct:` prefix must not be used for it. It skips the bash
+#       wrapper above, and with it the `exec -l` that puts the leading hyphen
+#       on argv[0], so fish stops being a login shell and no longer runs
+#       path_helper. An unprefixed value is the `shell:` form and keeps it.
 # NOTE: The $SHELL variable wins over the passwd entry, but only when Ghostty
 #       judges it was started from a command line, which its
 #       probableCliEnvironment() decides. A launch from the Dock, Spotlight, or
@@ -217,25 +228,32 @@ copy-on-select = clipboard
 #       because a desktop session holds the value its shell had at login. Such
 #       a launch therefore reads the passwd entry, and `chsh` reaches the next
 #       window rather than the next login. Typing `ghostty` at a prompt is a
-#       CLI launch and does take $SHELL, so one config starts two different
-#       shells depending on how it was opened. The passwd entry is what
-#       ../../../install.sh offers to change in set_login_shell.
-# HOW : To pin a shell anyway, give an absolute path and name the shell in
-#       shell-integration below, or the integration stops. The value applies
-#       to new surfaces only, so a reload leaves running shells alone. Confirm
-#       what resolved with: ghostty +show-config | grep '^command'
+#       CLI launch and does take $SHELL. Setting `command` removes that
+#       difference: one value serves every launch route.
+# HOW : The value applies to new surfaces only, so a reload leaves running
+#       shells alone. Confirm what resolved with:
+#           ghostty +show-config | grep '^command'
 # default: (unset: $SHELL in a CLI environment, then the passwd entry)
 
-# WHAT: How Ghostty integrates with the shell it started. `detect` picks the
-#       integration script from the shell binary's filename.
-# WHY : The default, and it follows whatever `command` resolves to, so the
-#       login shell gets its own integration without this file naming a shell.
-#       Integration is what supplies working-directory inheritance for new
-#       tabs, prompt marking, and the no-confirmation close at a prompt.
-# HOW : Name the shell (`fish`, `bash`, `zsh`, `elvish`, `nushell`) to force
-#       one scheme, or `none` to inject nothing.
+# WHAT: How Ghostty integrates with the shell it started. Naming a shell forces
+#       that scheme; `detect` picks one from the shell binary's filename.
+# WHY : Named rather than detected, to state which shell this config runs and
+#       to keep the two settings from having to agree. Detection matches the
+#       basename of `command`, so it resolves fish today either way; it would
+#       stop the day `command` pointed at a wrapper script under another name,
+#       and it fails silently when it does. Integration is what supplies
+#       working-directory inheritance for new tabs, prompt marking, the
+#       no-confirmation close at a prompt, and the OSC 133 marks
+#       notify-on-command-finish below needs.
+# NOTE: For fish the injection is environmental, not an argument: Ghostty
+#       prepends its own directory to XDG_DATA_DIRS, and fish sources the
+#       vendor_conf.d it finds there. So it works with an absolute `command`
+#       and needs no shell flags. Anything that overwrites XDG_DATA_DIRS after
+#       Ghostty sets it loses the integration.
+# HOW : Values: none, detect, bash, elvish, fish, nushell, or zsh. Ghostty logs
+#       which one it injected; run it from a terminal to see the line.
 # default: detect
-shell-integration = detect
+shell-integration = fish
 
 # WHAT: Integration features to toggle; a `no-` prefix disables one. Features
 #       not listed keep their defaults, so this names only the four that differ

@@ -15,6 +15,32 @@
 # in config.ghostty; font-size is the one such key today.
 # ==============================================================================
 
+# --- Shell --------------------------------------------------------------------
+# WHAT: The program Ghostty launches, as an absolute path.
+# WHY : The Homebrew prefix on Linux. config.ghostty explains why a bare name
+#       cannot serve and why the key lives in the per-OS files; this is the
+#       Linux half of that pair, and os-darwin.ghostty the other. It matters
+#       more here than there: ../../../install.sh gates set_login_shell on
+#       having a terminal, so an unattended install leaves the passwd entry at
+#       the distribution's default shell, and without this key Ghostty would
+#       start that shell.
+# NOTE: This decides what Ghostty starts, not what $SHELL says. On macOS
+#       login(1) sets SHELL from the passwd entry; on Linux there is no such
+#       wrapper and Ghostty sets nothing, so the child inherits the desktop
+#       session's SHELL. Until `chsh` has run, fish therefore runs with
+#       $SHELL still naming the old shell, and anything that spawns $SHELL —
+#       Neovim's `:terminal`, `sudo -s`, tmux — gets that one. Running
+#       `./install.sh` from a terminal, or `chsh` by hand, is the fix.
+#       Unlike macOS, Ghostty does not start a login shell here: it wraps the
+#       value in `/bin/sh -c` with no `-l`. Nothing is lost by it. The fish
+#       config is sourced whether or not the shell is a login shell, and
+#       path_helper, which the login case exists for, is macOS-only.
+# HOW : A distribution-packaged fish lives at /usr/bin/fish; change the path
+#       here. Do not add a `direct:` prefix, which would split the value on
+#       single spaces and support no quoting.
+# default: (unset: $SHELL in a CLI environment, then the passwd entry)
+command = /home/linuxbrew/.linuxbrew/bin/fish
+
 # --- Rendering ----------------------------------------------------------------
 # WHAT: Point size. Fractional values are allowed (e.g. 14.5).
 # WHY : 11 here against 14 in os-darwin.ghostty. The two are matched by

@@ -30,6 +30,24 @@
 # default: (unset: true on U.S. layouts, false otherwise)
 macos-option-as-alt = left
 
+# --- Shell --------------------------------------------------------------------
+# WHAT: The program Ghostty launches, as an absolute path.
+# WHY : The Homebrew prefix on Apple Silicon. config.ghostty explains why a
+#       bare name cannot serve and why the key lives in the per-OS files; this
+#       is the macOS half of that pair, and os-linux.ghostty the other.
+# NOTE: This is the value Ghostty would reach on its own from the passwd entry
+#       on a machine where `chsh` has run, so on a Dock launch it changes
+#       nothing. What it adds is that `ghostty` typed in a shell whose $SHELL
+#       is zsh starts fish rather than zsh, because $SHELL only wins when
+#       Ghostty judges the launch to be a CLI one.
+#       Setting it does not move where new windows open. Ghostty still reads
+#       the passwd entry for the home directory whenever `working-directory`
+#       resolves to `home`, which is what a desktop launch gets.
+# HOW : An Intel Mac keeps fish under /usr/local/bin; change the path here.
+#       Do not add a `direct:` prefix, which would cost the login shell.
+# default: (unset: $SHELL in a CLI environment, then the passwd entry)
+command = /opt/homebrew/bin/fish
+
 # --- Rendering ----------------------------------------------------------------
 # WHAT: Point size. Fractional values are allowed (e.g. 14.5).
 # WHY : 14 here against 11 in os-linux.ghostty. The two are matched by apparent

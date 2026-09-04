@@ -369,8 +369,8 @@ Each of these is documented in full in the file it affects.
   win; `?` makes it optional. Check what resolved with `ghostty +show-config`,
   not only `+validate-config`, which checks syntax
   ([`ghostty/config.ghostty`](ghostty/.config/ghostty/config.ghostty)).
-* **Ghostty truncates a config file at a line ending on a 2048-byte
-  boundary**, applying nothing below it and reporting nothing
+* **Ghostty truncates a config file at a comment or blank line ending on a
+  2048-byte boundary**, applying nothing below it and reporting nothing
   ([`ghostty/config.ghostty`](ghostty/.config/ghostty/config.ghostty)).
 * **Ghostty still reads the pre-1.3.0 `config` name.** Where both it and
   `config.ghostty` exist the two are loaded, the old name first, and
@@ -420,7 +420,7 @@ shellcheck install.sh                                 # the installer itself
 /bin/bash -n install.sh                               # bash 3.2 syntax, on macOS
 ghostty +validate-config                              # Ghostty syntax; silent means valid
 ghostty +show-config | grep macos-option-as-alt       # Ghostty resolved values
-LC_ALL=C awk '{n+=length($0)+1} n%2048==0 {print FILENAME": "NR}' \
+LC_ALL=C awk 'FNR==1{n=0} {n+=length($0)+1} n%2048==0 {print FILENAME": "FNR}' \
     ghostty/.config/ghostty/*.ghostty                 # Ghostty 2048-byte boundary
 git config --file git/.config/git/config --list       # Git
 fish --no-execute fish/.config/fish/**/*.fish         # fish
@@ -430,11 +430,13 @@ stow -n -v --target="$HOME" --dir="$PWD" <pkg>        # what stow would do
 ruby -c Brewfile                                      # Brewfile is Ruby
 ```
 
-Ghostty 1.3.1 stops reading a config file at any line ending exactly on a
-2048-byte boundary and applies nothing below it, without an error and with
-`+validate-config` still exiting 0. The `awk` line above prints any file and
-line that sits on one; silence means none does. Confirm the tail of the file
-arrived as well, with `ghostty +show-config | grep copy-on-select`.
+Ghostty 1.3.1 stops reading a config file at a comment or blank line ending
+exactly on a 2048-byte boundary and applies nothing below it, without an error
+and with `+validate-config` still exiting 0. A setting on the boundary is
+unaffected. The `awk` line above prints any line that sits on one, comment or
+not, which is the conservative check; silence means none does. Confirm the
+tail of the file arrived as well, with
+`ghostty +show-config | grep copy-on-select`.
 
 The `settings.json` files for Zed, VS Code, and Cursor are JSONC. `json.load`
 rejects their comments; strip them first or use a JSONC-tolerant parser.

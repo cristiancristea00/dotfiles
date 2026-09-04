@@ -28,7 +28,7 @@ explains why.
 
 ## One file, four paths
 
-```
+```text
 vscode/.config/Code/User/settings.json          ← the only real file
 vscode/Library/…/Code/User/settings.json        → symlink to it
 cursor/.config/Cursor/User/settings.json        → symlink to it
@@ -62,19 +62,20 @@ stow -R --no-folding --ignore='\.config' --target="$HOME" --dir="$PWD" vscode cu
 
 ## What's configured
 
-| Area           | Choice                                                          | Why                                                                                                    |
-| -------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| Editor font    | `JetBrains Mono` + fallbacks, 14pt, ligatures on                | The plain build; both editors draw their own UI icons. See [The font stack](../README.md#the-font-stack) |
-| Terminal font  | `JetBrainsMono Nerd Font Mono` + fallbacks, 14pt, ligatures off | The integrated terminal runs Neovim and the oh-my-posh prompt, which draw icon glyphs                   |
-| Theme          | `autoDetectColorScheme` → Catppuccin Latte / Mocha              | Follows the system appearance; see [Light and dark](../README.md#light-and-dark)                       |
-| Indentation    | 4 spaces, `detectIndentation` off                               | Matches Neovim's `expandtab` + `shiftwidth = 4`; with detection on, `tabSize` holds only for files already using it |
-| `formatOnSave` | off                                                             | Matches Neovim and Zed, where formatting is manual                                                     |
-| Inlay hints    | `"on"`                                                          | Matches Zed. The value is a string, not a boolean                                                      |
-| Cursor         | blinking block, editor and terminal                             | Same as every other tool; see [The cursor](../README.md#the-cursor)                                    |
-| Minimap        | on, `autohide: "scroll"`                                        | The closest equivalent to Zed's `auto`                                                                 |
-| Workbench      | Modern UI on                                                    | VS Code's redesigned workbench; floating panels separate surfaces as Zed and Ghostty do                |
-| Telemetry      | `"off"` + `redhat.telemetry.enabled: false`                     | The Red Hat extensions have their own switch                                                           |
-| Terminal shell | fish, on both `.osx` and `.linux`                               | Each platform reads only its own key                                                                   |
+| Area           | Choice                                                         | Why                                                                                                                 |
+| -------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Editor font    | `JetBrains Mono` + fallbacks, 14pt, ligatures on               | The plain build; both editors draw their own UI icons. See [The font stack](../README.md#the-font-stack)            |
+| Terminal font  | `JetBrainsMono Nerd Font Mono` + fallbacks, 14pt, ligatures on | The integrated terminal runs Neovim and the oh-my-posh prompt, which draw icon glyphs                               |
+| Theme          | `autoDetectColorScheme` → Catppuccin Latte / Mocha             | Follows the system appearance; see [Light and dark](../README.md#light-and-dark)                                    |
+| Indentation    | 4 spaces, `detectIndentation` off                              | Matches Neovim's `expandtab` + `shiftwidth = 4`; with detection on, `tabSize` holds only for files already using it |
+| `formatOnSave` | off                                                            | Matches Neovim and Zed, where formatting is manual                                                                  |
+| Inlay hints    | `"on"`                                                         | Matches Zed. The value is a string, not a boolean                                                                   |
+| Cursor         | blinking block, editor and terminal                            | Same as every other tool; see [The cursor](../README.md#the-cursor)                                                 |
+| Minimap        | on, `autohide: "scroll"`                                       | The closest equivalent to Zed's `auto`                                                                              |
+| Workbench      | Modern UI on                                                   | VS Code's redesigned workbench; floating panels separate surfaces as Zed and Ghostty do                             |
+| Telemetry      | `"off"` + `redhat.telemetry.enabled: false`                    | The Red Hat extensions have their own switch                                                                        |
+| Terminal shell | fish, on both `.osx` and `.linux`                              | Each platform reads only its own key                                                                                |
+| YAML schemas   | Detection off for six workflow globs                           | `github.vscode-github-actions` owns workflow files; Gitea and Forgejo use the same format on unclaimed paths        |
 
 ## Extensions
 
@@ -83,10 +84,10 @@ Neither editor has a declarative equivalent of Zed's
 and `.vscode/extensions.json` holds workspace recommendations only. The lists
 live here and `install.sh` feeds them to each editor's CLI:
 
-| File                                                                | Goes to      |
-| ------------------------------------------------------------------- | ------------ |
-| [`extensions.txt`](extensions.txt)                                  | both editors |
-| [`extensions-vscode.txt`](extensions-vscode.txt)                    | VS Code only |
+| File                                                                 | Goes to      |
+| -------------------------------------------------------------------- | ------------ |
+| [`extensions.txt`](extensions.txt)                                   | both editors |
+| [`extensions-vscode.txt`](extensions-vscode.txt)                     | VS Code only |
 | [`../cursor/extensions-cursor.txt`](../cursor/extensions-cursor.txt) | Cursor only  |
 
 There are three lists because the editors use different galleries. VS Code

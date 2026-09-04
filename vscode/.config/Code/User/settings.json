@@ -36,9 +36,10 @@
 //   The key is kept and the rest of the file applies. Do not delete the keys.
 //
 // FONTS
-//   The editor gets plain "JetBrains Mono" with ligatures on; the integrated
-//   terminal gets the Nerd Font Mono build with ligatures off. See
-//   ../../../../README.md § The font stack.
+//   The editor gets plain "JetBrains Mono"; the integrated terminal gets the
+//   Nerd Font Mono build, because Neovim draws icons there. Ligatures are on
+//   in both, through two separate keys. See ../../../../README.md § The font
+//   stack.
 //
 //   Every setting VS Code accepts: https://code.visualstudio.com/docs/configure/settings
 // ============================================================================
@@ -181,7 +182,7 @@
     "editor.minimap.autohide": "scroll",
 
     // WHAT: Vertical guides at the given character columns.
-    // WHY : The same four columns Neovim's `colorcolumn` and Zed's
+    // WHY : The same three columns Neovim's `colorcolumn` and Zed's
     //       `wrap_guides` draw; see ../../../../README.md § Column guides.
     //       Nothing here wraps or reformats at them. The default is none.
     // NOTE: The object form is the newer schema and works in both editors; the
@@ -196,10 +197,15 @@
     //       `"[markdown]": { "editor.rulers": [{ "column": 80 }] }`; the guides
     //       here are the same for every file type.
     "editor.rulers": [
-        { "column": 80 },
-        { "column": 120 },
-        { "column": 150 },
-        { "column": 200 }
+        {
+            "column": 80
+        },
+        {
+            "column": 120
+        },
+        {
+            "column": 150
+        }
     ],
 
     // WHAT: Inline type and parameter-name annotations from the language server.
@@ -251,10 +257,15 @@
     "terminal.integrated.fontSize": 14,
 
     // WHAT: Ligatures in the terminal.
-    // WHY : Off, a separate key from `editor.fontLigatures`, so the editor can
-    //       have them and the terminal not. Command output, diffs, and hex
-    //       dumps show the exact characters.
-    "terminal.integrated.fontLigatures.enabled": false,
+    // WHY : On, matching `editor.fontLigatures` above and every other surface
+    //       in the repo; see ../../../../README.md § The font stack. This is a
+    //       separate key, so the two can disagree, and it is off by default.
+    // NOTE: The key takes a boolean, not the CSS feature string
+    //       `editor.fontLigatures` accepts, so `true` means the font's default
+    //       feature set rather than the named `calt` and `liga`. For
+    //       JetBrains Mono those are the same two features.
+    // default: false
+    "terminal.integrated.fontLigatures.enabled": true,
 
     // WHAT: The integrated terminal's cursor: shape, blink, and its look when
     //       the terminal panel does not have keyboard focus.
@@ -439,5 +450,32 @@
     //       prompt.
     "[markdown]": {
         "editor.defaultFormatter": "yzhang.markdown-all-in-one"
-    }
+    },
+
+    // --- YAML ---------------------------------------------------------------
+    // WHAT: Glob patterns whose YAML files Red Hat's YAML extension will not
+    //       try to match against a schema.
+    // WHY : Workflow files belong to `github.vscode-github-actions`
+    //       (extensions.txt), which brings its own schema and completion for
+    //       them. Left to detect, `redhat.vscode-yaml` also matches them
+    //       against the GitHub Actions schema it pulls from schemastore.org,
+    //       so a key one schema knows and the other does not is reported as an
+    //       error. Gitea and Forgejo use the same workflow format on paths the
+    //       Actions extension does not claim, so they are listed too.
+    // NOTE: The extension adds the `.github/workflows` patterns by itself when
+    //       the Actions extension is enabled. They are listed anyway because
+    //       the documentation does not say whether an explicit value extends
+    //       that list or replaces it.
+    // HOW : Either a single glob string or a list of them. Modelines
+    //       (`# yaml-language-server: $schema=…`) still apply to a file
+    //       matched here.
+    // default: []
+    "yaml.disableSchemaDetection": [
+        "**/.github/workflows/*.yml",
+        "**/.github/workflows/*.yaml",
+        "**/.gitea/workflows/*.yml",
+        "**/.gitea/workflows/*.yaml",
+        "**/.forgejo/workflows/*.yml",
+        "**/.forgejo/workflows/*.yaml"
+    ]
 }

@@ -28,9 +28,9 @@ nvim "+checkhealth vim.pack vim.lsp nvim-treesitter"
 ```
 
 Neovide reads this config and its `vim.g.neovide_*` settings when launched.
-The Neovide setup has two halves: `../neovide/.config/neovide/config.toml`
+The Neovide setup has two halves: `../neovide/.config/neovide/config.<os>.toml`
 handles process and window creation, `lua/core/neovide.lua` runtime behaviour;
-the config.toml header describes the split. Font family and size must match
+the config header describes the split. Font family and size must match
 across both, and across the other tools listed in
 [The font stack](../README.md#the-font-stack).
 
@@ -83,8 +83,9 @@ nvim-web-devicons), blink.cmp, lualine, gitsigns, conform, indent-blankline.
 * **Change the font or size.** Five files across the repo, listed in
   [The font stack](../README.md#the-font-stack). In this package it is the
   `vim.o.guifont` line in `.config/nvim/lua/core/neovide.lua`; its companion
-  is the `[font]` section of `../neovide/.config/neovide/config.toml`, which
-  covers Neovide's first frames before `init.lua` runs. Live zoom: `⌘=`, `⌘-`,
+  is the `[font]` section of both `../neovide/.config/neovide/config.<os>.toml`
+  files, which cover Neovide's first frames before `init.lua` runs. The
+  `guifont` size branches on the platform; theirs is per file. Live zoom: `⌘=`, `⌘-`,
   `⌘0`.
 * **Reorder or extend the statusline.** The six `lualine_a` to `lualine_z`
   lists in `lua/plugins/statusline.lua` are the layout.

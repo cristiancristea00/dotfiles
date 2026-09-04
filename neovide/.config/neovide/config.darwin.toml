@@ -15,7 +15,7 @@
 #   both. See ../../../README.md § Per-OS configuration.
 #
 #   Division of responsibilities:
-#     neovide/config.toml         -> process and window creation (this file)
+#     neovide/config.darwin.toml    -> process and window creation (this file)
 #     nvim/.config/nvim/lua/core/neovide.lua
 #                                 -> runtime behaviour: animations, macOS
 #                                    cmd-key bindings, live zoom

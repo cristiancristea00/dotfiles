@@ -233,7 +233,8 @@ Regular.
 [`ghostty/config.ghostty`](ghostty/.config/ghostty/config.ghostty),
 [`os-darwin.ghostty`](ghostty/.config/ghostty/os-darwin.ghostty), and
 [`os-linux.ghostty`](ghostty/.config/ghostty/os-linux.ghostty);
-[`zed/settings.json`](zed/.config/zed/settings.json) (editor and terminal),
+[`zed/settings.darwin.json`](zed/.config/zed/settings.darwin.json) and its
+Linux twin (editor and terminal),
 [`vscode/settings.json`](vscode/.config/Code/User/settings.json) (editor,
 terminal, and eight further keys),
 [`neovide/config.darwin.toml`](neovide/.config/neovide/config.darwin.toml)
@@ -412,11 +413,13 @@ Each of these is documented in full in the file it affects.
   ([`ghostty/config.ghostty`](ghostty/.config/ghostty/config.ghostty)).
 * **Neovide (TOML)** binds every bare key to the nearest `[table]` above it,
   so top-level keys must come before any table
-  ([`neovide/config.toml`](neovide/.config/neovide/config.toml)).
+  ([`neovide/config.darwin.toml`](neovide/.config/neovide/config.darwin.toml)
+  and its Linux twin).
 * **Neovide's `[font.features]` is keyed per family.** A family without an
   entry gets no features, so every font in the chain needs its own line.
   Zed's `buffer_font_features` applies to every family
-  ([`neovide/config.toml`](neovide/.config/neovide/config.toml)).
+  ([`neovide/config.darwin.toml`](neovide/.config/neovide/config.darwin.toml)
+  and its Linux twin).
 * **bat** config lines are shell-style arguments; quote values with spaces:
   `--theme-dark="Catppuccin Mocha"`
   ([`bat/config.darwin`](bat/.config/bat/config.darwin)).

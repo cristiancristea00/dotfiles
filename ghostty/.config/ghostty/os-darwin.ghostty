@@ -85,8 +85,8 @@ background-blur = macos-glass-regular
 # WHY : Reclaims the row a separate tab bar takes, and the titlebar then always
 #       matches the terminal background. This is the one place Ghostty's chrome
 #       diverges from `frame = "transparent"` in
-#       ../../../neovide/.config/neovide/config.toml: Neovide has no tabs to
-#       merge, so it has nothing to gain from the style. os-linux.ghostty sets
+#       ../../../neovide/.config/neovide/config.darwin.toml: Neovide has no
+#       tabs to merge, so it gains nothing from the style. os-linux.ghostty sets
 #       `gtk-titlebar-style = tabs`, the same choice under GTK.
 # NOTE: With `tabs` the titlebar cannot be dragged by a tab title, only by the
 #       empty area beside the tabs. It also makes `window-theme` inert for

@@ -8,7 +8,7 @@
 
   This file is one half of the Neovide setup: runtime behaviour (animations,
   macOS cmd-key bindings, live zoom). Process- and window-level settings that
-  must exist before Neovim starts live in neovide/.config/neovide/config.toml,
+  must exist before Neovim starts live in neovide/.config/neovide/config.<os>.toml,
   whose header describes the split.
 
   Animations are kept but shortened. Every value carries Neovide's default.
@@ -100,8 +100,8 @@ vim.g.neovide_hide_mouse_when_typing = true -- Neovide default: false
 
 -- WHAT: Reopen with the window size and position of the last session.
 -- WHY : The default. Stated because `maximized = true` in
---       neovide/config.toml would take priority over the remembered size at
---       startup (Neovide's src/window/mod.rs, determine_window_size).
+--       neovide/config.<os>.toml would take priority over the remembered size
+--       at startup (Neovide's src/window/mod.rs, determine_window_size).
 vim.g.neovide_remember_window_size = true -- Neovide default: true
 
 -- WHAT: Ask before closing the window with unsaved changes.

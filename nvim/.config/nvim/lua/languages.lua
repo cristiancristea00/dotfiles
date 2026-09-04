@@ -145,8 +145,8 @@ return {
         filetypes = { "ruby" },
         parsers = { "ruby" },
         -- Shopify's ruby-lsp, not solargraph, which is the older server and
-        -- the one Zed's `ruby` extension enables by default; zed/settings.json
-        -- names ruby-lsp explicitly so both editors use this one.
+        -- the one Zed's `ruby` extension enables by default; Zed's settings
+        -- name ruby-lsp explicitly so both editors use this one.
         servers = { "ruby_lsp" }, -- brew install ruby-lsp (pulls the ruby formula)
         -- No conform entry. The server formats through the LSP, delegating to
         -- RuboCop, Standard, or Syntax Tree from the project's own bundle,

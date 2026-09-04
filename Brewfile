@@ -103,6 +103,16 @@ brew "tree-sitter-cli" # parser compiler -> nvim/lua/plugins/treesitter.lua
 brew "ty"                    # Python type checking and IDE features (Astral) -> languages.lua, vscode extension astral-sh.ty
 brew "ruff"                  # Python linting, formatting, and LSP           -> languages.lua, ruff/, vscode extension charliermarsh.ruff
 brew "taplo"                 # TOML server and formatter                     -> languages.lua
+# WHAT: The JSON language server, extracted from VS Code.
+# WHY : The binary nvim-lspconfig's `lsp/jsonls.lua` invokes is
+#       `vscode-json-language-server`, and this formula is what provides it.
+#       Without it every .json and .jsonc buffer reports a server that cannot
+#       start.
+# NOTE: The formula carries four further servers from the same extraction:
+#       HTML, CSS, ESLint, and Markdown. None is enabled, because
+#       languages.lua declares no entry that names them; Markdown keeps
+#       marksman, listed below.
+brew "vscode-langservers-extracted" # JSON and JSONC server (VS Code's)      -> languages.lua, nvim/after/lsp/jsonls.lua
 brew "yaml-language-server"  # YAML server, with schemastore.org schemas     -> languages.lua, nvim/after/lsp/yamlls.lua
 brew "marksman"              # Markdown server: links and references         -> languages.lua
 brew "bash-language-server"  # sh and bash server                            -> languages.lua

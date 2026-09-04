@@ -116,10 +116,16 @@
         "catppuccin-icons": true,
 
         // Languages Zed does not cover built in. Each provides a treesitter
-        // grammar; dockerfile, neocmake, and zig also provide a language
+        // grammar; dockerfile, lua, neocmake, and zig also provide a language
         // server. Each is the counterpart of an entry in
         // ../../../nvim/.config/nvim/lua/languages.lua.
         "dockerfile": true,
+        // Lua: the grammar, an EmmyLuaDoc grammar, and lua-language-server,
+        // which the extension downloads itself. This is the one language where
+        // the two editors do not share a server: languages.lua leaves Lua on
+        // treesitter alone, so Neovim has no lua_ls. VS Code and Cursor get
+        // the same server from sumneko.lua (../../../vscode/extensions.txt).
+        "lua": true,
         "neocmake": true,
         "xml": true,
         "toml": true,

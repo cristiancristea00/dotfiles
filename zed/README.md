@@ -59,6 +59,7 @@ Ten are declared. The ids are the directory names under
 | `catppuccin`        | The four flavour themes the `theme` block names                  |
 | `catppuccin-icons`  | The four icon themes the `icon_theme` block names                |
 | `dockerfile`        | Dockerfile grammar and `docker-language-server`                  |
+| `lua`               | Lua and EmmyLuaDoc grammars, and `lua-language-server`           |
 | `neocmake`          | CMake grammar and `neocmakelsp`                                  |
 | `xml`               | XML grammar                                                      |
 | `zig`               | Zig grammar and `zls`                                            |
@@ -81,6 +82,13 @@ Ruby is the one extension whose default server differs from Neovim's. The
 `languages` block in `settings.json` selects `ruby-lsp` and disables
 solargraph with a `!` prefix. Every other extension's default server is
 already the one `languages.lua` names.
+
+Lua is the one language where Neovim has no server at all. The extension
+downloads `lua-language-server` itself, and `sumneko.lua` gives VS Code and
+Cursor the same one, but the Lua entry in `languages.lua` keeps
+`servers = {}`. So the three editors are not on one server here, unlike
+everywhere else; closing that would mean a `lua_ls` entry, an
+`after/lsp/lua_ls.lua`, and a Brewfile formula.
 
 ## Known gaps
 

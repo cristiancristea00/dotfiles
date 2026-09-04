@@ -1,0 +1,177 @@
+# ==============================================================================
+# config.linux.toml — Neovide's configuration on Linux
+# ==============================================================================
+#
+# WHAT THIS FILE IS
+#   Neovide reads one file at startup, before it launches Neovim, from
+#   ~/.config/neovide/config.toml (or $NEOVIDE_CONFIG). It controls what Lua
+#   inside Neovim cannot: the window frame, the font used from the first
+#   frame, GPU and colour behaviour, and how the process launches.
+#
+#   TOML has no conditionals, so the repo ships one file per platform and
+#   ../../../install.sh links this one as config.toml on Linux. Its counterpart
+#   is config.darwin.toml. The two stay identical apart from the settings that
+#   justify the split, which are marked PER-OS below; a new option goes in
+#   both. See ../../../README.md § Per-OS configuration.
+#
+#   Division of responsibilities:
+#     neovide/config.toml         -> process and window creation (this file)
+#     nvim/.config/nvim/lua/core/neovide.lua
+#                                 -> runtime behaviour: animations, macOS
+#                                    cmd-key bindings, live zoom
+#                                    (vim.g.neovide_* variables)
+#
+#   Precedence, highest first: command-line flags > this file > environment
+#   variables > defaults.
+#
+#   FORMAT TRAP: every bare `key = value` belongs to the nearest `[table]`
+#   header above it. A top-level key placed below `[font]` is read as
+#   `font.<key>` and has no effect, so all top-level keys come first.
+#
+#   FORMAT TRAP: an unknown key and a bad value fail differently. Neovide
+#   ignores a key it does not recognise, because its config struct does not
+#   deny unknown fields, so a typo in a name costs only that setting. A key it
+#   does recognise carrying a value it cannot parse fails the whole struct:
+#   Config::init prints one line to stderr, falls back to Config::default(),
+#   and Neovide still launches, so every setting in this file is lost at once
+#   and only the built-in defaults apply. `frame` is how that happens in
+#   practice — see its PER-OS block below.
+#
+#   `neovide --help` prints the values read from this file as `[env: …]`
+#   defaults, which is how to tell the two apart: a key missing from that
+#   output means the file was discarded, not that the key was ignored.
+#
+#   Reference for every key: https://neovide.dev/config-file.html
+# ==============================================================================
+
+# ==============================================================================
+# TOP-LEVEL KEYS — bare keys go here, above every [table] header.
+# ==============================================================================
+
+# --- Process ------------------------------------------------------------------
+# WHAT: Whether `neovide` detaches from the terminal that launched it.
+# WHY : Launching from a shell returns the prompt instead of holding the
+#       terminal for the life of the editor. The exit code then no longer
+#       reaches that shell, which matters only when scripting around Neovide.
+# default: false
+fork = true
+
+# --- Window -------------------------------------------------------------------
+# PER-OS: differs from config.darwin.toml.
+# WHAT: Titlebar style. "full" is the compositor's own decorated frame.
+# WHY : The only decorated value Linux has. Neovide gates the Transparent and
+#       Buttonless variants behind a compile-time target check, so they do not
+#       exist to parse into here, and "transparent" would not be ignored: it
+#       fails the whole config struct, Neovide falls back to its built-in
+#       defaults, and every other setting in this file is lost with it. So
+#       config.darwin.toml carries the transparent titlebar that matches
+#       Ghostty, and this file cannot.
+# NOTE: Do not reach for NEOVIDE_FRAME to get around this either. An
+#       environment variable is parsed by the command-line layer, which on
+#       Linux rejects the value outright and exits before a window appears.
+# HOW : "full" or "none" (no titlebar, no drag area) are the two that exist
+#       here. Set "none" for a tiling window manager.
+# default: "full"
+frame = "full"
+
+# WHAT: Whether to hide the window-title text (the filename Neovim sets).
+#       macOS-only.
+# WHY : With `system-native-tabs` below, the title labels each tab; hiding it
+#       would leave the tabs unlabelled. Set true for a single window with
+#       empty chrome.
+# default: false
+title-hidden = false
+
+# WHAT: Start maximised.
+# WHY : The window opens at its remembered size instead, restored by the
+#       runtime setting vim.g.neovide_remember_window_size in core/neovide.lua.
+#       With maximized on, that remembered size would not be applied at
+#       startup (Neovide's src/window/mod.rs, determine_window_size).
+# default: false
+maximized = false
+
+# WHAT: Use macOS window tabs (⌘T, the native tab bar) instead of Neovide's own
+#       separate windows.
+# WHY : Native tabs get macOS's tab switcher, Exposé integration, and window
+#       merging. These are OS tabs, separate from Neovim's own `:tabnew`
+#       tabpages. The key has no effect on Linux.
+# default: false
+system-native-tabs = true
+
+# --- Rendering ------------------------------------------------------------------
+# WHAT: Request an sRGB colour surface from the OS.
+# WHY : Off matches what Ghostty and Zed show. Windows defaults to on.
+# HOW : Set true and compare if colours look washed out.
+# default on macOS and Linux: false
+srgb = false
+
+# WHAT: Sync frame rendering to the display's refresh rate.
+# WHY : Prevents tearing, and the animations tuned in core/neovide.lua assume
+#       vsynced output. Disabling it trades that for lower input latency.
+# default: true
+vsync = true
+
+# WHAT: Throttle rendering when nothing on screen changes.
+# WHY : Saves battery. Disable if animations look uneven on a high-refresh
+#       external display.
+# default: true
+idle = true
+
+# NOTE: The window chrome's light/dark appearance is not set here: config.toml
+#       has no theme key. It is the Neovim global `vim.g.neovide_theme`, whose
+#       default, "auto", follows the system appearance with the rest of the
+#       stack (see ../../../README.md § Light and dark). To pin one, set
+#       `vim.g.neovide_theme = "light"` (or "dark") in
+#       ../../../nvim/.config/nvim/lua/core/neovide.lua.
+
+# ==============================================================================
+# TABLES — everything below belongs to the table header above it.
+# ==============================================================================
+
+# --- Font -----------------------------------------------------------------------
+# WHAT: The font stack Neovide uses from the first rendered frame. `normal` is
+#       an ordered list: the first family is primary, the rest are fallbacks
+#       for codepoints it lacks.
+# WHY : The Nerd Font Mono build keeps the icons Neovim draws to one cell, so
+#       columns stay aligned. The chain is shared with the other tools; see
+#       ../../../README.md § The font stack. This section prevents a
+#       wrong-font flash at startup: it covers the frames before init.lua
+#       runs, after which Neovim's `guifont` takes over. Family and size must
+#       match ../../../nvim/.config/nvim/lua/core/neovide.lua.
+# HOW : Check that a family name resolves; Neovide falls back without a
+#       message. macOS: `ghostty +list-fonts | grep -i nerd`. Linux:
+#       `fc-list : family | grep -i nerd`. macOS also exposes JetBrains Mono's
+#       Nerd build as "JetBrainsMono NFM"; Fira Code's uses the full name.
+[font]
+normal = ["JetBrainsMono Nerd Font Mono", "FiraCode Nerd Font Mono", "Fira Code", "Source Code Pro", "IBM Plex Mono"]
+size = 14
+
+# WHAT: OpenType features, keyed by family name. `+tag` enables, `-tag`
+#       disables.
+# WHY : Ligatures on. The `calt` and `liga` features fuse `!=`, `->`, and `=>`
+#       here, in the editors' panes, and in the terminals, so Neovim renders
+#       the same text under Neovide and in Ghostty (see ../../../README.md
+#       § The font stack).
+# HOW : The table is keyed per family, and a family without an entry gets no
+#       features, so every font in `normal` needs its own line. Fira Code is
+#       a ligature-first typeface and renders without them if omitted. Source
+#       Code Pro has no programming ligatures, so its tags do nothing; it is
+#       listed so the table stays complete if the fallback order changes.
+#       Family names must match `normal` exactly.
+[font.features]
+"JetBrainsMono Nerd Font Mono" = ["+calt", "+liga"]
+"FiraCode Nerd Font Mono" = ["+calt", "+liga"]
+"Fira Code" = ["+calt", "+liga"]
+"Source Code Pro" = ["+calt", "+liga"]
+"IBM Plex Mono" = ["+calt", "+liga"]
+
+# --- Box drawing ------------------------------------------------------------------
+# WHAT: How box-drawing characters (│ ─ ┌ …) are rendered: window borders, the
+#       file tree's guides, and floating-window frames.
+# WHY : "native" draws them geometrically instead of using the font's glyphs,
+#       so segments join with no gaps between cells. It is the default since
+#       Neovide 0.16 (the docs' settings listing still shows "font-glyph");
+#       stated so the choice holds on an older Neovide.
+# default: "native"
+[box-drawing]
+mode = "native"

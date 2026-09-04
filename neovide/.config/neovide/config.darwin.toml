@@ -1,12 +1,18 @@
 # ==============================================================================
-# config.toml — Neovide's own configuration file
+# config.darwin.toml — Neovide's configuration on macOS
 # ==============================================================================
 #
 # WHAT THIS FILE IS
-#   Neovide reads this file at startup, before it launches Neovim, from
+#   Neovide reads one file at startup, before it launches Neovim, from
 #   ~/.config/neovide/config.toml (or $NEOVIDE_CONFIG). It controls what Lua
 #   inside Neovim cannot: the window frame, the font used from the first
 #   frame, GPU and colour behaviour, and how the process launches.
+#
+#   TOML has no conditionals, so the repo ships one file per platform and
+#   ../../../install.sh links this one as config.toml on macOS. Its counterpart
+#   is config.linux.toml. The two stay identical apart from the settings that
+#   justify the split, which are marked PER-OS below; a new option goes in
+#   both. See ../../../README.md § Per-OS configuration.
 #
 #   Division of responsibilities:
 #     neovide/config.toml         -> process and window creation (this file)
@@ -20,10 +26,20 @@
 #
 #   FORMAT TRAP: every bare `key = value` belongs to the nearest `[table]`
 #   header above it. A top-level key placed below `[font]` is read as
-#   `font.<key>` and has no effect, so all top-level keys come first. Neovide
-#   also ignores unknown keys without an error, so copy names exactly.
+#   `font.<key>` and has no effect, so all top-level keys come first.
+#
+#   FORMAT TRAP: an unknown key and a bad value fail differently. Neovide
+#   ignores a key it does not recognise, because its config struct does not
+#   deny unknown fields, so a typo in a name costs only that setting. A key it
+#   does recognise carrying a value it cannot parse fails the whole struct:
+#   Config::init prints one line to stderr, falls back to Config::default(),
+#   and Neovide still launches, so every setting in this file is lost at once
+#   and only the built-in defaults apply. `frame` is how that happens in
+#   practice — see its PER-OS block below.
+#
 #   `neovide --help` prints the values read from this file as `[env: …]`
-#   defaults, which shows whether a key took effect.
+#   defaults, which is how to tell the two apart: a key missing from that
+#   output means the file was discarded, not that the key was ignored.
 #
 #   Reference for every key: https://neovide.dev/config-file.html
 # ==============================================================================
@@ -41,13 +57,17 @@
 fork = true
 
 # --- Window -------------------------------------------------------------------
+# PER-OS: differs from config.linux.toml.
 # WHAT: Titlebar style. "transparent" keeps the macOS traffic-light buttons but
 #       paints the titlebar in the editor's background colour.
 # WHY : Matches Ghostty, whose macos-titlebar-style defaults to transparent.
+# NOTE: This value exists only on macOS. Neovide gates the Transparent and
+#       Buttonless variants behind a compile-time target check, so on Linux
+#       there is nothing for "transparent" to parse into, and the whole file
+#       would be discarded rather than the key ignored. That is why the two
+#       platforms need separate files, and why config.linux.toml sets "full".
 # HOW : "full" (standard grey macOS titlebar), "buttonless" (transparent with
-#       no traffic lights), "none" (no titlebar, no drag area). "transparent"
-#       and "buttonless" are macOS-only; on Linux, set "full" if the frame
-#       misbehaves.
+#       no traffic lights), "none" (no titlebar, no drag area).
 # default: "full"
 frame = "transparent"
 

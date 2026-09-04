@@ -91,20 +91,20 @@ A stow package mirrors the path its contents occupy under `$HOME`:
 `install.sh` runs stow three times, because `--no-folding` and `--ignore` are
 per-run flags and the packages need different combinations.
 
-**Folded** (`neovide nvim ruff tlrc`). Stow links the whole directory, so
+**Folded** (`nvim ruff tlrc`). Stow links the whole directory, so
 `~/.config/nvim` is one symlink into the repo. New files appear without a
 restow, and `nvim-pack-lock.json`, which `vim.pack` writes beside `init.lua`,
 lands in the repo.
 
-**`--no-folding`** (`bat fish ghostty git zed`). Stow creates real directories
+**`--no-folding`** (`bat fish ghostty git neovide zed`). Stow creates real directories
 and links each file individually. A directory must stay real if anything
 machine-local has to live in it:
 
 * Runtime state the application writes beside its config: `fish_variables`,
   Zed's `conversations/`, whatever `git config --global` appends. None of it
   belongs in the repo.
-* A per-OS selector symlink (`bat`, `ghostty`; see below). In a folded
-  directory the selector would be created inside the repo.
+* A per-OS selector symlink (`bat`, `ghostty`, `neovide`; see below). In a
+  folded directory the selector would be created inside the repo.
 
 **`--no-folding --ignore`** (`vscode cursor`), in a third invocation. Both
 editors read `~/.config` on Linux and `~/Library/Application Support` on
@@ -137,18 +137,21 @@ stow -R --no-folding --target="$HOME" --dir="$PWD" fish
 
 ### Per-OS configuration
 
-Three formats have no conditionals but need different values per platform.
+Four formats have no conditionals but need different values per platform.
 `install.sh` creates a symlink for each, which stow cannot express:
 
 | Link                                             | Points at                    | Why                                                                                           |                                                                                                                        |
 | ------------------------------------------------ | ---------------------------- | --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `~/.config/bat/config`                           | `config.darwin` \            | `config.linux`                                                                                | `--theme=auto:system` reads the macOS appearance and is macOS-only; Linux uses `--theme=auto`, which asks the terminal |
 | `~/.config/ghostty/os.ghostty`                   | `os-darwin.ghostty` \        | `os-linux.ghostty`                                                                            | macOS binds ⌘; on Linux `super` is the Windows key, which desktops reserve, so it binds Ctrl+Shift                     |
+| `~/.config/neovide/config.toml`                  | `config.darwin.toml` \       | `config.linux.toml`                                                                           | `frame = "transparent"` exists only on macOS, and off it Neovide discards the whole file rather than the one key       |
 | `~/Library/Application Support/tlrc/config.toml` | `~/.config/tlrc/config.toml` | tlrc reads XDG on Linux but Application Support on macOS; the bridge lets one file serve both |                                                                                                                        |
 
-The bat and Ghostty variants stay in sync apart from the settings that
-justify the split: the theme flag for bat, and the keybind modifier, the font
-weight, and `font-size` for Ghostty. Add a new option to both files of a pair.
+Each pair stays in sync apart from the settings that justify the split: the
+theme flag for bat; the keybind modifier, the font weight, `font-size`, and
+`command` for Ghostty; the frame style and the font size for Neovide. Add a new
+option to both files of a pair. Neovide's variants mark theirs `PER-OS`, since
+that file is long enough that a diff is the slower way to find them.
 
 Everything else branches at runtime: fish probes all three Homebrew prefixes,
 Neovim checks `vim.uv.os_uname().sysname`, and the Brewfile uses `OS.mac?` and

@@ -73,15 +73,16 @@ DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # WHY : Correct when nothing else needs to live in that directory. `nvim` is
 #       folded so that nvim-pack-lock.json, which vim.pack writes into the
 #       config directory, lands in the repo. See README.md § The stow model.
-PACKAGES_FOLD="neovide nvim ruff tlrc"
+PACKAGES_FOLD="nvim ruff tlrc"
 
 # WHAT: Packages stowed with --no-folding: the directory stays real and each
 #       file is linked individually.
 # WHY : Required when a directory must hold machine-local state beside the
 #       symlinks: runtime state the application writes (fish's fish_variables,
 #       Zed's conversations/, the theme file install.sh fetches for delta), or
-#       one of the OS selector symlinks created in step 7 (bat, ghostty).
-PACKAGES_NOFOLD="bat fish ghostty git zed"
+#       one of the OS selector symlinks created in step 7 (bat, ghostty,
+#       neovide).
+PACKAGES_NOFOLD="bat fish ghostty git neovide zed"
 
 # WHAT: Packages stowed with --no-folding and a per-OS --ignore, in a third
 #       invocation of their own.
@@ -794,6 +795,16 @@ link_os_selectors() {
         ok "ghostty → os-$suffix.ghostty"
     fi
 
+    # WHY: Neovide reads one config.toml and TOML has no conditionals, so the
+    #      repo ships a variant per platform. A value the running build cannot
+    #      parse — "transparent" for `frame` off macOS — discards the whole
+    #      file rather than the key, so the wrong variant is not a partial
+    #      config but none at all.
+    if [ -d "$HOME/.config/neovide" ]; then
+        run ln -sfn "config.$suffix.toml" "$HOME/.config/neovide/config.toml"
+        ok "neovide → config.$suffix.toml"
+    fi
+
     # WHY: The tlrc client resolves its config through the Rust `dirs` crate, which gives
     #      ~/.config on Linux and ~/Library/Application Support on macOS. The
     #      repo ships the XDG path; this bridges the macOS one.
@@ -1085,7 +1096,7 @@ set_login_shell() {
 # 10. Uninstall
 # ==============================================================================
 # WHAT: Remove every symlink this script created, leaving software installed.
-# WHY : Stow unstows its own packages but knows nothing about the three OS
+# WHY : Stow unstows its own packages but knows nothing about the four OS
 #       selector links from step 8, which must be removed explicitly.
 uninstall() {
     step "Removing symlinks"
@@ -1093,6 +1104,7 @@ uninstall() {
     local link
     for link in "$HOME/.config/bat/config" \
         "$HOME/.config/ghostty/os.ghostty" \
+        "$HOME/.config/neovide/config.toml" \
         "$HOME/Library/Application Support/tlrc/config.toml"; do
         if [ -L "$link" ]; then
             run rm "$link"

@@ -772,13 +772,13 @@ stow_packages() {
 # ==============================================================================
 # 8. Per-OS selector symlinks
 # ==============================================================================
-# WHAT: The three links stow cannot express, because they depend on the OS.
-# WHY : The bat and Ghostty config formats have no conditionals, so each ships
-#       a .darwin and a .linux variant and this picks one. tlrc's config lives
-#       at the XDG path, and macOS needs a bridge from the Application Support
-#       location it reads. The links are recreated on every run, so a dry run
-#       followed by a real run, or an OS change, ends in the same state. See
-#       README.md § Per-OS configuration.
+# WHAT: The five links stow cannot express, because they depend on the OS.
+# WHY : The bat, Ghostty, Neovide, and Zed config formats have no
+#       conditionals, so each ships a .darwin and a .linux variant and this
+#       picks one. The tlrc config lives at the XDG path, and macOS needs a
+#       bridge from the Application Support location it reads. The links are
+#       recreated on every run, so a dry run followed by a real run, or an OS
+#       change, ends in the same state. See README.md § Per-OS configuration.
 link_os_selectors() {
     local suffix
     if [ "$OS" = "macos" ]; then suffix="darwin"; else suffix="linux"; fi

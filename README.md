@@ -63,19 +63,19 @@ identity only under `~/work/`, so the personal identity applies here.
 
 ## Packages
 
-| Package                         | Installs to           | What it is                                               |                                                          |
-| ------------------------------- | --------------------- | -------------------------------------------------------- | -------------------------------------------------------- |
-| [`bat/`](bat/README.md)         | `~/.config/bat/`      | `cat` with syntax highlighting; also the `$MANPAGER`     |                                                          |
-| [`fish/`](fish/README.md)       | `~/.config/fish/`     | The shell: PATH, environment, prompt, functions          |                                                          |
-| [`ghostty/`](ghostty/README.md) | `~/.config/ghostty/`  | Terminal emulator                                        |                                                          |
-| [`git/`](git/README.md)         | `~/.config/git/`      | Global Git config, with work/personal identity switching |                                                          |
-| [`neovide/`](neovide/README.md) | `~/.config/neovide/`  | Neovim's GUI: window and startup font                    |                                                          |
-| [`nvim/`](nvim/README.md)       | `~/.config/nvim/`     | The editor: LSP, treesitter, plugins, keymaps            |                                                          |
-| [`ruff/`](ruff/README.md)       | `~/.config/ruff/`     | Python lint and format rules, as a user-level fallback   |                                                          |
-| [`tlrc/`](tlrc/README.md)       | `~/.config/tlrc/`     | `tldr` client; macOS gets a bridge symlink (see below)   |                                                          |
-| [`vscode/`](vscode/README.md)   | `~/.config/Code/` \   | `~/Library/…/Code/`                                      | GUI editor. Holds the settings file **Cursor also uses** |
-| [`zed/`](zed/README.md)         | `~/.config/zed/`      | GUI editor, configured as a non-modal editor             |                                                          |
-| [`cursor/`](cursor/README.md)   | `~/.config/Cursor/` \ | `~/Library/…/Cursor/`                                    | Symlinks into `vscode/`, nothing else                    |
+| Package                         | Installs to                                  | What it is                                               |
+| ------------------------------- | -------------------------------------------- | -------------------------------------------------------- |
+| [`bat/`](bat/README.md)         | `~/.config/bat/`                             | `cat` with syntax highlighting; also the `$MANPAGER`     |
+| [`fish/`](fish/README.md)       | `~/.config/fish/`                            | The shell: PATH, environment, prompt, functions          |
+| [`ghostty/`](ghostty/README.md) | `~/.config/ghostty/`                         | Terminal emulator                                        |
+| [`git/`](git/README.md)         | `~/.config/git/`                             | Global Git config, with work/personal identity switching |
+| [`neovide/`](neovide/README.md) | `~/.config/neovide/`                         | Neovim's GUI: window and startup font                    |
+| [`nvim/`](nvim/README.md)       | `~/.config/nvim/`                            | The editor: LSP, treesitter, plugins, keymaps            |
+| [`ruff/`](ruff/README.md)       | `~/.config/ruff/`                            | Python lint and format rules, as a user-level fallback   |
+| [`tlrc/`](tlrc/README.md)       | `~/.config/tlrc/`                            | `tldr` client; macOS gets a bridge symlink (see below)   |
+| [`vscode/`](vscode/README.md)   | `~/.config/Code/` or `~/Library/…/Code/`     | GUI editor. Holds the settings file **Cursor also uses** |
+| [`zed/`](zed/README.md)         | `~/.config/zed/`                             | GUI editor, configured as a non-modal editor             |
+| [`cursor/`](cursor/README.md)   | `~/.config/Cursor/` or `~/Library/…/Cursor/` | Symlinks into `vscode/`, nothing else                    |
 
 Root files are not packages and are never stowed: `install.sh`, `Brewfile`
 (every dependency), `AGENTS.md` (conventions for AI coding agents, symlinked
@@ -137,16 +137,17 @@ stow -R --no-folding --target="$HOME" --dir="$PWD" fish
 
 ### Per-OS configuration
 
-Five formats have no conditionals but need different values per platform.
-`install.sh` creates a symlink for each, which stow cannot express:
+Four formats have no conditionals but need different values per platform, so
+each ships one file per OS and `install.sh` links the one the platform reads.
+The fifth link is a macOS-only bridge for tlrc. Stow can express neither kind:
 
-| Link                                             | Points at                    | Why                                                                                           |                                                                                                                        |
-| ------------------------------------------------ | ---------------------------- | --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `~/.config/bat/config`                           | `config.darwin` \            | `config.linux`                                                                                | `--theme=auto:system` reads the macOS appearance and is macOS-only; Linux uses `--theme=auto`, which asks the terminal |
-| `~/.config/ghostty/os.ghostty`                   | `os-darwin.ghostty` \        | `os-linux.ghostty`                                                                            | macOS binds ⌘; on Linux `super` is the Windows key, which desktops reserve, so it binds Ctrl+Shift                     |
-| `~/.config/neovide/config.toml`                  | `config.darwin.toml` \       | `config.linux.toml`                                                                           | `frame = "transparent"` exists only on macOS, and off it Neovide discards the whole file rather than the one key       |
-| `~/.config/zed/settings.json`                    | `settings.darwin.json` \     | `settings.linux.json`                                                                         | The terminal's shell is an absolute path and the Homebrew prefix differs; Zed has no per-platform keys                 |
-| `~/Library/Application Support/tlrc/config.toml` | `~/.config/tlrc/config.toml` | tlrc reads XDG on Linux but Application Support on macOS; the bridge lets one file serve both |                                                                                                                        |
+| Link                                             | macOS                        | Linux                 | Why                                                                                                                    |
+| ------------------------------------------------ | ---------------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `~/.config/bat/config`                           | `config.darwin`              | `config.linux`        | `--theme=auto:system` reads the macOS appearance and is macOS-only; Linux uses `--theme=auto`, which asks the terminal |
+| `~/.config/ghostty/os.ghostty`                   | `os-darwin.ghostty`          | `os-linux.ghostty`    | macOS binds ⌘; on Linux `super` is the Windows key, which desktops reserve, so it binds Ctrl+Shift                     |
+| `~/.config/neovide/config.toml`                  | `config.darwin.toml`         | `config.linux.toml`   | `frame = "transparent"` exists only on macOS, and off it Neovide discards the whole file rather than the one key       |
+| `~/.config/zed/settings.json`                    | `settings.darwin.json`       | `settings.linux.json` | The terminal's shell is an absolute path and the Homebrew prefix differs; Zed has no per-platform keys                 |
+| `~/Library/Application Support/tlrc/config.toml` | `~/.config/tlrc/config.toml` | not created           | tlrc reads XDG on Linux but Application Support on macOS; the bridge lets one file serve both                          |
 
 Each pair stays in sync apart from the settings that justify the split: the
 theme flag for bat; the keybind modifier, the font weight, `font-size`, and

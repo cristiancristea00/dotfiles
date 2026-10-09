@@ -19,11 +19,11 @@
 #
 # CONTRAST
 #   Ratios are WCAG 2.0 contrast against Latte's Base, #eff1f5. Text is at
-#   least 4.5:1 and every accent at least 3:1. Most Latte accents are below
-#   3:1 (Yellow 2.31, Pink 2.34, Peach 2.64, Green 2.96), which leaves Red,
-#   Mauve, Blue, Maroon, Teal, and the Overlay and Subtext greys. ANSI `white`
-#   is Latte's Surface2, 1.91:1, and Ghostty draws the `dim` attribute at half
-#   opacity, so neither is used.
+#   least 4.5:1 and every accent at least 3:1. Most Latte accents are below 3:1
+#   (Yellow 2.31, Pink 2.34, Peach 2.64, Green 2.96), which leaves Red, Mauve,
+#   Blue, Maroon, Teal, Overlay2, and the two Subtext greys. Overlay1 (2.83:1)
+#   and Overlay0 (2.30:1) fail. ANSI `white` is Latte's Surface2, 1.91:1, and
+#   Ghostty draws the `dim` attribute at half opacity, so neither is used.
 #
 # FORMAT TRAP
 #   An unquoted `#` starts a comment, so every value holding a hex colour is in

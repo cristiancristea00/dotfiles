@@ -270,13 +270,14 @@ macOS the tools that can follow the system appearance do:
 | fish             | `fish_config theme choose catppuccin-mocha`; the theme carries both variants             |
 | eza              | A fish handler points `$EZA_CONFIG_DIR` at a Latte or Mocha directory                    |
 | delta            | A fish handler sets `$DELTA_FEATURES` to `catppuccin-latte` or `-mocha`                  |
+| Git log output   | A fish handler includes `colours-latte.gitconfig` through `GIT_CONFIG_*`                 |
 | tlrc             | Palette names, which resolve through the terminal's colours                              |
 
-The last four follow the **terminal**, not the OS. fish, eza, and delta read
-fish's `$fish_terminal_color_theme`, which holds `light`, `dark`, or
-`unknown` and updates when the terminal's background changes. tlrc's palette
-names resolve through whatever colours the terminal uses. Reading the
-terminal is why these four behave the same on Linux, which has no
+The last five follow the **terminal**, not the OS. The fish shell, eza,
+delta, and Git read fish's `$fish_terminal_color_theme`, which holds `light`,
+`dark`, or `unknown` and updates when the terminal's background changes.
+tlrc's palette names resolve through whatever colours the terminal uses.
+Reading the terminal is why these five behave the same on Linux, which has no
 `AppleInterfaceStyle`.
 
 **delta** follows the appearance only in a shell that sets `$DELTA_FEATURES`,
@@ -284,6 +285,10 @@ which means fish. Elsewhere (a bash or zsh script, a GUI tool) delta detects
 the background itself and uses its own `Monokai Extended` or `GitHub`. The
 `[delta]` block in [`git/.config/git/config`](git/.config/git/config) sets no
 `features` for this reason.
+
+**Git's log colours** also follow the appearance only in fish. Elsewhere Git
+uses the Mocha colours its config includes; see
+[Log colours](git/README.md#log-colours).
 
 **fzf** is not themed. It draws with the terminal's ANSI colours, which
 Ghostty sets to Catppuccin, so it follows light and dark already; the

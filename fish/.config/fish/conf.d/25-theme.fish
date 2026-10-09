@@ -4,8 +4,9 @@
 #
 # WHAT THIS FILE IS
 #   The Catppuccin surfaces the shell owns: fish's own syntax highlighting,
-#   eza's listing theme, and delta's flavour. All three follow the terminal's
-#   appearance. See ../../../../README.md § Light and dark.
+#   eza's listing theme, delta's flavour, and Git's log colours. All four
+#   follow the terminal's appearance. See ../../../../README.md § Light and
+#   dark.
 #
 # THE SIGNAL
 #   $fish_terminal_color_theme is a read-only fish variable holding `light`,
@@ -14,8 +15,9 @@
 #   anything reading it must run from an --on-variable handler. Each handler is
 #   also called once by hand below. The variable updates when the terminal's
 #   theme changes, so the handlers re-run without a shell restart. On
-#   `unknown`, fish and eza use the dark flavour, the stack's default. delta is
-#   left to detect the background itself.
+#   `unknown`, fish and eza use the dark flavour, the stack's default, and Git
+#   uses the Mocha colours its config includes. delta is left to detect the
+#   background itself.
 # ==============================================================================
 
 # WHAT: Guard everything here on an interactive shell.
@@ -103,5 +105,42 @@ if status is-interactive
     # WHY : The variable is empty here, so this takes the '*' branch and leaves
     #       $DELTA_FEATURES unset rather than inherited from the parent process.
     __delta_theme
+
+    # --- Git -----------------------------------------------------------------
+    # WHAT: In a light terminal, add an include of colours-latte.gitconfig to
+    #       Git's configuration through the environment.
+    # WHY : Git's colour keys and `[pretty]` formats take one value each, with
+    #       no light/dark form. ../../../../git/.config/git/config includes
+    #       colours-mocha.gitconfig. Git reads the environment's entries after
+    #       every config file, so the Latte values replace the Mocha ones. The
+    #       colours and their contrast ratios are documented in the two files.
+    # NOTE: The path is absolute because Git refuses a relative include.path
+    #       that does not come from a file. The three variables hold a single
+    #       list of entries, so this handler replaces any other value of them;
+    #       another entry belongs in this switch, with the count raised.
+    #       Outside a light terminal the variables are erased, and Git falls
+    #       back to the Mocha include, as eza falls back to Mocha.
+    # HOW : Check which file supplied the format with
+    #           git config --show-origin --get pretty.list
+    #       Delete this block to keep Git on Mocha everywhere.
+    function __git_theme --on-variable fish_terminal_color_theme \
+        --description 'Point Git at the log colours matching the terminal'
+        switch "$fish_terminal_color_theme"
+            case light
+                set -gx GIT_CONFIG_COUNT 1
+                set -gx GIT_CONFIG_KEY_0 include.path
+                set -gx GIT_CONFIG_VALUE_0 "$HOME/.config/git/colours-latte.gitconfig"
+            case '*'
+                # `dark`, `unknown`, and the empty value before the first
+                # prompt. Erasing unset variables returns 4; nothing checks it.
+                set -e GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0
+        end
+    end
+
+    # WHAT: Run the handler once at startup.
+    # WHY : The variable is empty here, so this takes the '*' branch and leaves
+    #       the three variables unset rather than inherited from the parent
+    #       process.
+    __git_theme
 
 end

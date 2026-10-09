@@ -355,6 +355,19 @@ quick-terminal-position = center
 #       running with no windows.
 # default: false
 # quit-after-last-window-closed = true
+#
+# WHAT: Minimum contrast ratio, from 1 to 21, between text and its cell
+#       background. Text below it is drawn in pure black or white.
+# WHY : Left at 1, which turns it off. The replacement is always black or
+#       white, never a nearby shade. Catppuccin's Surface1, which Neovim uses
+#       for LineNr, Whitespace, and EndOfBuffer, is 1.61:1 on Latte and 1.80:1
+#       on Mocha, so a value that catches ANSI white on Latte (1.91:1) also
+#       turns those black or white.
+# NOTE: Faint text is measured as its colour multiplied by faint-opacity, as
+#       if drawn over black. On Latte a faint colour therefore measures darker
+#       than it renders and is not replaced.
+# default: 1
+# minimum-contrast = 2
 
 # --- Platform include ---------------------------------------------------------
 # WHAT: Include the OS-specific file. `?` makes the include optional, so

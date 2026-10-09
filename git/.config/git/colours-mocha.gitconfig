@@ -1,0 +1,81 @@
+# ==============================================================================
+# git/colours-mocha.gitconfig — Catppuccin Mocha colours for Git's log output
+# ==============================================================================
+#
+# WHAT THIS FILE IS
+#   The `list` and `logs` formats, the ref-name colours, and the graph-lane
+#   colours, in Catppuccin Mocha. The config file includes it, so it applies
+#   wherever nothing else is chosen: in a dark terminal, where the background
+#   is unknown, and outside fish. In a light terminal,
+#   ../../../fish/.config/fish/conf.d/25-theme.fish adds
+#   colours-latte.gitconfig through Git's environment config, whose values
+#   replace these. The fields of each format are described in config § Custom
+#   log formats.
+#
+# THE PAIR
+#   The Latte file, colours-latte.gitconfig, holds the same keys in the same
+#   order, and each role takes the same Catppuccin colour name in both files.
+#   The two differ only in the hex values and the contrast ratios beside them.
+#   A new key goes in both.
+#
+# CONTRAST
+#   Ratios are WCAG 2.0 contrast against Mocha's Base, #1e1e2e. Every Mocha
+#   accent passes 3:1, and Text is 11.34:1. The colours here are the ones the
+#   Latte file is limited to, so each role keeps its hue when the terminal
+#   switches appearance.
+#
+# FORMAT TRAP
+#   An unquoted `#` starts a comment, so every value holding a hex colour is in
+#   double quotes; unquoted, the `list` format would end at its first colour.
+#   Check that every value arrived whole with:
+#       git config --file git/.config/git/colours-mocha.gitconfig --list
+# ==============================================================================
+
+[pretty]
+    # WHAT: The `list` format: hash in Maroon (7.93:1), date in Blue (7.79:1),
+    #       and author in Teal (11.01:1).
+    # WHY : The subject is bold in the terminal's foreground, Catppuccin Text
+    #       (11.34:1), so it needs no hex. The `%C(auto)%d` placeholder takes
+    #       the ref colours from [color "decorate"] and [color "diff"] below.
+    list = "[%C(#eba0ac)%h%C(reset)] [%C(#89b4fa)%ah%C(reset)] %C(bold)%s%C(reset) (%C(#94e2d5)%an%C(reset))%C(auto)%d%C(reset)"
+
+    # WHAT: The `logs` format: the colours of `list`, with the email in Teal
+    #       beside the author and both dates in Blue.
+    # WHY : The absolute and relative dates are one fact, so they share a
+    #       colour. The body is uncoloured, in Text (11.34:1).
+    logs = "Commit %C(#eba0ac)%h%C(reset) by %C(#94e2d5)%an%C(reset) (%C(#94e2d5)%ae%C(reset))%C(auto)%d%C(reset)%nOn %C(#89b4fa)%ai%C(reset) (%C(#89b4fa)%ar%C(reset)) %n%n%w(0,4,4)%C(bold)%s%C(reset)%n%n%b"
+
+[color "diff"]
+    # WHAT: Colour of the commit line in `git log` and `git show`, and of the
+    #       `(`, `, `, ` -> `, and `)` around the ref names `%d` prints.
+    # WHY : Overlay2 (5.81:1), a grey, so the punctuation recedes behind the
+    #       ref names. One slot serves both uses. The delta pager passes the
+    #       commit line through with this colour, because its `commit-style`
+    #       default is `raw`.
+    commit = "#9399b2"
+
+[color "decorate"]
+    # WHAT: Colours of the ref names that `%d` and `git log --decorate` print.
+    # WHY : Git's bold ANSI defaults read well on Mocha. Each slot takes the
+    #       colour the Latte file gives it, so a ref keeps its hue across the
+    #       switch, bold as Git's are.
+    # HEAD: Mauve, 8.07:1.
+    HEAD = "bold #cba6f7"
+    # Local branches: Blue, 7.79:1.
+    branch = "bold #89b4fa"
+    # Remote-tracking branches: Red, 7.08:1, the hue Git gives them.
+    remoteBranch = "bold #f38ba8"
+    # Tags: Maroon, 7.93:1.
+    tag = "bold #eba0ac"
+    # The stash, which `--all` shows: Teal, 11.01:1.
+    stash = "bold #94e2d5"
+    # Grafted and replaced commits: Overlay2, 5.81:1.
+    grafted = "bold #9399b2"
+
+[log]
+    # WHAT: Colours of the lanes `git log --graph` draws, assigned to lanes in
+    #       turn.
+    # WHY : The five colours the Latte file uses, in the same order, so a lane
+    #       keeps its hue across the switch: Blue 7.79, Mauve 8.07, Teal
+    #       11.01, Maroon 7.93, and Red 7.08.
+    graphColors = "#89b4fa,#cba6f7,#94e2d5,#eba0ac,#f38ba8"

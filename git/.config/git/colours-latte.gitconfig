@@ -1,0 +1,83 @@
+# ==============================================================================
+# git/colours-latte.gitconfig — Catppuccin Latte colours for Git's log output
+# ==============================================================================
+#
+# WHAT THIS FILE IS
+#   The `list` and `logs` formats, the ref-name colours, and the graph-lane
+#   colours, in Catppuccin Latte. In a light terminal,
+#   ../../../fish/.config/fish/conf.d/25-theme.fish includes this file through
+#   Git's environment config. Git reads the environment after every config
+#   file, so these values replace the ones config takes from
+#   colours-mocha.gitconfig. The fields of each format are described in config
+#   § Custom log formats.
+#
+# THE PAIR
+#   The Mocha file, colours-mocha.gitconfig, holds the same keys in the same
+#   order, and each role takes the same Catppuccin colour name in both files.
+#   The two differ only in the hex values and the contrast ratios beside them.
+#   A new key goes in both.
+#
+# CONTRAST
+#   Ratios are WCAG 2.0 contrast against Latte's Base, #eff1f5. Text is at
+#   least 4.5:1 and every accent at least 3:1. Most Latte accents are below
+#   3:1 (Yellow 2.31, Pink 2.34, Peach 2.64, Green 2.96), which leaves Red,
+#   Mauve, Blue, Maroon, Teal, and the Overlay and Subtext greys. ANSI `white`
+#   is Latte's Surface2, 1.91:1, and Ghostty draws the `dim` attribute at half
+#   opacity, so neither is used.
+#
+# FORMAT TRAP
+#   An unquoted `#` starts a comment, so every value holding a hex colour is in
+#   double quotes; unquoted, the `list` format would end at its first colour.
+#   Check that every value arrived whole with:
+#       git config --file git/.config/git/colours-latte.gitconfig --list
+# ==============================================================================
+
+[pretty]
+    # WHAT: The `list` format: hash in Maroon (3.48:1), date in Blue (4.34:1),
+    #       and author in Teal (3.31:1).
+    # WHY : The subject is bold in the terminal's foreground, Catppuccin Text
+    #       (7.06:1), so it needs no hex. The `%C(auto)%d` placeholder takes
+    #       the ref colours from [color "decorate"] and [color "diff"] below.
+    list = "[%C(#e64553)%h%C(reset)] [%C(#1e66f5)%ah%C(reset)] %C(bold)%s%C(reset) (%C(#179299)%an%C(reset))%C(auto)%d%C(reset)"
+
+    # WHAT: The `logs` format: the colours of `list`, with the email in Teal
+    #       beside the author and both dates in Blue.
+    # WHY : The absolute and relative dates are one fact, so they share a
+    #       colour. The body is uncoloured, in Text (7.06:1).
+    logs = "Commit %C(#e64553)%h%C(reset) by %C(#179299)%an%C(reset) (%C(#179299)%ae%C(reset))%C(auto)%d%C(reset)%nOn %C(#1e66f5)%ai%C(reset) (%C(#1e66f5)%ar%C(reset)) %n%n%w(0,4,4)%C(bold)%s%C(reset)%n%n%b"
+
+[color "diff"]
+    # WHAT: Colour of the commit line in `git log` and `git show`, and of the
+    #       `(`, `, `, ` -> `, and `)` around the ref names `%d` prints.
+    # WHY : Overlay2 (3.49:1), a grey, so the punctuation recedes behind the
+    #       ref names. Git's default is yellow, 2.31:1 here. One slot serves
+    #       both uses. The delta pager passes the commit line through with this
+    #       colour, because its `commit-style` default is `raw`.
+    commit = "#7c7f93"
+
+[color "decorate"]
+    # WHAT: Colours of the ref names that `%d` and `git log --decorate` print.
+    # WHY : Git's defaults are bold green, red, yellow, magenta, cyan, and
+    #       blue, and its green, yellow, and magenta are 2.31 to 2.96:1 here.
+    #       Each slot below takes a colour that passes 3:1, bold as Git's are.
+    # HEAD: Mauve, 4.79:1.
+    HEAD = "bold #8839ef"
+    # Local branches: Blue, 4.34:1.
+    branch = "bold #1e66f5"
+    # Remote-tracking branches: Red, 4.80:1, the hue Git gives them.
+    remoteBranch = "bold #d20f39"
+    # Tags: Maroon, 3.48:1.
+    tag = "bold #e64553"
+    # The stash, which `--all` shows: Teal, 3.31:1.
+    stash = "bold #179299"
+    # Grafted and replaced commits: Overlay2, 3.49:1.
+    grafted = "bold #7c7f93"
+
+[log]
+    # WHAT: Colours of the lanes `git log --graph` draws, assigned to lanes in
+    #       turn.
+    # WHY : Git's default cycles red, green, yellow, blue, magenta, and cyan,
+    #       then their bold forms, and green, yellow, and magenta are below 3:1
+    #       here. These are the five Latte accents that pass: Blue 4.34, Mauve
+    #       4.79, Teal 3.31, Maroon 3.48, and Red 4.80.
+    graphColors = "#1e66f5,#8839ef,#179299,#e64553,#d20f39"

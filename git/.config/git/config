@@ -323,21 +323,32 @@
 
 # --- Custom log formats ------------------------------------------------------------
 # WHAT: Named --pretty formats used by the `list` and `logs` aliases below.
-#       `list` is one line per commit: hash, human-style date (`%ah`),
-#       subject, author, refs. `logs` is a multi-line form with absolute and
-#       relative dates and the body.
+#       The `list` format is one line per commit: hash, human-style date
+#       (`%ah`), subject, author, refs. The `logs` format is a multi-line form
+#       with absolute and relative dates and the body. Both are defined in
+#       colours-mocha.gitconfig, which this include loads, together with the
+#       colours of ref names and graph lanes.
+# WHY : Git's colour keys and formats take one value each, with no light/dark
+#       form, so the Catppuccin colours sit in two files, one per flavour. In
+#       a light terminal ../../../fish/.config/fish/conf.d/25-theme.fish adds
+#       colours-latte.gitconfig through Git's environment config, which Git
+#       reads after every config file. Mocha applies everywhere else. The two
+#       files document each colour and its contrast ratio.
 # NOTE: The alias is called `list` because Git 2.54 added a built-in
 #       `git history`, and Git ignores an alias that has a built-in's name.
-# HOW : `git log --pretty=list` works anywhere once defined here.
-[pretty]
-    list = [%C(yellow)%h%C(reset)] [%C(cyan)%ah%C(reset)] %C(bold white)%s%C(reset) (%C(dim white)%an%C(reset))%C(auto)%d%C(reset)
-    logs = Commit %C(yellow)%h%C(reset) by %C(dim white)%an%C(reset) (%C(dim white)%ae%C(reset))%C(auto)%d%C(reset)%nOn %C(cyan)%ai%C(reset) (%C(green)%ar%C(reset)) %n%n%w(0,4,4)%C(bold white)%s%C(reset)%n%n%C(white)%b%C(reset)
+#       The relative path resolves against the deployed ~/.config/git/, where
+#       stow links both files. Git skips a missing include, and `git list`
+#       then fails with "invalid --pretty format: list".
+# HOW : Check which file supplied a format with
+#           git config --show-origin --get pretty.list
+[include]
+    path = colours-mocha.gitconfig
 
 # --- Aliases -----------------------------------------------------------------------
 [alias]
-    # Graph of one-line commits, in the `list` format above.
+    # Graph of one-line commits, in the `list` format described above.
     list = log --graph --color=always --pretty=list
-    # Graph of full commits, in the `logs` format above.
+    # Graph of full commits, in the `logs` format described above.
     logs = log --graph --color=always --pretty=logs
     # Stage everything, including deletions.
     all = add --all

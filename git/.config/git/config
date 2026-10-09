@@ -326,6 +326,8 @@
 #       `list` is one line per commit: hash, human-style date (`%ah`),
 #       subject, author, refs. `logs` is a multi-line form with absolute and
 #       relative dates and the body.
+# NOTE: The alias is called `list` because Git 2.54 added a built-in
+#       `git history`, and Git ignores an alias that has a built-in's name.
 # HOW : `git log --pretty=list` works anywhere once defined here.
 [pretty]
     list = [%C(yellow)%h%C(reset)] [%C(cyan)%ah%C(reset)] %C(bold white)%s%C(reset) (%C(dim white)%an%C(reset))%C(auto)%d%C(reset)

@@ -322,19 +322,19 @@
     threads = 8
 
 # --- Custom log formats ------------------------------------------------------------
-# WHAT: Named --pretty formats used by the `history` and `logs` aliases below.
-#       `history` is one line per commit: hash, human-style date (`%ah`),
+# WHAT: Named --pretty formats used by the `list` and `logs` aliases below.
+#       `list` is one line per commit: hash, human-style date (`%ah`),
 #       subject, author, refs. `logs` is a multi-line form with absolute and
 #       relative dates and the body.
-# HOW : `git log --pretty=history` works anywhere once defined here.
+# HOW : `git log --pretty=list` works anywhere once defined here.
 [pretty]
-    history = [%C(yellow)%h%C(reset)] [%C(cyan)%ah%C(reset)] %C(bold white)%s%C(reset) (%C(dim white)%an%C(reset))%C(auto)%d%C(reset)
+    list = [%C(yellow)%h%C(reset)] [%C(cyan)%ah%C(reset)] %C(bold white)%s%C(reset) (%C(dim white)%an%C(reset))%C(auto)%d%C(reset)
     logs = Commit %C(yellow)%h%C(reset) by %C(dim white)%an%C(reset) (%C(dim white)%ae%C(reset))%C(auto)%d%C(reset)%nOn %C(cyan)%ai%C(reset) (%C(green)%ar%C(reset)) %n%n%w(0,4,4)%C(bold white)%s%C(reset)%n%n%C(white)%b%C(reset)
 
 # --- Aliases -----------------------------------------------------------------------
 [alias]
-    # Graph of one-line commits, in the `history` format above.
-    history = log --graph --color=always --pretty=history
+    # Graph of one-line commits, in the `list` format above.
+    list = log --graph --color=always --pretty=list
     # Graph of full commits, in the `logs` format above.
     logs = log --graph --color=always --pretty=logs
     # Stage everything, including deletions.

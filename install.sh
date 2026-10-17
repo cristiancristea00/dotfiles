@@ -79,10 +79,11 @@ PACKAGES_FOLD="nvim ruff tlrc"
 #       file is linked individually.
 # WHY : Required when a directory must hold machine-local state beside the
 #       symlinks: runtime state the application writes (fish's fish_variables,
-#       Zed's conversations/, the theme file install.sh fetches for delta), or
+#       Zed's conversations/, the theme file install.sh fetches for delta, the
+#       credentials and sessions in ~/.claude, ~/.codex, and ~/.gemini), or
 #       one of the OS selector symlinks created in step 7 (bat, ghostty,
 #       neovide, zed).
-PACKAGES_NOFOLD="bat fish ghostty git neovide zed"
+PACKAGES_NOFOLD="agents bat fish ghostty git neovide zed"
 
 # WHAT: Packages stowed with --no-folding and a per-OS --ignore, in a third
 #       invocation of their own.

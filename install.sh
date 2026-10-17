@@ -10,19 +10,26 @@
 #     --dry-run            Show every action without changing anything.
 #     --cli-only           Skip GUI applications (Ghostty, Zed, Neovide,
 #                          Visual Studio Code, Cursor, Antigravity IDE).
-#     --packages a,b,c     Only handle the named stow packages.
+#     --packages a,b,c     Only handle the named stow packages. Selects no AI
+#                          tools unless --ai-tools is also given.
+#     --ai-tools a,b,c     Install these AI tools without asking: tool ids,
+#                          vendor names (claude, cursor, codex, antigravity),
+#                          all, or none. README.md § AI tools lists the ids.
 #     --uninstall          Remove the symlinks this script created.
-#     --yes, -y            Answer yes to every prompt. Required for
+#     --yes, -y            Answer yes to every yes/no prompt. Required for
 #                          non-interactive runs: without a terminal the script
-#                          refuses prompts rather than assuming consent.
+#                          refuses prompts rather than assuming consent. It
+#                          does not choose AI tools; --ai-tools does.
 #     --help, -h           This message.
 #
 # WHAT IT DOES, IN ORDER
-#     1. Detect OS, distribution, and package manager.
+#     1. Detect OS, distribution, and package manager, and ask which AI tools
+#        to install.
 #     2. Install Homebrew's prerequisites (Linux only).
 #     3. Install Homebrew if missing, and put it on PATH for this run.
 #     4. `brew bundle` the repo's Brewfile.
-#     5. Install GUI apps that Homebrew cannot provide (Linux only).
+#     5. Install GUI apps and AI tools that Homebrew cannot provide (Linux
+#        only).
 #     6. Back up anything in the way, then stow every package.
 #     7. Create the per-OS selector symlinks that stow cannot express.
 #     8. Bootstrap Neovim, install the editors' extensions, prime the tldr
@@ -144,6 +151,32 @@ IBM Plex Mono|*
 SELECTION
 )
 
+# WHAT: The AI tools the installer offers, one per line:
+#       vendor|id|label|kind|Linux method|Linux target|binary
+# WHY : One table drives the menu, the --ai-tools ids, and the Linux installs.
+#       On macOS every tool is a Homebrew cask, and the Brewfile maps each id
+#       to its cask; casks are macOS-only, so Linux needs the last three
+#       fields. A kind of `app` is a desktop application, which --cli-only
+#       leaves out.
+# HOW : The Linux method is `npm` (the target is the package), `script` (the
+#       target is the vendor's install script, piped into bash), or `url`
+#       (the target is printed for a manual install). The binary is the
+#       command whose presence skips the install. A new tool needs a line
+#       here and a cask line in the Brewfile.
+AI_TOOL_TABLE=$(cat <<'TOOLS'
+claude|claude-desktop|Claude Desktop|app|url|https://code.claude.com/docs/en/desktop-linux|
+claude|claude-cli|Claude Code CLI|cli|npm|@anthropic-ai/claude-code|claude
+cursor|cursor-app|Cursor|app|url|https://cursor.com/downloads|
+cursor|cursor-cli|Cursor CLI|cli|script|https://cursor.com/install|cursor-agent
+codex|codex-app|Codex app|app|url|https://openai.com/codex|
+codex|codex-cli|Codex CLI|cli|npm|@openai/codex|codex
+antigravity|antigravity-app|Antigravity App|app|url|https://antigravity.google/download|
+antigravity|antigravity-cli|Antigravity CLI|cli|script|https://antigravity.google/cli/install.sh|agy
+antigravity|antigravity-ide|Antigravity IDE|app|url|https://antigravity.google/download|
+TOOLS
+)
+AI_VENDORS="claude cursor codex antigravity"
+
 # ==============================================================================
 # Options, populated by parse_args
 # ==============================================================================
@@ -152,12 +185,18 @@ CLI_ONLY=0
 UNINSTALL=0
 ASSUME_YES=0
 PACKAGES_REQUESTED=""
+AI_TOOLS_GIVEN=0
+AI_TOOLS_REQUESTED=""
 
 # Filled in by detect_platform.
 OS=""
 DISTRO=""
 PKG_MANAGER=""
 BACKUP_DIR=""
+
+# Filled in by choose_ai_tools and install_ai_tools_linux.
+AI_TOOLS=""
+AI_TOOLS_URLS=""
 
 # ==============================================================================
 # Output helpers
@@ -260,14 +299,14 @@ is_ours() {
 #       blocks.
 # WHY : The header is the single copy of that text.
 # NOTE: The line range must be updated when the header changes.
-usage() { sed -n '2,30p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,37p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
 # ==============================================================================
 # 1. Argument parsing
 # ==============================================================================
 # WHAT: Set the option variables above from the command line.
-# NOTE: `--packages` takes its list as a separate argument or with `=`, so
-#       both `--packages nvim` and `--packages=nvim` work.
+# NOTE: `--packages` and `--ai-tools` take their list as a separate argument
+#       or with `=`, so both `--packages nvim` and `--packages=nvim` work.
 parse_args() {
     while [ $# -gt 0 ]; do
         case "$1" in
@@ -285,6 +324,16 @@ parse_args() {
                 ;;
             --packages=*)
                 PACKAGES_REQUESTED="$(printf '%s' "${1#*=}" | tr ',' ' ')"
+                ;;
+            --ai-tools)
+                shift
+                [ $# -gt 0 ] || die "--ai-tools needs a comma-separated list"
+                AI_TOOLS_GIVEN=1
+                AI_TOOLS_REQUESTED="$(printf '%s' "$1" | tr ',' ' ')"
+                ;;
+            --ai-tools=*)
+                AI_TOOLS_GIVEN=1
+                AI_TOOLS_REQUESTED="$(printf '%s' "${1#*=}" | tr ',' ' ')"
                 ;;
             *) die "unknown option: $1 (try --help)" ;;
         esac
@@ -361,6 +410,155 @@ detect_platform() {
 }
 
 # ==============================================================================
+# 2b. AI tool selection
+# ==============================================================================
+# WHAT: Decide which AI tools this run installs, from --ai-tools or by asking
+#       once per vendor, and leave the ids in AI_TOOLS.
+# WHY : It runs before anything is installed, so the rest of the run needs no
+#       keyboard. The answer is a choice among several tools rather than a
+#       yes/no question, so `confirm` and --yes do not apply. Without a
+#       terminal nothing is selected, for the reason `confirm` refuses: a
+#       piped run must not install software nobody chose.
+# NOTE: A --packages run is for linking configuration, so it selects no AI
+#       tools unless --ai-tools is also given.
+choose_ai_tools() {
+    step "AI tools"
+
+    local vendor picked
+    if [ "$AI_TOOLS_GIVEN" -eq 1 ]; then
+        expand_ai_tools "$AI_TOOLS_REQUESTED"
+    elif [ -n "$PACKAGES_REQUESTED" ]; then
+        info "--packages given: none selected (add --ai-tools to choose)"
+    elif [ ! -t 0 ]; then
+        warn "No terminal to ask on: no AI tools selected."
+        warn "Re-run with --ai-tools=all, or a list such as --ai-tools=claude,codex-cli."
+    else
+        [ "$CLI_ONLY" -eq 1 ] && info "CLI-only: desktop apps are not offered"
+        for vendor in $AI_VENDORS; do
+            picked="$(ask_ai_vendor "$vendor")"
+            # shellcheck disable=SC2086  # $picked is a newline-separated id list
+            AI_TOOLS="$AI_TOOLS $(printf '%s ' $picked)"
+        done
+        # shellcheck disable=SC2086  # collapse the spaces the loop left
+        AI_TOOLS="$(printf '%s ' $AI_TOOLS)"
+        AI_TOOLS="${AI_TOOLS% }"
+    fi
+
+    if [ -n "$AI_TOOLS" ]; then
+        ok "Selected: $AI_TOOLS"
+    else
+        ok "No AI tools selected"
+    fi
+}
+
+# WHAT: Print one field of the AI tool table for an id.
+# HOW : Fields are numbered as in AI_TOOL_TABLE: 1 vendor, 2 id, 3 label,
+#       4 kind, 5 Linux method, 6 Linux target, 7 binary.
+ai_tool_field() {
+    printf '%s\n' "$AI_TOOL_TABLE" | awk -F'|' -v id="$1" -v f="$2" '$2 == id { print $f }'
+}
+
+# WHAT: Print a vendor's tool ids, one per line, leaving out desktop apps
+#       under --cli-only.
+ai_vendor_tools() {
+    printf '%s\n' "$AI_TOOL_TABLE" \
+        | awk -F'|' -v v="$1" -v cli="$CLI_ONLY" '$1 == v && (cli == 0 || $4 == "cli") { print $2 }'
+}
+
+# WHAT: Turn the --ai-tools words (ids, vendor names, all, none) into the
+#       space-separated, de-duplicated id list in AI_TOOLS.
+# WHY : An unknown word stops the run before anything is installed, with the
+#       valid ids, rather than installing part of what was meant.
+expand_ai_tools() {
+    local word id ids result=""
+    for word in $1; do
+        case "$word" in
+            none) continue ;;
+            all) ids="$(for v in $AI_VENDORS; do ai_vendor_tools "$v"; done)" ;;
+            *)
+                case " $AI_VENDORS " in
+                    *" $word "*) ids="$(ai_vendor_tools "$word")" ;;
+                    *)
+                        [ -n "$(ai_tool_field "$word" 2)" ] || die "unknown AI tool: $word" \
+                            "(valid: all, none, $AI_VENDORS, $(printf '%s\n' "$AI_TOOL_TABLE" \
+                            | awk -F'|' '{ printf "%s ", $2 }'))"
+                        if [ "$CLI_ONLY" -eq 1 ] && [ "$(ai_tool_field "$word" 4)" = "app" ]; then
+                            warn "CLI-only: skipping $word, a desktop app"
+                            continue
+                        fi
+                        ids="$word"
+                        ;;
+                esac
+                ;;
+        esac
+        for id in $ids; do
+            case " $result " in
+                *" $id "*) ;;
+                *) result="$result $id" ;;
+            esac
+        done
+    done
+    AI_TOOLS="${result# }"
+}
+
+# WHAT: Ask which of one vendor's tools to install, and print the chosen ids,
+#       one per line.
+# WHY : One prompt per vendor keeps each question to two or three numbered
+#       tools. Enter means none, so a re-run that needs nothing new is four
+#       presses of Enter.
+# NOTE: The prompt and any warning go to stderr, because stdout is the answer
+#       the caller captures.
+ask_ai_vendor() {
+    local vendor="$1" ids id n=0 i word reply chosen valid menu="" name
+    ids="$(ai_vendor_tools "$vendor")"
+    [ -n "$ids" ] || return 0
+
+    for id in $ids; do
+        n=$((n + 1))
+        menu="$menu  $n) $(ai_tool_field "$id" 3)"
+    done
+    case "$vendor" in
+        claude) name="Claude" ;;
+        cursor) name="Cursor" ;;
+        codex) name="Codex" ;;
+        antigravity) name="Antigravity" ;;
+        *) name="$vendor" ;;
+    esac
+
+    while :; do
+        printf '    %s:%s   [a]ll, [n]one, or numbers [n]: ' "$name" "$menu" >&2
+        read -r reply || reply=""
+        case "$reply" in
+            "" | [nN] | [nN][oO][nN][eE]) return 0 ;;
+            [aA] | [aA][lL][lL]) printf '%s\n' "$ids"; return 0 ;;
+        esac
+
+        chosen=""
+        valid=1
+        for word in $(printf '%s' "$reply" | tr ',' ' '); do
+            case "$word" in
+                *[!0-9]*) valid=0; break ;;
+            esac
+            if [ "$word" -lt 1 ] || [ "$word" -gt "$n" ]; then
+                valid=0
+                break
+            fi
+            i=0
+            for id in $ids; do
+                i=$((i + 1))
+                [ "$i" -eq "$word" ] && chosen="$chosen $id"
+            done
+        done
+        if [ "$valid" -eq 1 ] && [ -n "$chosen" ]; then
+            # shellcheck disable=SC2086  # one id per line
+            printf '%s\n' $chosen
+            return 0
+        fi
+        warn "Answer a, n, or numbers from 1 to $n."
+    done
+}
+
+# ==============================================================================
 # 3. Homebrew prerequisites (Linux only)
 # ==============================================================================
 # WHAT: Install the compiler and utilities Homebrew needs before it runs.
@@ -432,9 +630,13 @@ install_homebrew() {
 # 5. Brewfile
 # ==============================================================================
 # WHAT: Install everything the Brewfile declares.
-# WHY : The Brewfile guards its own entries with OS.mac?, OS.linux?, and the
-#       CLI-only variable, so one file and one command serve both platforms.
-#       The variable must be HOMEBREW_-prefixed; the Brewfile header explains.
+# WHY : The Brewfile guards its own entries with OS.mac?, OS.linux?, the
+#       CLI-only variable, and the AI tool selection, so one file and one
+#       command serve both platforms. The variables must be HOMEBREW_-prefixed;
+#       the Brewfile header explains.
+# NOTE: An empty selection is passed as the word `none`, never as an empty
+#       string. The Brewfile reads an unset variable as every tool, for a bare
+#       `brew bundle`, and an empty value is not guaranteed to arrive set.
 install_brewfile() {
     step "Installing packages from the Brewfile"
     [ -f "$DOTFILES_DIR/Brewfile" ] || die "No Brewfile at $DOTFILES_DIR"
@@ -445,13 +647,14 @@ install_brewfile() {
     #       unavailable on this platform) should not stop the configuration
     #       from being linked. The failure is reported and `brew bundle check`
     #       lists what is missing.
-    local bundle_status=0
+    local bundle_status=0 ai_tools="${AI_TOOLS:-none}"
     if [ "$CLI_ONLY" -eq 1 ]; then
         info "CLI-only: GUI applications will be skipped"
-        run env HOMEBREW_DOTFILES_CLI_ONLY=1 \
+        run env HOMEBREW_DOTFILES_CLI_ONLY=1 HOMEBREW_DOTFILES_AI_TOOLS="$ai_tools" \
             brew bundle install --file "$DOTFILES_DIR/Brewfile" || bundle_status=$?
     else
-        run brew bundle install --file "$DOTFILES_DIR/Brewfile" || bundle_status=$?
+        run env HOMEBREW_DOTFILES_AI_TOOLS="$ai_tools" \
+            brew bundle install --file "$DOTFILES_DIR/Brewfile" || bundle_status=$?
     fi
 
     if [ "$bundle_status" -eq 0 ]; then
@@ -470,12 +673,12 @@ install_brewfile() {
 # WHAT: Install Ghostty and Zed through the distribution's package manager.
 # WHY : Both are Homebrew casks, and casks are macOS-only. Neovide has a
 #       formula, so the Brewfile handled it.
-# NOTE: Visual Studio Code and Cursor are casks too and are not handled here.
-#       Code needs Microsoft's third-party apt or dnf repository and Cursor
-#       ships only an AppImage; this script adds no system repository and
-#       fetches no third-party package, which is also why it does not fetch
-#       Ghostty's community .deb. Their configuration still deploys; the
-#       Brewfile carries the download links. Every step here warns and
+# NOTE: Visual Studio Code is a cask too and is not handled here. Code needs
+#       Microsoft's third-party apt or dnf repository; this script adds no
+#       system repository and fetches no third-party package, which is also
+#       why it does not fetch Ghostty's community .deb. Its configuration
+#       still deploys; the Brewfile carries the download link. Cursor and
+#       Antigravity IDE are AI tools, handled by install_ai_tools_linux. Every step here warns and
 #       continues, because packaging varies between distributions.
 install_gui_apps_linux() {
     [ "$OS" = "linux" ] || return 0
@@ -626,6 +829,62 @@ SELECTION
 
     command -v fc-cache >/dev/null 2>&1 && run fc-cache -f "$font_dir"
     ok "Installed $installed font files to $font_dir"
+}
+
+# ==============================================================================
+# 6c. AI tools Homebrew cannot install (Linux only)
+# ==============================================================================
+# WHAT: Install the selected AI command-line tools with each vendor's
+#       documented method, and collect the download pages of the selected
+#       desktop apps for the summary.
+# WHY : Every AI tool is a Homebrew cask, and casks are macOS-only. The Claude
+#       Code and Codex CLIs are npm packages, which the Brewfile's node
+#       provides when either is selected. The Cursor and Antigravity CLIs
+#       publish only an install script; selecting one in the menu is the
+#       decision to pipe that script into bash, the step the Zed install
+#       leaves to the user. Both scripts install into ~/.local/bin and need
+#       no sudo. The desktop apps need a third-party repository or an archive
+#       (Claude Desktop and the Codex app add an apt repository; Cursor is an
+#       AppImage; the Antigravity apps are .tar.gz files), which this script
+#       does not fetch, so their pages are printed instead.
+# NOTE: A tool whose command is already on PATH is skipped, so a re-run does
+#       not reinstall. Each failure warns and continues.
+install_ai_tools_linux() {
+    [ "$OS" = "linux" ] || return 0
+    [ -n "$AI_TOOLS" ] || return 0
+
+    step "AI tools"
+
+    local id label method target binary
+    for id in $AI_TOOLS; do
+        label="$(ai_tool_field "$id" 3)"
+        method="$(ai_tool_field "$id" 5)"
+        target="$(ai_tool_field "$id" 6)"
+        binary="$(ai_tool_field "$id" 7)"
+
+        if [ "$method" = "url" ]; then
+            AI_TOOLS_URLS="$AI_TOOLS_URLS  $label: $target
+"
+            info "$label: install by hand from $target"
+            continue
+        fi
+        if [ -n "$binary" ] && command -v "$binary" >/dev/null 2>&1; then
+            ok "$label already installed"
+            continue
+        fi
+        case "$method" in
+            npm)
+                if ! command -v npm >/dev/null 2>&1 && [ "$DRY_RUN" -eq 0 ]; then
+                    warn "$label: npm is not on PATH (the Brewfile's node failed?); skipping"
+                    continue
+                fi
+                run npm install -g "$target" || warn "$label install failed"
+                ;;
+            script)
+                run bash -c "curl -fsSL '$target' | bash" || warn "$label install failed"
+                ;;
+        esac
+    done
 }
 
 # ==============================================================================
@@ -1196,6 +1455,12 @@ print_summary() {
     info "    Antigravity IDE"
     [ -n "$BACKUP_DIR" ] && info "Displaced files were saved to: $BACKUP_DIR"
 
+    if [ -n "$AI_TOOLS_URLS" ]; then
+        info ""
+        info "Install these selected AI tools by hand:"
+        printf '%s' "$AI_TOOLS_URLS" | sed 's/^/    /'
+    fi
+
     if [ "$OS" = "linux" ]; then
         info ""
         info "Fonts come from $FONTS_REPO"
@@ -1235,11 +1500,13 @@ main() {
         return 0
     fi
 
+    choose_ai_tools
     install_prerequisites
     install_homebrew
     install_brewfile
     install_gui_apps_linux
     install_fonts_linux
+    install_ai_tools_linux
     stow_packages
     link_os_selectors
     install_catppuccin_themes

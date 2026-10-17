@@ -18,20 +18,21 @@
 #   passes only HOMEBREW_* variables through to this file, so a plain
 #   DOTFILES_CLI_ONLY would read as nil and every GUI app would install.
 #
+#   `ENV["HOMEBREW_DOTFILES_AI_TOOLS"]` is set by ./install.sh to the AI tool
+#   ids chosen in its menu or with --ai-tools, space-separated, or to `none`.
+#   Unset, as in a bare `brew bundle`, it selects every AI tool, so this file
+#   still declares all of them and `brew bundle cleanup` does not list an
+#   installed one for removal.
+#
 # NOT LISTED HERE
 #   * clangd: Xcode on macOS; an LLVM package on Linux, often versioned as
 #     clangd-18 with `clangd` through update-alternatives.
 #   * sourcekit-lsp: Xcode on macOS; the swift.org toolchain on Linux.
 #   * rust-analyzer and rustfmt: rustup (see fish/conf.d/00-path.fish).
 #   * fish_indent: ships with fish.
-#   * Claude Code: its native installer
-#     (`curl -fsSL https://claude.ai/install.sh | bash`), which puts it in
-#     ~/.local/bin and updates it in the background; the `claude-code` cask
-#     does not update itself. agents/ configures it.
-#   * Codex on Linux: Homebrew has only a cask, so install it with
-#     `npm install -g @openai/codex` or from its GitHub release binaries.
-#   * The Antigravity CLI on Linux: Homebrew has only a cask, so install it
-#     with `curl -fsSL https://antigravity.google/cli/install.sh | bash`.
+#   * AI tools on Linux: every one is a cask, so install.sh installs the CLIs
+#     with npm or the vendor's script and prints the desktop apps' download
+#     pages (install.sh § 6c).
 #   * Fonts on Linux: casks cannot install them, so install.sh fetches them
 #     from a private repository (README.md § The font stack).
 #
@@ -49,24 +50,18 @@ cask "font-source-code-pro"          if OS.mac? # fallback                    ->
 cask "font-ibm-plex-mono"            if OS.mac? # fallback                    -> every font stack
 
 # --- Applications ------------------------------------------------------------------
-# Every application this repo configures is declared here, so the Brewfile
-# and the package list match. macOS gets all seven as casks. On Linux, Neovide
-# has a formula. Ghostty and Zed are cask-only, so install.sh uses the
-# distribution's package manager. Visual Studio Code, Cursor, and the two
-# Antigravity apps are installed by hand: Code needs Microsoft's apt or dnf
-# repository (a signing key and a sources file), Cursor ships only an
-# AppImage, the Antigravity apps ship only as .tar.gz archives, and install.sh
-# adds no third-party system repository.
+# Every application this repo configures is declared here or, for the AI
+# tools, under AI coding agents, so the Brewfile and the package list match.
+# macOS gets all four below as casks. On Linux, Neovide has a formula. Ghostty
+# and Zed are cask-only, so install.sh uses the distribution's package manager.
+# Visual Studio Code is installed by hand: it needs Microsoft's apt or dnf
+# repository (a signing key and a sources file), and install.sh adds no
+# third-party system repository.
 #     https://code.visualstudio.com/docs/setup/linux
-#     https://cursor.com/downloads
-#     https://antigravity.google/download
 cask "ghostty"            if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # terminal    -> ghostty/
 cask "zed"                if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # GUI editor  -> zed/
 cask "neovide-app"        if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # Neovim GUI  -> neovide/
 cask "visual-studio-code" if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # GUI editor  -> vscode/
-cask "cursor"             if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # GUI editor  -> cursor/
-cask "antigravity"        if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # agent app   -> agents/
-cask "antigravity-ide"    if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # agent IDE   -> agents/
 brew "neovide"     if OS.linux? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"] # Neovim GUI, as a formula -> neovide/
 
 # --- Dotfiles management -------------------------------------------------------------
@@ -93,12 +88,31 @@ brew "wl-clipboard" if OS.linux? # Wayland, the default on current GNOME and KDE
 brew "xclip"        if OS.linux? # X11
 
 # --- AI coding agents ------------------------------------------------------------------
-# WHAT: The Codex and Antigravity CLIs, which read the agents/ instruction file.
-# WHY : Both are published as casks, not formulae, so they are macOS-only here
-#       (see NOT LISTED HERE for Linux). They are command-line tools, so unlike
-#       the casks under Applications they are not skipped by --cli-only.
-cask "codex"           if OS.mac? # OpenAI's coding agent              -> agents/ (~/.codex/AGENTS.md)
-cask "antigravity-cli" if OS.mac? # Google's coding agent, as `agy`    -> agents/ (~/.gemini/AGENTS.md)
+# WHAT: Each vendor's desktop app and CLI, installed only if selected in
+#       install.sh's menu or with --ai-tools; the comment's first word is the
+#       id. The agents read the agents/ instruction file.
+# WHY : All are casks, so they are macOS-only here (see NOT LISTED HERE for
+#       Linux). The desktop apps are also skipped by --cli-only; the CLIs are
+#       not.
+# HOW : The ids and their Linux install methods are in install.sh's
+#       AI_TOOL_TABLE; a new tool needs a line there and one here.
+ai_tools = ENV["HOMEBREW_DOTFILES_AI_TOOLS"]
+ai_tool = ->(id) { ai_tools.nil? || ai_tools.split.include?(id) }
+gui = !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]
+cask "claude"          if OS.mac? && gui && ai_tool.("claude-desktop")  # claude-desktop: Claude Desktop          -> agents/
+cask "claude-code"     if OS.mac? && ai_tool.("claude-cli")             # claude-cli: Claude Code, as `claude`     -> agents/ (~/.claude/CLAUDE.md)
+cask "cursor"          if OS.mac? && gui && ai_tool.("cursor-app")      # cursor-app: the Cursor editor            -> cursor/
+cask "cursor-cli"      if OS.mac? && ai_tool.("cursor-cli")             # cursor-cli: Cursor's agent, as `cursor-agent`
+cask "codex-app"       if OS.mac? && gui && ai_tool.("codex-app")       # codex-app: the Codex desktop app         -> agents/
+cask "codex"           if OS.mac? && ai_tool.("codex-cli")              # codex-cli: OpenAI's Codex CLI            -> agents/ (~/.codex/AGENTS.md)
+cask "antigravity"     if OS.mac? && gui && ai_tool.("antigravity-app") # antigravity-app: the Antigravity App     -> agents/
+cask "antigravity-cli" if OS.mac? && ai_tool.("antigravity-cli")        # antigravity-cli: Google's agent, as `agy` -> agents/ (~/.gemini/AGENTS.md)
+cask "antigravity-ide" if OS.mac? && gui && ai_tool.("antigravity-ide") # antigravity-ide: the Antigravity IDE    -> antigravity-ide/, agents/
+# WHAT: Node.js, for npm.
+# WHY : On Linux, install.sh installs the Claude Code and Codex CLIs with
+#       `npm install -g`, the vendors' method there; Homebrew's node keeps the
+#       global prefix writable without sudo. Nothing else here needs it.
+brew "node" if OS.linux? && (ai_tool.("claude-cli") || ai_tool.("codex-cli")) # npm -> install.sh § 6c
 
 # --- Git -----------------------------------------------------------------------------
 brew "git-delta"     # diff pager               -> git/config [delta]

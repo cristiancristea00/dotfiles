@@ -1,9 +1,9 @@
 <!--
-AGENTS.md: global instructions for Claude Code, Codex, and Gemini CLI, stowed
+AGENTS.md: global instructions for Claude Code, Codex, and Antigravity, stowed
 from agents/ in the dotfiles repository as ~/.claude/CLAUDE.md,
-~/.codex/AGENTS.md, and ~/.gemini/GEMINI.md; agents/README.md documents it.
-Gemini CLI treats an unquoted `@` path as an import: keep every `@` in
-backticks and use no imports.
+~/.codex/AGENTS.md, and ~/.gemini/AGENTS.md; agents/README.md documents it.
+Claude Code and Antigravity treat an unquoted `@` path as an import or file
+reference: keep every `@` in backticks and use no imports.
 -->
 
 # Global instructions
@@ -26,8 +26,8 @@ apply regardless.
   documentation rather than memory.
 * Once the questions are answered, work to the end without further check-ins
   unless a new open choice appears.
-* In a run where no one can answer, such as `claude -p`, `codex exec`, or CI,
-  make no changes and end with the questions.
+* In a run where no one can answer, such as `claude -p`, `codex exec`,
+  `agy -p`, or CI, make no changes and end with the questions.
 * Use subagents whenever they help, including for parallel research and for
   reviewing your own work. Give them your own model and reasoning effort; a
   Claude Fable session gives them Opus at the same effort.

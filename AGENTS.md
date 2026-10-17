@@ -135,7 +135,7 @@ rules an agent must not break:
   `CLAUDE.md`. Edit the real file; never replace a link with a copy.
 * `agents/.codex/AGENTS.md` is the global instruction file for every
   repository, not this repo's guidance; `agents/.claude/CLAUDE.md` and
-  `agents/.gemini/GEMINI.md` are committed symlinks to it. Its traps are in
+  `agents/.gemini/AGENTS.md` are committed symlinks to it. Its traps are in
   [agents/README.md](agents/README.md).
 
 ## Cross-platform

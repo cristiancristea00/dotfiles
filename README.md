@@ -3,7 +3,7 @@
 Configuration for a **macOS and Linux** development setup: **Ghostty** running
 **fish**, **Neovim** (in the terminal and under **Neovide**), **Zed**,
 **Visual Studio Code**, **Cursor**, **Git**, **bat**, and **tlrc**, plus one
-instruction file for the **Claude Code**, **Codex**, and **Gemini CLI** coding
+instruction file for the **Claude Code**, **Codex**, and **Antigravity** coding
 agents. One script installs everything; GNU **stow** links it into place.
 
 Two rules shape the repo:
@@ -52,10 +52,12 @@ without changing anything.
   later and needs a COPR on Fedora; Zed is packaged only for Arch. Where no
   package exists the script prints the upstream download URL instead of
   piping a remote script into a shell.
-* **Codex on Linux.** Homebrew publishes Codex only as a cask, so on Linux
-  install it with `npm install -g @openai/codex` or from the release binaries
-  on GitHub. Claude Code is not in the Brewfile on either platform; its native
-  installer keeps it updated. See [the Brewfile](Brewfile).
+* **Codex and Antigravity on Linux.** Homebrew publishes both only as casks.
+  On Linux, install Codex with `npm install -g @openai/codex` or from its
+  release binaries on GitHub, the Antigravity CLI with its install script, and
+  the Antigravity App and IDE from the `.tar.gz` archives at
+  antigravity.google/download. Claude Code is not in the Brewfile on either
+  platform; its native installer keeps it updated. See [the Brewfile](Brewfile).
 * **`~/.gitconfig`.** Git reads it after `~/.config/git/config`, so any value
   in it wins. Remove or rename it. See [git/README](git/README.md).
 * **Xcode's theme** must be selected by hand. See

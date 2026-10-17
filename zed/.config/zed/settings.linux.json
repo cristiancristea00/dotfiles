@@ -356,9 +356,10 @@
     //       The per-OS split renamed this pair, so neither variant matched any
     //       longer and both opened as strict JSON with every comment line
     //       flagged; `**/zed/settings*.json` covers all three names. The other
-    //       two globs cover the VS Code and Cursor settings this repo also
-    //       ships, which Zed's defaults do not name at all.
-    // NOTE: Three globs rather than six, because a user's `file_types` extends
+    //       three globs cover the VS Code, Cursor, and Antigravity IDE
+    //       settings this repo also ships, which Zed's defaults do not name at
+    //       all.
+    // NOTE: Four globs rather than seven, because a user's `file_types` extends
     //       Zed's defaults instead of replacing them. The setting is
     //       `HashMap<Arc<str>, ExtendingSet<String>>`, a `HashMap` merges per
     //       key, and `ExtendingSet::merge_from` extends the list, all in
@@ -384,6 +385,7 @@
         "JSONC": [
             "**/Code/User/*.json",
             "**/Cursor/User/*.json",
+            "**/Antigravity IDE/User/*.json",
             "**/zed/settings*.json"
         ]
     },

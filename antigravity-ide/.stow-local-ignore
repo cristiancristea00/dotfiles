@@ -1,0 +1,21 @@
+# Files stow must not link out of this package. This file replaces stow's
+# built-in ignore list, so the defaults this repo needs are restated below;
+# the RCS, CVS, Subversion, darcs, and Mercurial patterns are left out.
+# Entries are anchored regexes; a leading ^/ anchors to the top of the package.
+
+# --- stow's defaults, restated -------------------------------------------------
+^/README.*
+^/LICENSE.*
+^/COPYING
+\.git
+\.gitignore
+\.gitmodules
+.+~
+\#.*\#
+
+# --- this package's additions ---------------------------------------------------
+# The extension lists are inputs to install.sh, not files that belong in $HOME.
+^/extensions.*\.txt
+# macOS creates .DS_Store in any directory Finder opens. Stow's defaults do not
+# cover it, so without this line it would be linked into $HOME.
+\.DS_Store

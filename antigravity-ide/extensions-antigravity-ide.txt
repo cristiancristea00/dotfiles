@@ -1,0 +1,26 @@
+# ==============================================================================
+# extensions-antigravity-ide.txt — Antigravity IDE only
+# ==============================================================================
+#
+# WHAT: Extensions installed into Antigravity IDE but not Visual Studio Code or
+#       Cursor. Each replaces a Microsoft extension that Antigravity IDE's
+#       gallery, Open VSX (open-vsx.org), does not serve.
+# WHY : Open VSX carries every id in ../vscode/extensions.txt but none of
+#       Microsoft's licence-restricted extensions: Pylance, the C++ tools, and
+#       the ms-vscode-remote.* family. Antigravity IDE bundles its own
+#       remote-SSH and dev-container extensions, so only the language tools
+#       need a substitute here.
+# HOW : One id per line; `#` starts a comment. The shared ids are in
+#       ../vscode/extensions.txt. Check an id with
+#       `curl -s -o /dev/null -w '%{http_code}' https://open-vsx.org/api/<publisher>/<name>`;
+#       200 means Open VSX serves it.
+# NOTE: The file ../vscode/extensions-vscode.txt lists the VS Code extension
+#       each entry here replaces. Change one file, check the other.
+# ==============================================================================
+# C, C++, and Objective-C IntelliSense, from the clangd language server.
+#                              Substitutes for: ms-vscode.cpptools,
+#                                               ms-vscode.cpp-devtools
+llvm-vs-code-extensions.vscode-clangd
+# Python type checking and IntelliSense, a Pyright fork.
+#                              Substitutes for: ms-python.vscode-pylance
+detachhead.basedpyright

@@ -24,6 +24,12 @@
 #   * sourcekit-lsp: Xcode on macOS; the swift.org toolchain on Linux.
 #   * rust-analyzer and rustfmt: rustup (see fish/conf.d/00-path.fish).
 #   * fish_indent: ships with fish.
+#   * Claude Code: its native installer
+#     (`curl -fsSL https://claude.ai/install.sh | bash`), which puts it in
+#     ~/.local/bin and updates it in the background; the `claude-code` cask
+#     does not update itself. agents/ configures it.
+#   * Codex on Linux: Homebrew has only a cask, so install it with
+#     `npm install -g @openai/codex` or from its GitHub release binaries.
 #   * Fonts on Linux: casks cannot install them, so install.sh fetches them
 #     from a private repository (README.md § The font stack).
 #
@@ -79,6 +85,14 @@ brew "tlrc"          # tldr client (the `tldr` binary)    -> tlrc/
 #       Neovim picks at runtime.
 brew "wl-clipboard" if OS.linux? # Wayland, the default on current GNOME and KDE
 brew "xclip"        if OS.linux? # X11
+
+# --- AI coding agents ------------------------------------------------------------------
+# WHAT: The Codex and Gemini CLIs, which read agents/'s instruction file.
+# WHY : Codex is published as a cask, not a formula, so it is macOS-only here
+#       (see NOT LISTED HERE for Linux). It is a command-line tool, so unlike
+#       the casks under Applications it is not skipped by --cli-only.
+cask "codex" if OS.mac? # OpenAI's coding agent  -> agents/ (~/.codex/AGENTS.md)
+brew "gemini-cli"       # Google's coding agent  -> agents/ (~/.gemini/GEMINI.md)
 
 # --- Git -----------------------------------------------------------------------------
 brew "git-delta"     # diff pager               -> git/config [delta]

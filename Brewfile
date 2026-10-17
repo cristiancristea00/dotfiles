@@ -30,6 +30,8 @@
 #     does not update itself. agents/ configures it.
 #   * Codex on Linux: Homebrew has only a cask, so install it with
 #     `npm install -g @openai/codex` or from its GitHub release binaries.
+#   * The Antigravity CLI on Linux: Homebrew has only a cask, so install it
+#     with `curl -fsSL https://antigravity.google/cli/install.sh | bash`.
 #   * Fonts on Linux: casks cannot install them, so install.sh fetches them
 #     from a private repository (README.md § The font stack).
 #
@@ -48,19 +50,23 @@ cask "font-ibm-plex-mono"            if OS.mac? # fallback                    ->
 
 # --- Applications ------------------------------------------------------------------
 # Every application this repo configures is declared here, so the Brewfile
-# and the package list match. macOS gets all five as casks. On Linux, Neovide
+# and the package list match. macOS gets all seven as casks. On Linux, Neovide
 # has a formula. Ghostty and Zed are cask-only, so install.sh uses the
-# distribution's package manager. Visual Studio Code and Cursor are installed
-# by hand: Code needs Microsoft's apt or dnf repository (a signing key and a
-# sources file), Cursor ships only an AppImage, and install.sh adds no
-# third-party system repository.
+# distribution's package manager. Visual Studio Code, Cursor, and the two
+# Antigravity apps are installed by hand: Code needs Microsoft's apt or dnf
+# repository (a signing key and a sources file), Cursor ships only an
+# AppImage, the Antigravity apps ship only as .tar.gz archives, and install.sh
+# adds no third-party system repository.
 #     https://code.visualstudio.com/docs/setup/linux
 #     https://cursor.com/downloads
+#     https://antigravity.google/download
 cask "ghostty"            if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # terminal    -> ghostty/
 cask "zed"                if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # GUI editor  -> zed/
 cask "neovide-app"        if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # Neovim GUI  -> neovide/
 cask "visual-studio-code" if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # GUI editor  -> vscode/
 cask "cursor"             if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # GUI editor  -> cursor/
+cask "antigravity"        if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # agent app   -> agents/
+cask "antigravity-ide"    if OS.mac? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"]   # agent IDE   -> agents/
 brew "neovide"     if OS.linux? && !ENV["HOMEBREW_DOTFILES_CLI_ONLY"] # Neovim GUI, as a formula -> neovide/
 
 # --- Dotfiles management -------------------------------------------------------------
@@ -87,12 +93,12 @@ brew "wl-clipboard" if OS.linux? # Wayland, the default on current GNOME and KDE
 brew "xclip"        if OS.linux? # X11
 
 # --- AI coding agents ------------------------------------------------------------------
-# WHAT: The Codex and Gemini CLIs, which read agents/'s instruction file.
-# WHY : Codex is published as a cask, not a formula, so it is macOS-only here
-#       (see NOT LISTED HERE for Linux). It is a command-line tool, so unlike
-#       the casks under Applications it is not skipped by --cli-only.
-cask "codex" if OS.mac? # OpenAI's coding agent  -> agents/ (~/.codex/AGENTS.md)
-brew "gemini-cli"       # Google's coding agent  -> agents/ (~/.gemini/GEMINI.md)
+# WHAT: The Codex and Antigravity CLIs, which read the agents/ instruction file.
+# WHY : Both are published as casks, not formulae, so they are macOS-only here
+#       (see NOT LISTED HERE for Linux). They are command-line tools, so unlike
+#       the casks under Applications they are not skipped by --cli-only.
+cask "codex"           if OS.mac? # OpenAI's coding agent              -> agents/ (~/.codex/AGENTS.md)
+cask "antigravity-cli" if OS.mac? # Google's coding agent, as `agy`    -> agents/ (~/.gemini/AGENTS.md)
 
 # --- Git -----------------------------------------------------------------------------
 brew "git-delta"     # diff pager               -> git/config [delta]

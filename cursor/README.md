@@ -8,20 +8,22 @@ This file covers what is specific to Cursor.
 ## Where the configuration lives
 
 Every file here points at `../vscode/.config/Code/User/`, so one
-`settings.json` serves both editors on both platforms. The symlinks are
-committed as symlinks (git mode `120000`). Edit the real file in `vscode/`,
-never a link. See [One file, four paths](../vscode/README.md#one-file-four-paths).
+`settings.json` serves VS Code, Cursor, and Antigravity IDE on both
+platforms. The symlinks are committed as symlinks (git mode `120000`). Edit
+the real file in `vscode/`, never a link. See
+[One file, six paths](../vscode/README.md#one-file-six-paths).
 
 ## Install
 
-`./install.sh` handles this. Cursor is stowed together with `vscode`, in one
-invocation, because both need the same per-OS `--ignore`:
+`./install.sh` handles this. Cursor is stowed together with `vscode` and
+`antigravity-ide`, in one invocation, because all three need the same per-OS
+`--ignore`:
 
 ```sh
 # macOS
-stow --no-folding --ignore='\.config' --target="$HOME" --dir="$HOME/personal/dotfiles" vscode cursor
+stow --no-folding --ignore='\.config' --target="$HOME" --dir="$HOME/personal/dotfiles" vscode cursor antigravity-ide
 # Linux
-stow --no-folding --ignore='Library'  --target="$HOME" --dir="$HOME/personal/dotfiles" vscode cursor
+stow --no-folding --ignore='Library'  --target="$HOME" --dir="$HOME/personal/dotfiles" vscode cursor antigravity-ide
 ```
 
 [The stow model](../README.md#the-stow-model) in the root README explains why

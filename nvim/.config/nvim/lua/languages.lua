@@ -174,7 +174,7 @@ return {
         --       to the `jsonc` filetype.
         -- WHY : Neovim's runtime already maps `Code/User/*.json`, and
         --       core/filetypes.lua registers only the rules Neovim lacks, so
-        --       these are the four trees left without one. The filetype is also
+        --       these are the five trees left without one. The filetype is also
         --       the only lever over the server: Neovim sends the filetype as
         --       the LSP languageId, and vscode-json-language-server takes
         --       `comments: ignore` from the id `jsonc` alone. Left at `json`,
@@ -192,6 +192,7 @@ return {
         --       package.json at `json`.
         patterns = {
             [".*/Cursor/User/.*%.json"] = "jsonc", -- Neovim's own rule covers Code/User only
+            [".*/Antigravity IDE/User/.*%.json"] = "jsonc", -- the same, for Antigravity IDE
             [".*/zed/settings.*%.json"] = "jsonc", -- settings.json and both per-OS variants
             [".*/%.vscode/.*%.json"] = "jsonc", -- a project's VS Code directory
             [".*/%.zed/.*%.json"] = "jsonc", -- a project's Zed directory

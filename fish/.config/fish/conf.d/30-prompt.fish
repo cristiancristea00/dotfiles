@@ -14,9 +14,10 @@
 #         * Apple Terminal is excluded because it cannot render the Nerd Font
 #           powerline glyphs the theme uses; they show as boxes. The test is
 #           inert on Linux, where $TERM_PROGRAM is never that value. Zed, VS
-#           Code, and Cursor select the Nerd Font in their own settings files,
-#           so their terminals are not excluded. VS Code and Cursor both report
-#           $TERM_PROGRAM as "vscode", so a test for one applies to the other.
+#           Code, Cursor, and Antigravity IDE select the Nerd Font in their own
+#           settings files, so their terminals are not excluded. VS Code,
+#           Cursor, and Antigravity IDE all report $TERM_PROGRAM as "vscode",
+#           so a test for one applies to all three.
 # NOTE: Bundled theme filenames end in `.omp.json`; `.json` points at nothing
 #       and oh-my-posh fails on every interactive shell start.
 # NOTE: oh-my-posh takes one config path and has no light/dark form, so the

@@ -1,10 +1,11 @@
 # dotfiles
 
 Configuration for a **macOS and Linux** development setup: **Ghostty** running
-**fish**, **Neovim** (in the terminal and under **Neovide**), **Zed**,
-**Visual Studio Code**, **Cursor**, **Git**, **bat**, and **tlrc**, plus one
-instruction file for the **Claude Code**, **Codex**, and **Antigravity** coding
-agents. One script installs everything; GNU **stow** links it into place.
+**fish**, **Neovim** (in the terminal and under **Neovide**), **Zed**, **Visual
+Studio Code**, **Cursor**, **Antigravity IDE**, **Git**, **bat**, and **tlrc**,
+plus one instruction file for the **Claude Code**, **Codex**, and
+**Antigravity** coding agents. One script installs everything; GNU **stow**
+links it into place.
 
 Two rules shape the repo:
 
@@ -27,19 +28,45 @@ cd ~/personal/dotfiles
 ./install.sh
 ```
 
-The script detects the platform, installs Homebrew if it is missing, applies
-the `Brewfile`, backs up files that stow would collide with, links every
-package, creates the per-OS selector symlinks, bootstraps Neovim, and offers
-to make fish the login shell. `./install.sh --dry-run` prints every action
-without changing anything.
+The script detects the platform, asks which AI tools to install, installs
+Homebrew if it is missing, applies the `Brewfile`, backs up files that stow
+would collide with, links every package, creates the per-OS selector symlinks,
+bootstraps Neovim, and offers to make fish the login shell.
+`./install.sh --dry-run` prints every action without changing anything.
 
-| Option           | Effect                                                                                                |
-| ---------------- | ----------------------------------------------------------------------------------------------------- |
-| `--dry-run`      | Print every action, change nothing                                                                    |
-| `--cli-only`     | Skip the GUI apps (Ghostty, Zed, Neovide, VS Code, Cursor) for servers and containers                 |
-| `--packages a,b` | Handle only the named packages                                                                        |
-| `--uninstall`    | Remove the symlinks, leave the software installed                                                     |
-| `--yes`          | Answer yes to every prompt; required when stdin is not a terminal, where the script refuses to prompt |
+| Option           | Effect                                                                                                                                    |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `--dry-run`      | Print every action, change nothing                                                                                                        |
+| `--cli-only`     | Skip the GUI apps (Ghostty, Zed, Neovide, VS Code) and the desktop AI tools, for servers and containers                                   |
+| `--packages a,b` | Handle only the named packages; selects no AI tools unless `--ai-tools` is given                                                          |
+| `--ai-tools a,b` | Install these AI tools without asking: ids, vendor names, `all`, or `none` (see [AI tools](#ai-tools))                                    |
+| `--uninstall`    | Remove the symlinks, leave the software installed                                                                                         |
+| `--yes`          | Answer yes to every yes/no prompt; required when stdin is not a terminal, where the script refuses to prompt. It does not choose AI tools |
+
+### AI tools
+
+Before installing anything, the script asks once per vendor which AI tools to
+install. Each prompt takes `a` for all, `n` or Enter for none, or the tools'
+numbers. Without a terminal it selects none unless `--ai-tools` names them,
+and a `--packages` run selects none unless the flag is also given. The
+configuration in [`agents/`](agents/README.md), [`cursor/`](cursor/README.md),
+and [`antigravity-ide/`](antigravity-ide/README.md) is linked either way.
+
+| Vendor (`--ai-tools` name) | Id                | Tool            | macOS | Linux                                     |
+| -------------------------- | ----------------- | --------------- | ----- | ----------------------------------------- |
+| `claude`                   | `claude-desktop`  | Claude Desktop  | cask  | Download page printed (Debian and Ubuntu) |
+| `claude`                   | `claude-cli`      | Claude Code CLI | cask  | `npm install -g`                          |
+| `cursor`                   | `cursor-app`      | Cursor          | cask  | Download page printed (AppImage)          |
+| `cursor`                   | `cursor-cli`      | Cursor CLI      | cask  | Vendor install script                     |
+| `codex`                    | `codex-app`       | Codex app       | cask  | Download page printed                     |
+| `codex`                    | `codex-cli`       | Codex CLI       | cask  | `npm install -g`                          |
+| `antigravity`              | `antigravity-app` | Antigravity App | cask  | Download page printed (`.tar.gz`)         |
+| `antigravity`              | `antigravity-cli` | Antigravity CLI | cask  | Vendor install script                     |
+| `antigravity`              | `antigravity-ide` | Antigravity IDE | cask  | Download page printed (`.tar.gz`)         |
+
+`--cli-only` leaves the desktop apps out. The Brewfile gates each cask on its
+id; `install.sh`'s `AI_TOOL_TABLE` holds the Linux methods. A plain
+`brew bundle --file Brewfile` installs every tool.
 
 ### What the installer cannot do
 
@@ -52,12 +79,11 @@ without changing anything.
   later and needs a COPR on Fedora; Zed is packaged only for Arch. Where no
   package exists the script prints the upstream download URL instead of
   piping a remote script into a shell.
-* **Codex and Antigravity on Linux.** Homebrew publishes both only as casks.
-  On Linux, install Codex with `npm install -g @openai/codex` or from its
-  release binaries on GitHub, the Antigravity CLI with its install script, and
-  the Antigravity App and IDE from the `.tar.gz` archives at
-  antigravity.google/download. Claude Code is not in the Brewfile on either
-  platform; its native installer keeps it updated. See [the Brewfile](Brewfile).
+* **AI desktop apps on Linux.** They need a third-party repository or an
+  archive (Claude Desktop and the Codex app add an apt repository, Cursor is an
+  AppImage, the Antigravity apps are `.tar.gz` files), so the script prints
+  each selected app's download page instead. The AI CLIs are installed; see
+  [AI tools](#ai-tools).
 * **`~/.gitconfig`.** Git reads it after `~/.config/git/config`, so any value
   in it wins. Remove or rename it. See [git/README](git/README.md).
 * **Xcode's theme** must be selected by hand. See
@@ -70,20 +96,21 @@ identity only under `~/work/`, so the personal identity applies here.
 
 ## Packages
 
-| Package                         | Installs to                                  | What it is                                               |
-| ------------------------------- | -------------------------------------------- | -------------------------------------------------------- |
-| [`agents/`](agents/README.md)   | `~/.claude/`, `~/.codex/`, `~/.gemini/`      | Global instruction file for three AI coding agents       |
-| [`bat/`](bat/README.md)         | `~/.config/bat/`                             | `cat` with syntax highlighting; also the `$MANPAGER`     |
-| [`fish/`](fish/README.md)       | `~/.config/fish/`                            | The shell: PATH, environment, prompt, functions          |
-| [`ghostty/`](ghostty/README.md) | `~/.config/ghostty/`                         | Terminal emulator                                        |
-| [`git/`](git/README.md)         | `~/.config/git/`                             | Global Git config, with work/personal identity switching |
-| [`neovide/`](neovide/README.md) | `~/.config/neovide/`                         | Neovim's GUI: window and startup font                    |
-| [`nvim/`](nvim/README.md)       | `~/.config/nvim/`                            | The editor: LSP, treesitter, plugins, keymaps            |
-| [`ruff/`](ruff/README.md)       | `~/.config/ruff/`                            | Python lint and format rules, as a user-level fallback   |
-| [`tlrc/`](tlrc/README.md)       | `~/.config/tlrc/`                            | `tldr` client; macOS gets a bridge symlink (see below)   |
-| [`vscode/`](vscode/README.md)   | `~/.config/Code/` or `~/Library/…/Code/`     | GUI editor. Holds the settings file **Cursor also uses** |
-| [`zed/`](zed/README.md)         | `~/.config/zed/`                             | GUI editor, configured as a non-modal editor             |
-| [`cursor/`](cursor/README.md)   | `~/.config/Cursor/` or `~/Library/…/Cursor/` | Symlinks into `vscode/`, nothing else                    |
+| Package                                         | Installs to                                                    | What it is                                                                  |
+| ----------------------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| [`agents/`](agents/README.md)                   | `~/.claude/`, `~/.codex/`, `~/.gemini/`                        | Global instruction file for three AI coding agents                          |
+| [`bat/`](bat/README.md)                         | `~/.config/bat/`                                               | `cat` with syntax highlighting; also the `$MANPAGER`                        |
+| [`fish/`](fish/README.md)                       | `~/.config/fish/`                                              | The shell: PATH, environment, prompt, functions                             |
+| [`ghostty/`](ghostty/README.md)                 | `~/.config/ghostty/`                                           | Terminal emulator                                                           |
+| [`git/`](git/README.md)                         | `~/.config/git/`                                               | Global Git config, with work/personal identity switching                    |
+| [`neovide/`](neovide/README.md)                 | `~/.config/neovide/`                                           | Neovim's GUI: window and startup font                                       |
+| [`nvim/`](nvim/README.md)                       | `~/.config/nvim/`                                              | The editor: LSP, treesitter, plugins, keymaps                               |
+| [`ruff/`](ruff/README.md)                       | `~/.config/ruff/`                                              | Python lint and format rules, as a user-level fallback                      |
+| [`tlrc/`](tlrc/README.md)                       | `~/.config/tlrc/`                                              | `tldr` client; macOS gets a bridge symlink (see below)                      |
+| [`vscode/`](vscode/README.md)                   | `~/.config/Code/` or `~/Library/…/Code/`                       | GUI editor. Holds the settings file **Cursor and Antigravity IDE also use** |
+| [`zed/`](zed/README.md)                         | `~/.config/zed/`                                               | GUI editor, configured as a non-modal editor                                |
+| [`cursor/`](cursor/README.md)                   | `~/.config/Cursor/` or `~/Library/…/Cursor/`                   | Symlinks into `vscode/`, and Cursor's extension list                        |
+| [`antigravity-ide/`](antigravity-ide/README.md) | `~/.config/Antigravity IDE/` or `~/Library/…/Antigravity IDE/` | Symlinks into `vscode/`, and Antigravity IDE's extension list               |
 
 Root files are not packages and are never stowed: `install.sh`, `Brewfile`
 (every dependency), `AGENTS.md` (conventions for AI coding agents, symlinked
@@ -115,17 +142,18 @@ machine-local has to live in it:
 * A per-OS selector symlink (`bat`, `ghostty`, `neovide`, `zed`; see below).
   In a folded directory the selector would be created inside the repo.
 
-**`--no-folding --ignore`** (`vscode cursor`), in a third invocation. Both
-editors read `~/.config` on Linux and `~/Library/Application Support` on
-macOS, and the format has no conditionals, so each package ships both trees
-and `--ignore` drops the one the platform does not read:
+**`--no-folding --ignore`** (`vscode cursor antigravity-ide`), in a third
+invocation. All three editors read `~/.config` on Linux and
+`~/Library/Application Support` on macOS, and the format has no conditionals, so
+each package ships both trees and `--ignore` drops the one the platform does not
+read:
 
 ```sh
-stow --no-folding --ignore='\.config' --target="$HOME" --dir="$PWD" vscode cursor  # macOS
-stow --no-folding --ignore='Library'  --target="$HOME" --dir="$PWD" vscode cursor  # Linux
+stow --no-folding --ignore='\.config' --target="$HOME" --dir="$PWD" vscode cursor antigravity-ide  # macOS
+stow --no-folding --ignore='Library'  --target="$HOME" --dir="$PWD" vscode cursor antigravity-ide  # Linux
 ```
 
-This invocation must stay separate. Adding `vscode cursor` to the
+This invocation must stay separate. Adding these three packages to the
 `--no-folding` call above would apply `--ignore='\.config'` to fish, ghostty,
 git, and zed and remove their entire trees.
 
@@ -181,14 +209,14 @@ Neovim checks `vim.uv.os_uname().sysname`, and the Brewfile uses `OS.mac?` and
 One typeface family everywhere, in two builds, with a shared fallback chain.
 The Nerd Font build goes wherever icons are drawn.
 
-| Surface                    | Primary font                   | Ligatures |
-| -------------------------- | ------------------------------ | --------- |
-| Ghostty                    | `JetBrainsMono Nerd Font Mono` | on        |
-| Neovide / Neovim           | `JetBrainsMono Nerd Font Mono` | on        |
-| Zed, editor pane           | `JetBrains Mono`               | on        |
-| Zed, integrated terminal   | `JetBrainsMono Nerd Font Mono` | on        |
-| VS Code / Cursor, editor   | `JetBrains Mono`               | on        |
-| VS Code / Cursor, terminal | `JetBrainsMono Nerd Font Mono` | on        |
+| Surface                                      | Primary font                   | Ligatures |
+| -------------------------------------------- | ------------------------------ | --------- |
+| Ghostty                                      | `JetBrainsMono Nerd Font Mono` | on        |
+| Neovide / Neovim                             | `JetBrainsMono Nerd Font Mono` | on        |
+| Zed, editor pane                             | `JetBrains Mono`               | on        |
+| Zed, integrated terminal                     | `JetBrainsMono Nerd Font Mono` | on        |
+| VS Code / Cursor / Antigravity IDE, editor   | `JetBrains Mono`               | on        |
+| VS Code / Cursor / Antigravity IDE, terminal | `JetBrainsMono Nerd Font Mono` | on        |
 
 Fallbacks, in order: `FiraCode Nerd Font Mono` (a second build with icons, so
 icons survive one step down the chain), then `JetBrains Mono` (terminals only:
@@ -199,12 +227,12 @@ Mono`.
 whole UI by the display's backing factor while the Linux desktop runs
 unscaled, so there the point size has to absorb the difference:
 
-| Surface                               | macOS | Linux |
-| ------------------------------------- | ----- | ----- |
-| Ghostty                               | 14    | 11    |
-| Neovide / Neovim                      | 14    | 10    |
-| Zed, editor and terminal              | 14    | 14    |
-| VS Code / Cursor, editor and terminal | 14    | 14    |
+| Surface                                                 | macOS | Linux |
+| ------------------------------------------------------- | ----- | ----- |
+| Ghostty                                                 | 14    | 11    |
+| Neovide / Neovim                                        | 14    | 10    |
+| Zed, editor and terminal                                | 14    | 14    |
+| VS Code / Cursor / Antigravity IDE, editor and terminal | 14    | 14    |
 
 Zed and VS Code hold one size for both platforms because their `settings.json`
 files are shared across them and the format has no conditionals; VS Code's is
@@ -268,19 +296,19 @@ boxes.
 Everything visual uses **Catppuccin**: Latte (light) and Mocha (dark). On
 macOS the tools that can follow the system appearance do:
 
-| Tool             | Mechanism                                                                                |
-| ---------------- | ---------------------------------------------------------------------------------------- |
-| Ghostty          | `theme = light:Catppuccin Latte,dark:Catppuccin Mocha`                                   |
-| Zed              | `"theme": { "mode": "system", … }`, Latte / Mocha                                        |
-| VS Code / Cursor | `window.autoDetectColorScheme` + `preferredLight`/`DarkColorTheme`                       |
-| bat              | `--theme=auto:system`, Latte / Mocha                                                     |
-| Neovim           | `flavour = "auto"`, reading `background`                                                 |
-| Neovide          | `vim.g.neovide_theme`, default `auto` (window chrome only); config.toml has no theme key |
-| fish             | `fish_config theme choose catppuccin-mocha`; the theme carries both variants             |
-| eza              | A fish handler points `$EZA_CONFIG_DIR` at a Latte or Mocha directory                    |
-| delta            | A fish handler sets `$DELTA_FEATURES` to `catppuccin-latte` or `-mocha`                  |
-| Git log output   | A fish handler includes `colours-latte.gitconfig` through `GIT_CONFIG_*`                 |
-| tlrc             | Palette names, which resolve through the terminal's colours                              |
+| Tool                               | Mechanism                                                                                |
+| ---------------------------------- | ---------------------------------------------------------------------------------------- |
+| Ghostty                            | `theme = light:Catppuccin Latte,dark:Catppuccin Mocha`                                   |
+| Zed                                | `"theme": { "mode": "system", … }`, Latte / Mocha                                        |
+| VS Code / Cursor / Antigravity IDE | `window.autoDetectColorScheme` + `preferredLight`/`DarkColorTheme`                       |
+| bat                                | `--theme=auto:system`, Latte / Mocha                                                     |
+| Neovim                             | `flavour = "auto"`, reading `background`                                                 |
+| Neovide                            | `vim.g.neovide_theme`, default `auto` (window chrome only); config.toml has no theme key |
+| fish                               | `fish_config theme choose catppuccin-mocha`; the theme carries both variants             |
+| eza                                | A fish handler points `$EZA_CONFIG_DIR` at a Latte or Mocha directory                    |
+| delta                              | A fish handler sets `$DELTA_FEATURES` to `catppuccin-latte` or `-mocha`                  |
+| Git log output                     | A fish handler includes `colours-latte.gitconfig` through `GIT_CONFIG_*`                 |
+| tlrc                               | Palette names, which resolve through the terminal's colours                              |
 
 The last five follow the **terminal**, not the OS. The fish shell, eza,
 delta, and Git read fish's `$fish_terminal_color_theme`, which holds `light`,
@@ -344,14 +372,14 @@ neither a stow package nor a Brewfile entry.
 
 A **blinking block**, in every tool and every mode:
 
-| Surface                    | Shape                             | Blink                                |
-| -------------------------- | --------------------------------- | ------------------------------------ |
-| Ghostty                    | `cursor-style = block`            | `cursor-style-blink = true`          |
-| Neovim / Neovide           | `guicursor = a:block-…`           | in the same option                   |
-| Zed, editor                | `cursor_shape`                    | `cursor_blink`                       |
-| Zed, terminal              | `terminal.cursor_shape`           | `terminal.blinking = "on"`           |
-| VS Code / Cursor, editor   | `editor.cursorStyle`              | `editor.cursorBlinking`              |
-| VS Code / Cursor, terminal | `terminal.integrated.cursorStyle` | `terminal.integrated.cursorBlinking` |
+| Surface                                      | Shape                             | Blink                                |
+| -------------------------------------------- | --------------------------------- | ------------------------------------ |
+| Ghostty                                      | `cursor-style = block`            | `cursor-style-blink = true`          |
+| Neovim / Neovide                             | `guicursor = a:block-…`           | in the same option                   |
+| Zed, editor                                  | `cursor_shape`                    | `cursor_blink`                       |
+| Zed, terminal                                | `terminal.cursor_shape`           | `terminal.blinking = "on"`           |
+| VS Code / Cursor / Antigravity IDE, editor   | `editor.cursorStyle`              | `editor.cursorBlinking`              |
+| VS Code / Cursor / Antigravity IDE, terminal | `terminal.integrated.cursorStyle` | `terminal.integrated.cursorBlinking` |
 
 Neovim's default varies the shape by mode (a vertical bar in insert, a
 horizontal one in replace); `a:` sets every mode at once.
@@ -372,11 +400,11 @@ horizontal one in replace); `a:` sets every mode at once.
 
 Vertical lines at **80, 120, and 150**, in all three editors:
 
-| Editor           | Setting                            |
-| ---------------- | ---------------------------------- |
-| Neovim / Neovide | `colorcolumn = "80,120,150"`       |
-| Zed              | `wrap_guides` + `show_wrap_guides` |
-| VS Code / Cursor | `editor.rulers`                    |
+| Editor                             | Setting                            |
+| ---------------------------------- | ---------------------------------- |
+| Neovim / Neovide                   | `colorcolumn = "80,120,150"`       |
+| Zed                                | `wrap_guides` + `show_wrap_guides` |
+| VS Code / Cursor / Antigravity IDE | `editor.rulers`                    |
 
 They are reference marks. Nothing wraps or reformats at any of them, and no
 file type is exempt. Three columns cover the limits this setup works to
@@ -492,19 +520,19 @@ not, which is the conservative check; silence means none does. Confirm the
 tail of the file arrived as well, with
 `ghostty +show-config | grep copy-on-select`.
 
-Ten of the eleven tracked `.json` files are JSONC, carrying the documentation
-every setting here has; only `nvim/.config/nvim/nvim-pack-lock.json` is strict
-JSON. The `json.load` function rejects comments, hence the strip above, or use
-a JSONC-tolerant parser.
+Fourteen of the fifteen tracked `.json` files are JSONC, carrying the
+documentation every setting here has; only
+`nvim/.config/nvim/nvim-pack-lock.json` is strict JSON. The `json.load` function
+rejects comments, hence the strip above, or use a JSONC-tolerant parser.
 
 The editors are the other half of that check, and each finds JSONC by its own
 rule. This repo declares only what a rule misses:
 
-| Editor          | Finds JSONC by                                                         | What the repo adds                                                                                 |
-| --------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Neovim          | A runtime rule for `Code/User`, anchored at `$HOME`                    | Four path patterns in [`nvim/.config/nvim/lua/languages.lua`](nvim/.config/nvim/lua/languages.lua) |
-| VS Code, Cursor | The built-in `configuration-editing` extension, by bare file name      | One `files.associations` glob, for Zed's per-OS names                                              |
-| Zed             | Its default `file_types`, which wants the name `settings.json` exactly | A `JSONC` key in `file_types`, for both editors' `User` trees and Zed's own per-OS names           |
+| Editor                           | Finds JSONC by                                                         | What the repo adds                                                                                 |
+| -------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Neovim                           | A runtime rule for `Code/User`, anchored at `$HOME`                    | Five path patterns in [`nvim/.config/nvim/lua/languages.lua`](nvim/.config/nvim/lua/languages.lua) |
+| VS Code, Cursor, Antigravity IDE | The built-in `configuration-editing` extension, by bare file name      | One `files.associations` glob, for Zed's per-OS names                                              |
+| Zed                              | Its default `file_types`, which wants the name `settings.json` exactly | A `JSONC` key in `file_types`, for the three editors' `User` trees and Zed's own per-OS names      |
 
 Each entry carries its own reasoning. A comment shown as an error therefore
 means the path has no association, not that the file is malformed.

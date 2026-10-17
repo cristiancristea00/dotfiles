@@ -110,11 +110,11 @@ Each top-level directory is a stow package whose contents mirror their path
 under `$HOME`: `bat/.config/bat/config` becomes `~/.config/bat/config`. A new
 file goes where it lives when deployed.
 
-Packages: `agents` `bat` `cursor` `fish` `ghostty` `git` `neovide` `nvim`
-`ruff` `tlrc` `vscode` `zed`. Root files (`README.md`, `AGENTS.md` and its
-symlinks, `install.sh`, `Brewfile`, `LICENSE`, `.gitignore`) are not packages
-and are never stowed. Each package has a `README.md`, which stow's default
-ignore list keeps out of `$HOME`.
+Packages: `agents` `antigravity-ide` `bat` `cursor` `fish` `ghostty` `git`
+`neovide` `nvim` `ruff` `tlrc` `vscode` `zed`. Root files (`README.md`,
+`AGENTS.md` and its symlinks, `install.sh`, `Brewfile`, `LICENSE`, `.gitignore`)
+are not packages and are never stowed. Each package has a `README.md`, which
+stow's default ignore list keeps out of `$HOME`.
 
 The three stow invocations, and why a package is in one group rather than
 another, are documented in [The stow model](README.md#the-stow-model). The
@@ -124,15 +124,17 @@ rules an agent must not break:
   live in it: runtime state the application writes, or a per-OS selector
   symlink. Adding a file to a `--no-folding` package needs
   `stow -R --no-folding … <pkg>`, or the file is not linked.
-* The `vscode cursor` invocation must stay separate. `--ignore` is a per-run
-  flag, so merging those two into the `--no-folding` call would apply
+* The `vscode cursor antigravity-ide` invocation must stay separate.
+  `--ignore` is a per-run flag, so merging those three into the
+  `--no-folding` call would apply
   `--ignore='\.config'` to fish, ghostty, git, and zed and remove their
   entire trees. `install.sh` keeps the two lists apart, and `backup_conflicts`
   takes a matching skip prefix that must never be passed for the other
   packages.
-* `vscode/` holds the only real `settings.json`; the other three paths (one in
-  `vscode/`, two in `cursor/`) are committed symlinks, mode `120000`, like
-  `CLAUDE.md`. Edit the real file; never replace a link with a copy.
+* `vscode/` holds the only real `settings.json`; the other five paths (one in
+  `vscode/`, two in `cursor/`, two in `antigravity-ide/`) are committed
+  symlinks, mode `120000`, like `CLAUDE.md`. Edit the real file; never replace a
+  link with a copy.
 * `agents/.codex/AGENTS.md` is the global instruction file for every
   repository, not this repo's guidance; `agents/.claude/CLAUDE.md` and
   `agents/.gemini/AGENTS.md` are committed symlinks to it. Its traps are in
@@ -182,11 +184,11 @@ Structure to know before editing:
 * The font stack spans five files and differs between editors and terminals.
   Change all of them together; [The font stack](README.md#the-font-stack)
   lists them, and VS Code needs eight further keys for the same family.
-* `vscode/.config/Code/User/settings.json` is read by VS Code and Cursor
-  through symlinks. Never add `window.zoomLevel` to it: VS Code bug #275792
-  deletes every comment line above a setting when that setting is reset, and
-  the zoom shortcuts write this key. Settings Sync must stay off; it is a
-  second writer whose merge is not documented to keep comments.
+* `vscode/.config/Code/User/settings.json` is read by VS Code, Cursor, and
+  Antigravity IDE through symlinks. Never add `window.zoomLevel` to it: VS Code
+  bug #275792 deletes every comment line above a setting when that setting is
+  reset, and the zoom shortcuts write this key. Settings Sync must stay off; it
+  is a second writer whose merge is not documented to keep comments.
 
 ## Commit convention
 
@@ -203,9 +205,10 @@ Commits follow [Conventional Commits v1.0.0](https://www.conventionalcommits.org
 
 Rules:
 
-* **Scope is the package directory**: `agents`, `bat`, `cursor`, `fish`,
-  `ghostty`, `git`, `neovide`, `nvim`, `ruff`, `tlrc`, `vscode`, `zed`. Omit
-  it only for repo-wide changes, which are usually `chore` or `docs`.
+* **Scope is the package directory**: `agents`, `antigravity-ide`, `bat`,
+  `cursor`, `fish`, `ghostty`, `git`, `neovide`, `nvim`, `ruff`, `tlrc`,
+  `vscode`, `zed`. Omit it only for repo-wide changes, which are usually
+  `chore` or `docs`.
 * **One package per commit.** A change spanning packages (a font-stack edit
   touching several files) is the exception, and its scope is omitted.
 * Description in lower case, imperative mood, no trailing period.
@@ -269,6 +272,17 @@ Rules:
   Linux package install cannot proceed without them at all; a new one belongs
   behind `confirm`, which refuses without a tty, rather than behind a bare
   `sudo`.
+* **AI tools are installed only when chosen.** `choose_ai_tools` asks once
+  per vendor; without a terminal it selects nothing unless `--ai-tools` names
+  the tools, and `--yes` does not choose them. A new tool needs a line in
+  `AI_TOOL_TABLE` in `install.sh` and a cask line in the `Brewfile`.
+* **Remote install scripts run only for Homebrew and a selected AI CLI.**
+  Besides Homebrew's own installer, `install_ai_tools_linux` is the one step
+  that pipes a remote script into a shell: the Cursor and Antigravity CLI
+  scripts, their vendors' documented method on Linux, for tools chosen in the
+  menu or with `--ai-tools`. Both install into `~/.local/bin` without `sudo`.
+  Anything else without a package gets its download URL printed, as Zed
+  does.
 * **`confirm` never assumes consent.** It takes a per-call default (`yes` for
   backing files up, which destroys nothing; `no` for anything that changes
   the system) and, without a terminal, refuses. `--yes` is the way to say yes
@@ -289,14 +303,15 @@ Rules:
 ./install.sh --dry-run          # preview without changing anything
 ./install.sh --cli-only         # skip GUI apps (servers, containers)
 ./install.sh --packages nvim    # one package
+./install.sh --ai-tools=all     # every AI tool, without the menu
 ./install.sh --uninstall        # remove the symlinks
 ./install.sh --yes              # required for non-interactive runs
 
 # The three stow invocations install.sh runs, if you need them by hand
 stow --target="$HOME" --dir="$PWD" nvim ruff tlrc
 stow --no-folding --target="$HOME" --dir="$PWD" agents bat fish ghostty git neovide zed
-stow --no-folding --ignore='\.config' --target="$HOME" --dir="$PWD" vscode cursor  # macOS
-stow --no-folding --ignore='Library'  --target="$HOME" --dir="$PWD" vscode cursor  # Linux
+stow --no-folding --ignore='\.config' --target="$HOME" --dir="$PWD" vscode cursor antigravity-ide  # macOS
+stow --no-folding --ignore='Library'  --target="$HOME" --dir="$PWD" vscode cursor antigravity-ide  # Linux
 
 # Preview, re-link after adding files, remove
 stow -n -v --target="$HOME" --dir="$PWD" <pkg>     # dry run

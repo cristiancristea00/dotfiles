@@ -1,23 +1,26 @@
 # ==============================================================================
-# extensions.txt — extensions both editors get
+# extensions.txt — extensions all three editors get
 # ==============================================================================
 #
-# WHAT: Extension ids, one per line, installed into both Visual Studio Code and
-#       Cursor by install.sh. Blank lines and lines starting with # are ignored.
-# WHY : Neither editor has a declarative equivalent of Zed's
+# WHAT: Extension ids, one per line, installed into Visual Studio Code, Cursor,
+#       and Antigravity IDE by install.sh. Blank lines and lines starting with
+#       # are ignored.
+# WHY : No editor here has a declarative equivalent of Zed's
 #       auto_install_extensions: nothing in settings.json can install an
 #       extension, and .vscode/extensions.json holds workspace recommendations
 #       only. The installer feeds this list to each editor's CLI.
 # HOW : The installer reads the installed set once with `--list-extensions`
 #       and runs `code --install-extension <id> --force` (and the same for
-#       `cursor`) only for ids not yet installed. `code --list-extensions`
-#       regenerates a starting point.
+#       `cursor` and `antigravity-ide`) only for ids not yet installed.
+#       `code --list-extensions` regenerates a starting point.
 # NOTE: The editors resolve ids against different galleries, so there are
-#       three lists: this one, extensions-vscode.txt for VS Code only, and
-#       ../cursor/extensions-cursor.txt for Cursor only. README.md § Extensions
-#       (in this directory) has the gallery query that decides where an id
-#       belongs.
-# NOTE: vscodevim.vim is not listed. Both editors are configured as non-modal
+#       four lists: this one, extensions-vscode.txt for VS Code only,
+#       ../cursor/extensions-cursor.txt for Cursor only, and
+#       ../antigravity-ide/extensions-antigravity-ide.txt for Antigravity IDE
+#       only. README.md § Extensions (in this directory) has the gallery
+#       queries that decide where an id belongs. Every id here must be in all
+#       three galleries.
+# NOTE: vscodevim.vim is not listed. All three are configured as non-modal
 #       editors, as Zed is; Neovim is the modal editor here.
 # ==============================================================================
 

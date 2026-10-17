@@ -1,14 +1,14 @@
 // ============================================================================
-// keybindings.json — shared key bindings for Visual Studio Code and Cursor
+// keybindings.json — shared by VS Code, Cursor, and Antigravity IDE
 // ============================================================================
 //
 // WHAT THIS FILE IS
 //   Custom key bindings, overriding the defaults. Like settings.json, one file
-//   serves both editors through symlinks; that file's header lists the four
-//   destinations and the editing rules.
+//   serves all three editors through symlinks; that file's header lists the
+//   six destinations and the editing rules.
 //
 // WHY IT IS EMPTY
-//   Both editors' default bindings are used unchanged. The file exists so that
+//   Each editor's default bindings are used unchanged. The file exists so that
 //   a future binding is version-controlled from the start instead of being
 //   created outside the repo.
 //

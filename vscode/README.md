@@ -1,21 +1,22 @@
 # Visual Studio Code
 
-[Visual Studio Code](https://code.visualstudio.com) and
-[Cursor](../cursor/README.md) are configured here: both editors read one
-`settings.json`, which lives in this package. Cursor's package holds symlinks
-pointing back here.
+[Visual Studio Code](https://code.visualstudio.com),
+[Cursor](../cursor/README.md), and
+[Antigravity IDE](../antigravity-ide/README.md) are configured here: all three
+editors read one `settings.json`, which lives in this package. The Cursor and
+Antigravity IDE packages hold symlinks pointing back here.
 
-Like Zed, and unlike Neovim, both are configured as non-modal editors;
+Like Zed, and unlike Neovim, all three are configured as non-modal editors;
 `vscodevim.vim` is not installed.
 
 ## Install
 
 ```sh
 # From the repo root. macOS: deploys the Library/ tree, ignores .config/
-stow --no-folding --ignore='\.config' --target="$HOME" --dir="$PWD" vscode cursor
+stow --no-folding --ignore='\.config' --target="$HOME" --dir="$PWD" vscode cursor antigravity-ide
 
 # Linux: the reverse
-stow --no-folding --ignore='Library' --target="$HOME" --dir="$PWD" vscode cursor
+stow --no-folding --ignore='Library' --target="$HOME" --dir="$PWD" vscode cursor antigravity-ide
 ```
 
 `install.sh` picks the right form. Stow's `--no-folding` keeps `User/` a real
@@ -26,24 +27,26 @@ and `~/Library/Application Support` on macOS. The invocation must stay separate
 from the repo's other stow calls; [The stow model](../README.md#the-stow-model)
 explains why.
 
-## One file, four paths
+## One file, six paths
 
 ```text
-vscode/.config/Code/User/settings.json          ← the only real file
-vscode/Library/…/Code/User/settings.json        → symlink to it
-cursor/.config/Cursor/User/settings.json        → symlink to it
-cursor/Library/…/Cursor/User/settings.json      → symlink to it
+vscode/.config/Code/User/settings.json                             ← the only real file
+vscode/Library/…/Code/User/settings.json                           → symlink to it
+cursor/.config/Cursor/User/settings.json                           → symlink to it
+cursor/Library/…/Cursor/User/settings.json                         → symlink to it
+antigravity-ide/.config/Antigravity IDE/User/settings.json         → symlink to it
+antigravity-ide/Library/…/Antigravity IDE/User/settings.json       → symlink to it
 ```
 
-The three symlinks are committed as symlinks (git mode `120000`), the same
-mechanism `CLAUDE.md` uses. Editing the real file changes what both editors
-read on both platforms. Each editor ignores keys it does not recognise, so
-`cursor.*` keys have no effect in VS Code and
+The five symlinks are committed as symlinks (git mode `120000`), the same
+mechanism `CLAUDE.md` uses. Editing the real file changes what all three
+editors read on both platforms. Each editor ignores keys it does not
+recognise, so `cursor.*` keys have no effect in VS Code and
 `workbench.experimental.modernUI` has none in Cursor.
 
 ## Edit this file, not the settings UI
 
-Both editors write to `settings.json` when a setting is changed through their
+Each editor writes to `settings.json` when a setting is changed through its
 UI. Two rules follow:
 
 * **Never set `window.zoomLevel`.** Resetting a setting through the UI
@@ -57,7 +60,7 @@ UI. Two rules follow:
 If the UI replaces the symlink with a real file, re-link from the repo root:
 
 ```sh
-stow -R --no-folding --ignore='\.config' --target="$HOME" --dir="$PWD" vscode cursor
+stow -R --no-folding --ignore='\.config' --target="$HOME" --dir="$PWD" vscode cursor antigravity-ide
 ```
 
 ## What's configured
@@ -81,18 +84,19 @@ stow -R --no-folding --ignore='\.config' --target="$HOME" --dir="$PWD" vscode cu
 
 ## Extensions
 
-Neither editor has a declarative equivalent of Zed's
+No editor here has a declarative equivalent of Zed's
 `auto_install_extensions`: nothing in `settings.json` can install an extension,
 and `.vscode/extensions.json` holds workspace recommendations only. The lists
 live here and `install.sh` feeds them to each editor's CLI:
 
-| File                                                                 | Goes to      |
-| -------------------------------------------------------------------- | ------------ |
-| [`extensions.txt`](extensions.txt)                                   | both editors |
-| [`extensions-vscode.txt`](extensions-vscode.txt)                     | VS Code only |
-| [`../cursor/extensions-cursor.txt`](../cursor/extensions-cursor.txt) | Cursor only  |
+| File                                                                                                     | Goes to              |
+| -------------------------------------------------------------------------------------------------------- | -------------------- |
+| [`extensions.txt`](extensions.txt)                                                                       | all three editors    |
+| [`extensions-vscode.txt`](extensions-vscode.txt)                                                         | VS Code only         |
+| [`../cursor/extensions-cursor.txt`](../cursor/extensions-cursor.txt)                                     | Cursor only          |
+| [`../antigravity-ide/extensions-antigravity-ide.txt`](../antigravity-ide/extensions-antigravity-ide.txt) | Antigravity IDE only |
 
-There are three lists because the editors use different galleries. VS Code
+There are four lists because the editors use different galleries. VS Code
 resolves ids against Microsoft's Marketplace. Cursor resolves them against its
 own gallery at `marketplace.cursorapi.com`, declared in
 `Cursor.app/Contents/Resources/app/product.json`; it is not Open VSX. That
@@ -104,8 +108,17 @@ licence-restricted extensions: Pylance, the C++ tools, and the
 [`extensions-cursor.txt`](../cursor/extensions-cursor.txt). Four
 markdown-preview extensions have no counterpart and are absent from Cursor.
 
-The gallery answers which ids it serves; an id that comes back empty belongs in
-`extensions-vscode.txt`:
+Antigravity IDE resolves ids against Open VSX, declared as `extensionsGallery`
+in `Antigravity IDE.app/Contents/Resources/app/product.json`. Open VSX serves
+every id in the shared list and none of the licence-restricted ones or the four
+markdown-preview extras. Antigravity IDE bundles its own remote-SSH and
+dev-container extensions; clangd and basedpyright replace the C++ tools and
+Pylance, declared in
+[`extensions-antigravity-ide.txt`](../antigravity-ide/extensions-antigravity-ide.txt).
+An id belongs in the shared list only when all three galleries serve it.
+
+Cursor's gallery answers which ids it serves; an id that comes back empty
+belongs in `extensions-vscode.txt`:
 
 ```sh
 curl -s -X POST \
@@ -113,6 +126,12 @@ curl -s -X POST \
   -H 'Content-Type: application/json' \
   -H 'Accept: application/json;api-version=7.2-preview.1' \
   -d '{"filters":[{"criteria":[{"filterType":7,"value":"<publisher.name>"}]}],"flags":914}'
+```
+
+Open VSX answers with an HTTP status, and 200 means it serves the id:
+
+```sh
+curl -s -o /dev/null -w '%{http_code}\n' https://open-vsx.org/api/<publisher>/<name>
 ```
 
 `install.sh` installs only what is missing: it reads each editor's installed
@@ -131,13 +150,15 @@ is missing.
 
 ## Known gaps
 
-* **On Linux neither editor is installed automatically.** Both are Homebrew
-  casks, which are macOS-only. Unlike Ghostty and Zed, `install.sh` does not
-  use the package manager for them: VS Code needs Microsoft's third-party apt
-  or dnf repository (a signing key and a sources file), and Cursor ships only
-  an AppImage. The configuration still deploys; install the applications from
-  [code.visualstudio.com](https://code.visualstudio.com/docs/setup/linux) and
-  [cursor.com](https://cursor.com/downloads).
+* **On Linux no editor here is installed automatically.** All three are
+  Homebrew casks, which are macOS-only. Unlike Ghostty and Zed, `install.sh`
+  does not use the package manager for them: VS Code needs Microsoft's
+  third-party apt or dnf repository (a signing key and a sources file), Cursor
+  ships only an AppImage, and Antigravity IDE only a `.tar.gz` archive. The
+  configuration still deploys. Install VS Code from
+  [code.visualstudio.com](https://code.visualstudio.com/docs/setup/linux);
+  for Cursor and Antigravity IDE, `install.sh` prints the download URL when
+  the editor is selected in its AI-tools menu.
 * **The Linux stow form is verified only with `stow -n -v`**, not by a run on
   Linux.
 * **VS Code profiles are not modelled.** A stowed `settings.json` governs the

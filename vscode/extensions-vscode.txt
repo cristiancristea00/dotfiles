@@ -2,33 +2,41 @@
 # extensions-vscode.txt — Visual Studio Code only
 # ==============================================================================
 #
-# WHAT: Extensions installed into Visual Studio Code but not Cursor.
-# WHY : Each id was checked against Cursor's gallery and is not there: either
+# WHAT: Extensions installed into Visual Studio Code but not Cursor or
+#       Antigravity IDE.
+# WHY : Each id was checked against Cursor's gallery and Open VSX, Antigravity
+#       IDE's gallery, and is in neither: either
 #       a Microsoft extension whose licence restricts it to Microsoft's own
 #       products, or a small extension nobody has mirrored. README.md §
 #       Extensions (in this directory) has the gallery query.
 # HOW : One id per line; `#` starts a comment. The right-hand column records
-#       what Cursor gets instead; each substitute is declared in
-#       ../cursor/extensions-cursor.txt, so a change to one file needs a
-#       check of the other.
+#       what Cursor and Antigravity IDE get instead; each substitute is
+#       declared in ../cursor/extensions-cursor.txt or
+#       ../antigravity-ide/extensions-antigravity-ide.txt, so a change to one
+#       file needs a check of the others.
 # ==============================================================================
 
 # --- Licence-restricted Microsoft extensions ----------------------------------
 # The Python type checker.        Cursor: anysphere.cursorpyright
+#   Antigravity IDE: detachhead.basedpyright
 ms-python.vscode-pylance
 # C and C++ IntelliSense.         Cursor: anysphere.cpptools
+#   Antigravity IDE: llvm-vs-code-extensions.vscode-clangd
 ms-vscode.cpptools
 ms-vscode.cpp-devtools
 # Remote development.             Cursor: anysphere.remote-ssh
+#   Antigravity IDE: bundled
 ms-vscode-remote.remote-ssh
 ms-vscode-remote.remote-ssh-edit
 ms-vscode.remote-explorer
 # Dev containers.                 Cursor: anysphere.remote-containers
+#   Antigravity IDE: bundled
 ms-vscode-remote.remote-containers
 
-# --- No Cursor equivalent exists ----------------------------------------------
-# Markdown preview extras. Not in Cursor's gallery under any publisher, so the
-# preview there lacks checkboxes, emoji shortcodes, and footnotes.
+# --- No Cursor or Antigravity IDE equivalent exists ---------------------------
+# Markdown preview extras. Not in Cursor's gallery or on Open VSX under any
+# publisher, so the preview there lacks checkboxes, emoji shortcodes, and
+# footnotes.
 bierner.github-markdown-preview
 bierner.markdown-checkbox
 bierner.markdown-emoji

@@ -1,14 +1,15 @@
 // ============================================================================
-// settings.json — shared configuration for Visual Studio Code and Cursor
+// settings.json — shared by VS Code, Cursor, and Antigravity IDE
 // ============================================================================
 //
 // WHAT THIS FILE IS
-//   One file, four destinations. Cursor is a VS Code fork and accepts the VS
-//   Code settings schema, so both editors read this file:
-//       macOS   ~/Library/Application Support/{Code,Cursor}/User/settings.json
-//       Linux   ~/.config/{Code,Cursor}/User/settings.json
+//   One file, six destinations. Cursor and Antigravity IDE are VS Code forks
+//   and accept the VS Code settings schema, so all three editors read this
+//   file:
+//       macOS   ~/Library/Application Support/{Code,Cursor,Antigravity IDE}/User/settings.json
+//       Linux   ~/.config/{Code,Cursor,Antigravity IDE}/User/settings.json
 //   The repo holds one real file, vscode/.config/Code/User/settings.json; the
-//   other three paths are symlinks to it, which install.sh links into place.
+//   other five paths are symlinks to it, which install.sh links into place.
 //
 // EDIT THIS FILE, NOT THE SETTINGS UI
 //   Changing a value through the UI edits this JSONC file in place and keeps
@@ -23,16 +24,17 @@
 //   UI font larger than the code font (see UI FONT below).
 //
 //   If comments are lost, restore from git and re-link:
-//       stow -R --no-folding --ignore='\.config' --target="$HOME" --dir="$PWD" vscode cursor  # from the repo root
+//       stow -R --no-folding --ignore='\.config' --target="$HOME" --dir="$PWD" vscode cursor antigravity-ide  # from the repo root
 //
 // SETTINGS SYNC MUST STAY OFF
 //   Settings Sync is a second writer to this file, driven by remote state, and
 //   "Accept Remote" replaces the repo copy with the cloud copy. Its merge is
 //   not documented to keep comments. This repo is the source of truth.
 //
-// EACH EDITOR IGNORES THE OTHER'S KEYS
+// EACH EDITOR IGNORES THE OTHERS' KEYS
 //   `cursor.*` keys show an "Unknown Configuration Setting" warning in VS
-//   Code's Problems panel, and the newest VS Code keys do the same in Cursor.
+//   Code's Problems panel, and the newest VS Code keys do the same in Cursor
+//   and Antigravity IDE.
 //   The key is kept and the rest of the file applies. Do not delete the keys.
 //
 // FONTS
@@ -423,7 +425,7 @@
     },
 
     // --- Cursor-specific ----------------------------------------------------
-    // These keys have no effect in VS Code (see EACH EDITOR IGNORES THE OTHER'S
+    // These keys have no effect in VS Code (see EACH EDITOR IGNORES THE OTHERS'
     // KEYS in the header).
     //
     // WHAT: Paths Cursor must never read into AI context.
@@ -524,7 +526,7 @@
     //       complete with signatures rather than resolving to nothing. The
     //       default is empty.
     // NOTE: Four paths for one machine each, because this file is shared by
-    //       both editors and both platforms and JSONC has no conditionals:
+    //       three editors and both platforms and JSONC has no conditionals:
     //       Homebrew on Apple Silicon, Homebrew on Intel, Homebrew on Linux,
     //       and a distribution package. The server skips a path that does not
     //       exist, so listing all four costs nothing, which is the same

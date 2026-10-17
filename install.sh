@@ -9,7 +9,7 @@
 #
 #     --dry-run            Show every action without changing anything.
 #     --cli-only           Skip GUI applications (Ghostty, Zed, Neovide,
-#                          Visual Studio Code, Cursor).
+#                          Visual Studio Code, Cursor, Antigravity IDE).
 #     --packages a,b,c     Only handle the named stow packages.
 #     --uninstall          Remove the symlinks this script created.
 #     --yes, -y            Answer yes to every prompt. Required for
@@ -87,15 +87,15 @@ PACKAGES_NOFOLD="agents bat fish ghostty git neovide zed"
 
 # WHAT: Packages stowed with --no-folding and a per-OS --ignore, in a third
 #       invocation of their own.
-# WHY : Visual Studio Code and Cursor read their settings from an XDG path on
-#       Linux and from ~/Library/Application Support on macOS, and neither
-#       format has a conditional, so each package ships both trees and
+# WHY : Visual Studio Code, Cursor, and Antigravity IDE read their settings
+#       from an XDG path on Linux and from ~/Library/Application Support on
+#       macOS, and the format has no conditional, so each package ships both trees and
 #       EDITOR_IGNORE filters out the wrong one at link time. --no-folding
 #       because User/ also holds globalStorage/, History/, and
 #       workspaceStorage/, all machine-local. The invocation is separate
 #       because --ignore is a per-run flag; applied to PACKAGES_NOFOLD it would
 #       remove the fish, ghostty, git, and zed trees.
-PACKAGES_EDITOR="vscode cursor"
+PACKAGES_EDITOR="vscode cursor antigravity-ide"
 
 # WHAT: The regex that selects one of the two trees each editor package ships,
 #       and the matching path prefix backup_conflicts skips.
@@ -831,10 +831,10 @@ link_os_selectors() {
 # 9. Post-install steps
 # ==============================================================================
 # WHAT: Install the extensions listed in the editor packages' .txt files.
-# WHY : Neither editor has a declarative equivalent of Zed's
+# WHY : No editor here has a declarative equivalent of Zed's
 #       auto_install_extensions, so the lists live in the repo and this feeds
-#       them to each editor's CLI. The two editors resolve ids against
-#       different galleries, so there are three lists;
+#       them to each editor's CLI. The three editors resolve ids against
+#       different galleries, so there are four lists;
 #       vscode/README.md § Extensions explains and has the query that decides
 #       where an id belongs.
 # HOW : The `code` CLI reaches $PATH through the editor's "Shell Command:
@@ -847,14 +847,16 @@ install_editor_extensions() {
     # Each pair is "<cli>:<list> <list>…"; the lists are relative to the repo.
     install_extension_list "code"   "vscode/extensions.txt" "vscode/extensions-vscode.txt" && any=1
     install_extension_list "cursor" "vscode/extensions.txt" "cursor/extensions-cursor.txt" && any=1
+    install_extension_list "antigravity-ide" "vscode/extensions.txt" \
+        "antigravity-ide/extensions-antigravity-ide.txt" && any=1
 
-    [ "$any" -eq 1 ] || info "Neither editor CLI is on \$PATH; nothing to do"
+    [ "$any" -eq 1 ] || info "No editor CLI is on \$PATH; nothing to do"
     return 0
 }
 
 # WHAT: Feed one editor's CLI the ids it does not already have.
-# WHY : Split out so the two editors share the parsing and a failure in one
-#       does not stop the other.
+# WHY : Split out so the editors share the parsing and a failure in one does
+#       not stop the others.
 # NOTE: The installed set is read once, with --list-extensions, and each id is
 #       checked against it in the shell. Calling --install-extension for every
 #       id and letting --force make it a no-op costs about 0.76 s per id; the
@@ -1190,7 +1192,8 @@ print_summary() {
 
     info "Restart these for the new configuration to take effect:"
     info "  • your terminal (or reload Ghostty with the reload-config binding)"
-    info "  • any running Neovim, Neovide, Zed, Visual Studio Code or Cursor"
+    info "  • any running Neovim, Neovide, Zed, Visual Studio Code, Cursor, or"
+    info "    Antigravity IDE"
     [ -n "$BACKUP_DIR" ] && info "Displaced files were saved to: $BACKUP_DIR"
 
     if [ "$OS" = "linux" ]; then

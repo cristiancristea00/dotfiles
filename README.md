@@ -85,7 +85,7 @@ identity only under `~/work/`, so the personal identity applies here.
 
 Root files are not packages and are never stowed: `install.sh`, `Brewfile`
 (every dependency), `AGENTS.md` (conventions for AI coding agents, symlinked
-as `CLAUDE.md` and `GEMINI.md`), `LICENSE`, and `.gitignore`.
+as `CLAUDE.md`), `LICENSE`, and `.gitignore`.
 
 ---
 

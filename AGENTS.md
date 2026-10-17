@@ -4,10 +4,10 @@ Guidance for AI coding agents working in this repository. [README.md](README.md)
 describes what the repo is; this file describes how to change it without
 breaking its conventions.
 
-This file is the single source of truth. `CLAUDE.md` and `GEMINI.md` are
-symlinks to it, so each assistant finds the guidance under its own filename
-and there is one document to maintain. Edit `AGENTS.md`; never edit a symlink,
-and never replace one with a real file. To support another tool:
+This file is the single source of truth. Codex and Antigravity read
+`AGENTS.md` directly; `CLAUDE.md` is a symlink to it for Claude Code, so there
+is one document to maintain. Edit `AGENTS.md`; never edit the symlink, and
+never replace it with a real file. To support a tool that reads another name:
 
 ```sh
 ln -s AGENTS.md <TOOLNAME>.md

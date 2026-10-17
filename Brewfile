@@ -103,7 +103,9 @@ cask "claude"          if OS.mac? && gui && ai_tool.("claude-desktop")  # claude
 cask "claude-code"     if OS.mac? && ai_tool.("claude-cli")             # claude-cli: Claude Code, as `claude`     -> agents/ (~/.claude/CLAUDE.md)
 cask "cursor"          if OS.mac? && gui && ai_tool.("cursor-app")      # cursor-app: the Cursor editor            -> cursor/
 cask "cursor-cli"      if OS.mac? && ai_tool.("cursor-cli")             # cursor-cli: Cursor's agent, as `cursor-agent`
-cask "codex-app"       if OS.mac? && gui && ai_tool.("codex-app")       # codex-app: the Codex desktop app         -> agents/
+# NOTE: The codex-app id installs the chatgpt cask. OpenAI ships the Codex
+#       desktop app inside ChatGPT, and the codex-app cask is deprecated.
+cask "chatgpt"         if OS.mac? && gui && ai_tool.("codex-app")       # codex-app: the ChatGPT app, with Codex   -> agents/
 cask "codex"           if OS.mac? && ai_tool.("codex-cli")              # codex-cli: OpenAI's Codex CLI            -> agents/ (~/.codex/AGENTS.md)
 cask "antigravity"     if OS.mac? && gui && ai_tool.("antigravity-app") # antigravity-app: the Antigravity App     -> agents/
 cask "antigravity-cli" if OS.mac? && ai_tool.("antigravity-cli")        # antigravity-cli: Google's agent, as `agy` -> agents/ (~/.gemini/AGENTS.md)

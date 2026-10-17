@@ -168,7 +168,7 @@ claude|claude-desktop|Claude Desktop|app|url|https://code.claude.com/docs/en/des
 claude|claude-cli|Claude Code CLI|cli|npm|@anthropic-ai/claude-code|claude
 cursor|cursor-app|Cursor|app|url|https://cursor.com/downloads|
 cursor|cursor-cli|Cursor CLI|cli|script|https://cursor.com/install|cursor-agent
-codex|codex-app|Codex app|app|url|https://openai.com/codex|
+codex|codex-app|ChatGPT app (with Codex)|app|url|https://openai.com/codex|
 codex|codex-cli|Codex CLI|cli|npm|@openai/codex|codex
 antigravity|antigravity-app|Antigravity App|app|url|https://antigravity.google/download|
 antigravity|antigravity-cli|Antigravity CLI|cli|script|https://antigravity.google/cli/install.sh|agy
@@ -844,7 +844,7 @@ SELECTION
 #       decision to pipe that script into bash, the step the Zed install
 #       leaves to the user. Both scripts install into ~/.local/bin and need
 #       no sudo. The desktop apps need a third-party repository or an archive
-#       (Claude Desktop and the Codex app add an apt repository; Cursor is an
+#       (Claude Desktop and the ChatGPT app add an apt repository; Cursor is an
 #       AppImage; the Antigravity apps are .tar.gz files), which this script
 #       does not fetch, so their pages are printed instead.
 # NOTE: A tool whose command is already on PATH is skipped, so a re-run does

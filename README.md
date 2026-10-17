@@ -52,17 +52,17 @@ and a `--packages` run selects none unless the flag is also given. The
 configuration in [`agents/`](agents/README.md), [`cursor/`](cursor/README.md),
 and [`antigravity-ide/`](antigravity-ide/README.md) is linked either way.
 
-| Vendor (`--ai-tools` name) | Id                | Tool            | macOS | Linux                                     |
-| -------------------------- | ----------------- | --------------- | ----- | ----------------------------------------- |
-| `claude`                   | `claude-desktop`  | Claude Desktop  | cask  | Download page printed (Debian and Ubuntu) |
-| `claude`                   | `claude-cli`      | Claude Code CLI | cask  | `npm install -g`                          |
-| `cursor`                   | `cursor-app`      | Cursor          | cask  | Download page printed (AppImage)          |
-| `cursor`                   | `cursor-cli`      | Cursor CLI      | cask  | Vendor install script                     |
-| `codex`                    | `codex-app`       | Codex app       | cask  | Download page printed                     |
-| `codex`                    | `codex-cli`       | Codex CLI       | cask  | `npm install -g`                          |
-| `antigravity`              | `antigravity-app` | Antigravity App | cask  | Download page printed (`.tar.gz`)         |
-| `antigravity`              | `antigravity-cli` | Antigravity CLI | cask  | Vendor install script                     |
-| `antigravity`              | `antigravity-ide` | Antigravity IDE | cask  | Download page printed (`.tar.gz`)         |
+| Vendor (`--ai-tools` name) | Id                | Tool                     | macOS            | Linux                                     |
+| -------------------------- | ----------------- | ------------------------ | ---------------- | ----------------------------------------- |
+| `claude`                   | `claude-desktop`  | Claude Desktop           | cask             | Download page printed (Debian and Ubuntu) |
+| `claude`                   | `claude-cli`      | Claude Code CLI          | cask             | `npm install -g`                          |
+| `cursor`                   | `cursor-app`      | Cursor                   | cask             | Download page printed (AppImage)          |
+| `cursor`                   | `cursor-cli`      | Cursor CLI               | cask             | Vendor install script                     |
+| `codex`                    | `codex-app`       | ChatGPT app (with Codex) | cask (`chatgpt`) | Download page printed                     |
+| `codex`                    | `codex-cli`       | Codex CLI                | cask             | `npm install -g`                          |
+| `antigravity`              | `antigravity-app` | Antigravity App          | cask             | Download page printed (`.tar.gz`)         |
+| `antigravity`              | `antigravity-cli` | Antigravity CLI          | cask             | Vendor install script                     |
+| `antigravity`              | `antigravity-ide` | Antigravity IDE          | cask             | Download page printed (`.tar.gz`)         |
 
 `--cli-only` leaves the desktop apps out. The Brewfile gates each cask on its
 id; `install.sh`'s `AI_TOOL_TABLE` holds the Linux methods. A plain
@@ -80,10 +80,10 @@ id; `install.sh`'s `AI_TOOL_TABLE` holds the Linux methods. A plain
   package exists the script prints the upstream download URL instead of
   piping a remote script into a shell.
 * **AI desktop apps on Linux.** They need a third-party repository or an
-  archive (Claude Desktop and the Codex app add an apt repository, Cursor is an
-  AppImage, the Antigravity apps are `.tar.gz` files), so the script prints
-  each selected app's download page instead. The AI CLIs are installed; see
-  [AI tools](#ai-tools).
+  archive (Claude Desktop and the ChatGPT app add an apt repository, Cursor is
+  an AppImage, the Antigravity apps are `.tar.gz` files), so the script
+  prints each selected app's download page instead. The AI CLIs are
+  installed; see [AI tools](#ai-tools).
 * **`~/.gitconfig`.** Git reads it after `~/.config/git/config`, so any value
   in it wins. Remove or rename it. See [git/README](git/README.md).
 * **Xcode's theme** must be selected by hand. See

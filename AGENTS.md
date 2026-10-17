@@ -110,11 +110,11 @@ Each top-level directory is a stow package whose contents mirror their path
 under `$HOME`: `bat/.config/bat/config` becomes `~/.config/bat/config`. A new
 file goes where it lives when deployed.
 
-Packages: `bat` `cursor` `fish` `ghostty` `git` `neovide` `nvim` `ruff`
-`tlrc` `vscode` `zed`. Root files (`README.md`, `AGENTS.md` and its symlinks,
-`install.sh`, `Brewfile`, `LICENSE`, `.gitignore`) are not packages and are
-never stowed. Each package has a `README.md`, which stow's default ignore list
-keeps out of `$HOME`.
+Packages: `agents` `bat` `cursor` `fish` `ghostty` `git` `neovide` `nvim`
+`ruff` `tlrc` `vscode` `zed`. Root files (`README.md`, `AGENTS.md` and its
+symlinks, `install.sh`, `Brewfile`, `LICENSE`, `.gitignore`) are not packages
+and are never stowed. Each package has a `README.md`, which stow's default
+ignore list keeps out of `$HOME`.
 
 The three stow invocations, and why a package is in one group rather than
 another, are documented in [The stow model](README.md#the-stow-model). The
@@ -133,6 +133,10 @@ rules an agent must not break:
 * `vscode/` holds the only real `settings.json`; the other three paths (one in
   `vscode/`, two in `cursor/`) are committed symlinks, mode `120000`, like
   `CLAUDE.md`. Edit the real file; never replace a link with a copy.
+* `agents/.codex/AGENTS.md` is the global instruction file for every
+  repository, not this repo's guidance; `agents/.claude/CLAUDE.md` and
+  `agents/.gemini/GEMINI.md` are committed symlinks to it. Its traps are in
+  [agents/README.md](agents/README.md).
 
 ## Cross-platform
 
@@ -199,9 +203,9 @@ Commits follow [Conventional Commits v1.0.0](https://www.conventionalcommits.org
 
 Rules:
 
-* **Scope is the package directory**: `bat`, `cursor`, `fish`, `ghostty`,
-  `git`, `neovide`, `nvim`, `ruff`, `tlrc`, `vscode`, `zed`. Omit it only for
-  repo-wide changes, which are usually `chore` or `docs`.
+* **Scope is the package directory**: `agents`, `bat`, `cursor`, `fish`,
+  `ghostty`, `git`, `neovide`, `nvim`, `ruff`, `tlrc`, `vscode`, `zed`. Omit
+  it only for repo-wide changes, which are usually `chore` or `docs`.
 * **One package per commit.** A change spanning packages (a font-stack edit
   touching several files) is the exception, and its scope is omitted.
 * Description in lower case, imperative mood, no trailing period.
@@ -290,7 +294,7 @@ Rules:
 
 # The three stow invocations install.sh runs, if you need them by hand
 stow --target="$HOME" --dir="$PWD" nvim ruff tlrc
-stow --no-folding --target="$HOME" --dir="$PWD" bat fish ghostty git neovide zed
+stow --no-folding --target="$HOME" --dir="$PWD" agents bat fish ghostty git neovide zed
 stow --no-folding --ignore='\.config' --target="$HOME" --dir="$PWD" vscode cursor  # macOS
 stow --no-folding --ignore='Library'  --target="$HOME" --dir="$PWD" vscode cursor  # Linux
 

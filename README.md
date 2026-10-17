@@ -2,8 +2,9 @@
 
 Configuration for a **macOS and Linux** development setup: **Ghostty** running
 **fish**, **Neovim** (in the terminal and under **Neovide**), **Zed**,
-**Visual Studio Code**, **Cursor**, **Git**, **bat**, and **tlrc**. One script
-installs everything; GNU **stow** links it into place.
+**Visual Studio Code**, **Cursor**, **Git**, **bat**, and **tlrc**, plus one
+instruction file for the **Claude Code**, **Codex**, and **Gemini CLI** coding
+agents. One script installs everything; GNU **stow** links it into place.
 
 Two rules shape the repo:
 
@@ -51,6 +52,10 @@ without changing anything.
   later and needs a COPR on Fedora; Zed is packaged only for Arch. Where no
   package exists the script prints the upstream download URL instead of
   piping a remote script into a shell.
+* **Codex on Linux.** Homebrew publishes Codex only as a cask, so on Linux
+  install it with `npm install -g @openai/codex` or from the release binaries
+  on GitHub. Claude Code is not in the Brewfile on either platform; its native
+  installer keeps it updated. See [the Brewfile](Brewfile).
 * **`~/.gitconfig`.** Git reads it after `~/.config/git/config`, so any value
   in it wins. Remove or rename it. See [git/README](git/README.md).
 * **Xcode's theme** must be selected by hand. See
@@ -65,6 +70,7 @@ identity only under `~/work/`, so the personal identity applies here.
 
 | Package                         | Installs to                                  | What it is                                               |
 | ------------------------------- | -------------------------------------------- | -------------------------------------------------------- |
+| [`agents/`](agents/README.md)   | `~/.claude/`, `~/.codex/`, `~/.gemini/`      | Global instruction file for three AI coding agents       |
 | [`bat/`](bat/README.md)         | `~/.config/bat/`                             | `cat` with syntax highlighting; also the `$MANPAGER`     |
 | [`fish/`](fish/README.md)       | `~/.config/fish/`                            | The shell: PATH, environment, prompt, functions          |
 | [`ghostty/`](ghostty/README.md) | `~/.config/ghostty/`                         | Terminal emulator                                        |
@@ -96,13 +102,14 @@ per-run flags and the packages need different combinations.
 restow, and `nvim-pack-lock.json`, which `vim.pack` writes beside `init.lua`,
 lands in the repo.
 
-**`--no-folding`** (`bat fish ghostty git neovide zed`). Stow creates real directories
+**`--no-folding`** (`agents bat fish ghostty git neovide zed`). Stow creates real directories
 and links each file individually. A directory must stay real if anything
 machine-local has to live in it:
 
 * Runtime state the application writes beside its config: `fish_variables`,
-  Zed's `conversations/`, whatever `git config --global` appends. None of it
-  belongs in the repo.
+  Zed's `conversations/`, whatever `git config --global` appends, the coding
+  agents' credentials and sessions in `~/.claude`, `~/.codex`, and
+  `~/.gemini`. None of it belongs in the repo.
 * A per-OS selector symlink (`bat`, `ghostty`, `neovide`, `zed`; see below).
   In a folded directory the selector would be created inside the repo.
 

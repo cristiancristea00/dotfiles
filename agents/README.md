@@ -70,7 +70,7 @@ The file states this because the tools do not agree on an order:
 
 ## Length
 
-The file is about 130 lines, blank lines included.
+The file is about 260 lines, blank lines included.
 
 * Claude Code warns when an instruction file passes about 200 lines.
 * OpenAI reports that shorter instructions score higher in its coding-agent

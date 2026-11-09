@@ -87,7 +87,8 @@ A new rule earns its place only if an agent makes the mistake without it.
   `@filename` into a path reference. Keep every `@` in backticks, and use no
   imports.
 * **Subagent model and effort are not enforced in Antigravity.** The file asks
-  for subagents on the main agent's model and effort. Codex does this by
+  for subagents on the main agent's model and effort, except in a Claude Fable
+  session, which delegates to Opus one effort level higher. Codex does this by
   default, and Claude Code sets them per call when its instructions ask.
   Antigravity sets a subagent's model only in that subagent's definition
   (`inherit`, `flash`, or `pro`, in `~/.gemini/config/agents/`), and has no

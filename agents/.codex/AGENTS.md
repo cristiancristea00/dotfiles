@@ -29,8 +29,13 @@ apply regardless.
 * In a run where no one can answer, such as `claude -p`, `codex exec`,
   `agy -p`, or CI, make no changes and end with the questions.
 * Use subagents whenever they help, including for parallel research and for
-  reviewing your own work. Give them your own model and reasoning effort; a
-  Claude Fable session gives them Opus at the same effort.
+  reviewing your own work. Give them your own model and reasoning effort.
+* In a Claude Fable session, act only as the orchestrator: ask the questions,
+  plan, brief agents, read files to brief them and to check their output, and
+  commit. Give all research and every edit, however small, to Opus agents one
+  reasoning effort level above yours, up to `xhigh`: `medium` gives `high`, and
+  `high`, `xhigh`, or `max` gives `xhigh`. Review their work yourself instead
+  of giving the review to another agent.
 
 ## Writing
 

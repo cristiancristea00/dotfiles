@@ -3,9 +3,9 @@
 Configuration for a **macOS and Linux** development setup: **Ghostty** running
 **fish**, **Neovim** (in the terminal and under **Neovide**), **Zed**, **Visual
 Studio Code**, **Cursor**, **Antigravity IDE**, **Git**, **bat**, and **tlrc**,
-plus one instruction file for the **Claude Code**, **Codex**, and
-**Antigravity** coding agents. One script installs everything; GNU **stow**
-links it into place.
+plus shared global and per-language instructions for the **Claude Code**,
+**Codex**, and **Antigravity** coding agents. One script installs everything;
+GNU **stow** links it into place.
 
 Two rules shape the repo:
 
@@ -98,7 +98,7 @@ identity only under `~/work/`, so the personal identity applies here.
 
 | Package                                         | Installs to                                                    | What it is                                                                  |
 | ----------------------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| [`agents/`](agents/README.md)                   | `~/.claude/`, `~/.codex/`, `~/.gemini/`                        | Global instruction file for three AI coding agents                          |
+| [`agents/`](agents/README.md)                   | `~/.claude/`, `~/.codex/`, `~/.gemini/`                        | Global and per-language instructions for three AI coding agents             |
 | [`bat/`](bat/README.md)                         | `~/.config/bat/`                                               | `cat` with syntax highlighting; also the `$MANPAGER`                        |
 | [`fish/`](fish/README.md)                       | `~/.config/fish/`                                              | The shell: PATH, environment, prompt, functions                             |
 | [`ghostty/`](ghostty/README.md)                 | `~/.config/ghostty/`                                           | Terminal emulator                                                           |

@@ -137,8 +137,10 @@ rules an agent must not break:
   link with a copy.
 * `agents/.codex/AGENTS.md` is the global instruction file for every
   repository, not this repo's guidance; `agents/.claude/CLAUDE.md` and
-  `agents/.gemini/AGENTS.md` are committed symlinks to it. Its traps are in
-  [agents/README.md](agents/README.md).
+  `agents/.gemini/AGENTS.md` are committed symlinks to it. The per-language
+  rules are real files in `agents/.codex/languages/`, linked from
+  `agents/.claude/rules/` and `agents/.gemini/config/rules/`. Their traps are
+  in [agents/README.md](agents/README.md).
 
 ## Cross-platform
 

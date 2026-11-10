@@ -1,25 +1,29 @@
 # agents
 
-One instruction file for three AI coding agents: Claude Code, Codex, and
-Antigravity. Each reads it as its global, user-level instructions, in every
-repository. It sets the rules for asking questions, prose, code, commits, and
-the language style guides.
+One global instruction file and four language files for three AI coding
+agents: Claude Code, Codex, and Antigravity. Each reads the global file as its
+user-level instructions, in every repository. It sets the rules for asking
+questions, prose, code, and commits. The language files hold the style rules
+for C++ and C, Swift and Objective-C, Rust, and Python.
 
-## Where the file lives
+## Where the files live
 
-| Path in this package | Deployed as           | Read by                       | What it is                                     |
-| -------------------- | --------------------- | ----------------------------- | ---------------------------------------------- |
-| `.codex/AGENTS.md`   | `~/.codex/AGENTS.md`  | Codex                         | The real file                                  |
-| `.claude/CLAUDE.md`  | `~/.claude/CLAUDE.md` | Claude Code                   | Committed symlink (mode `120000`) to the above |
-| `.gemini/AGENTS.md`  | `~/.gemini/AGENTS.md` | Antigravity (App, IDE, CLI)   | Committed symlink (mode `120000`) to the above |
+| Path in this package             | Deployed as                        | Read by                     | What it is                                       |
+| -------------------------------- | ---------------------------------- | --------------------------- | ------------------------------------------------ |
+| `.codex/AGENTS.md`               | `~/.codex/AGENTS.md`               | Codex                       | The real global file                             |
+| `.claude/CLAUDE.md`              | `~/.claude/CLAUDE.md`              | Claude Code                 | Committed symlink (mode `120000`) to the above   |
+| `.gemini/AGENTS.md`              | `~/.gemini/AGENTS.md`              | Antigravity (App, IDE, CLI) | Committed symlink (mode `120000`) to the above   |
+| `.codex/languages/*.md`          | `~/.codex/languages/*.md`          | Codex, by reference         | The real language files                          |
+| `.claude/rules/*.md`             | `~/.claude/rules/*.md`             | Claude Code                 | Committed symlinks (mode `120000`) to the above  |
+| `.gemini/config/rules/*.md`      | `~/.gemini/config/rules/*.md`      | Antigravity (App, IDE, CLI) | Committed symlinks (mode `120000`) to the above  |
 
-Edit `.codex/AGENTS.md`, never a link.
+Edit the files under `.codex/`, never a link.
 
-The real file sits under `.codex/` rather than at the package root because
-stow links every file in a package. A root `AGENTS.md` would be deployed as
-`~/AGENTS.md`, which Claude Code can read a second time as a parent-directory
-`AGENTS.md`. The two links follow the precedent of `cursor/`, which links into
-`vscode/`.
+The real global file sits under `.codex/` rather than at the package root
+because stow links every file in a package. A root `AGENTS.md` would be
+deployed as `~/AGENTS.md`, which Claude Code can read a second time as a
+parent-directory `AGENTS.md`. The global file's two links follow the precedent
+of `cursor/`, which links into `vscode/`.
 
 Antigravity's global rules can be `~/.gemini/AGENTS.md` or
 `~/.gemini/GEMINI.md`, both read by the App, the IDE, and the CLI; the CLI
@@ -34,6 +38,31 @@ alone also reads the same names under `~/.gemini/config/`. The link is
 
 The package links one name only. Antigravity loads every global rule file it
 finds, so a second link to the same file would risk loading it twice.
+
+## Language files
+
+Each language file enters the context only while the agent works in that
+language, so a session's context holds only the rules for the languages it
+works in. The global file's
+Languages section lists the four files and tells the agent to read the right
+one when its rules are not already in context. Each tool gets the files this
+way:
+
+* **Claude Code** loads `~/.claude/rules/<language>.md` when it reads, writes,
+  or edits a file that matches the rule's `paths` frontmatter.
+* **Antigravity** loads `~/.gemini/config/rules/<language>.md` when the agent
+  works on a file that matches the rule's `globs`, because the rule's
+  `trigger` is `glob`.
+* **Codex** has no file-triggered instructions. It reads
+  `~/.codex/languages/<language>.md` because the global file's list tells it
+  to.
+
+The list also covers the cases in which Claude Code or Antigravity does not
+load a file on its own; the Traps section names them. A `.h` file matches both
+the C++ and the Swift file, because it can be C, C++, or Objective-C.
+
+The files live under `.codex/languages/` because Codex reads them by path,
+and `~/.codex/rules/` holds Codex's command policy.
 
 ## Install
 
@@ -52,15 +81,15 @@ A real `~/.codex/AGENTS.md` from before this package is moved to the
 
 ## Precedence
 
-The file's opening paragraph gives the order:
+The global file's opening paragraph gives the order:
 
 1. The user's messages override every rule.
 2. A project's instruction files, contributing guide, and formatter and linter
-   configuration override the Code and Languages sections and the commit
-   message format.
+   configuration override the Code and Languages sections, the language
+   files, and the commit message format.
 3. The other rules apply in every project.
 
-The file states this because the tools do not agree on an order:
+The global file states this because the tools do not agree on an order:
 
 | Tool        | Built-in order                                                                    |
 | ----------- | --------------------------------------------------------------------------------- |
@@ -70,13 +99,15 @@ The file states this because the tools do not agree on an order:
 
 ## Length
 
-The file is about 260 lines, blank lines included.
+The global file is about 160 lines, blank lines included. Each language file
+is loaded only for its own files, so it does not add to that count.
 
 * Claude Code warns when an instruction file passes about 200 lines.
 * OpenAI reports that shorter instructions score higher in its coding-agent
   tests.
-* Antigravity truncates a rule file past 24,000 bytes, and global and
-  always-on rules share a 20,000-token budget.
+* Antigravity truncates each rule file past 24,000 bytes; the global file and
+  each language file count separately. Global and always-on rules share a
+  20,000-token budget.
 
 A new rule earns its place only if an agent makes the mistake without it.
 
@@ -116,24 +147,53 @@ A new rule earns its place only if an agent makes the mistake without it.
   directory rule. The second copy is the same text and does no harm.
 * **Claude Code has no user-level `AGENTS.md`.** It reads `AGENTS.md` only in a
   project, so `~/.claude/CLAUDE.md` is the only global path.
-* **Cowork skips a symlinked `~/.claude/CLAUDE.md`.** Cowork sessions in the
-  Claude desktop app do not load this link. They also skip user-level imports
-  that resolve outside the working directory. Claude Code in the terminal and
-  in the desktop app's Code tab reads the link.
+* **Cowork skips the symlinked `~/.claude/` files.** Cowork sessions in the
+  Claude desktop app do not load this link or the symlinked rules in
+  `~/.claude/rules/`. They also skip user-level imports that resolve outside
+  the working directory. Claude Code in the terminal and in the desktop app's
+  Code tab reads the links.
+* **One frontmatter serves two tools.** Claude Code reads only `paths` and
+  ignores the other keys. Antigravity reads `trigger`, `globs`, and
+  `description`. Quote every glob that starts with `*`, and keep the
+  frontmatter free of comments.
+* **A frontmatter error fails silently, in opposite directions.** Claude Code
+  loads a rule whose frontmatter does not parse in every session, as if it had
+  no `paths`. Antigravity discards a rule whose `trigger` is missing or not a
+  valid value.
+* **Claude Code does not always load a language file.**
+  * The `paths` patterns match only under the session's primary working
+    directory.
+  * Glob, Grep, and `find` do not load the rule; Read, Write, Edit, and a
+    `cat` or `head` of one file do.
+  * `/compact` drops a loaded rule until the next matching read.
+  * A file created with Write may receive its rule only after the first
+    write.
+* **Unverified: Antigravity's glob trigger for global rules.** Its
+  documentation describes `trigger: glob` for workspace rules and requires
+  frontmatter for global ones, but does not say that a global rule is
+  triggered by `globs`, or that it ignores the `paths` key.
+* **Antigravity may ask before reading a language file by path.** Its agent
+  needs approval to read outside the workspace, which affects only the list's
+  fallback, not the glob-triggered rule.
 
 ## Verifying a change
 
 ```sh
-git ls-files -s agents                                  # both links are mode 120000
-grep -nE '(^|[[:space:]])@' agents/.codex/AGENTS.md     # empty: no unquoted @
+git ls-files -s agents | grep -c 120000                 # 10 links
+grep -nE '(^|[[:space:]])@' agents/.codex/AGENTS.md agents/.codex/languages/*.md   # empty: no unquoted @
 readlink -f ~/.claude/CLAUDE.md ~/.codex/AGENTS.md ~/.gemini/AGENTS.md
+readlink -f ~/.claude/rules/*.md ~/.gemini/config/rules/*.md ~/.codex/languages/*.md
 ```
 
 In each tool:
 
 * **Claude Code:** `/memory` lists `~/.claude/CLAUDE.md`. `/doctor
-  prompt-audit` reports conflicts between instruction files.
-* **Codex:** a new session can quote the "Global instructions" heading.
-* **Antigravity:** `agy -p` can quote the same heading; the CLI has no
+  prompt-audit` reports conflicts between instruction files. An
+  `InstructionsLoaded` hook reports `load_reason: "path_glob_match"` when a
+  language file loads.
+* **Codex:** a new session can quote the "Global instructions" heading, and
+  after it edits a `.py` file it can quote the "Python" heading.
+* **Antigravity:** `agy -p` can quote the same headings; the CLI has no
   `/memory` command. In the App and the IDE, ask the agent for the first
-  heading of its global rules.
+  heading of its global rules, and for the "Python" heading after it opens a
+  `.py` file.

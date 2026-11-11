@@ -99,7 +99,7 @@ The global file states this because the tools do not agree on an order:
 
 ## Length
 
-The global file is about 160 lines, blank lines included. Each language file
+The global file is about 170 lines, blank lines included. Each language file
 is loaded only for its own files, so it does not add to that count.
 
 * Claude Code warns when an instruction file passes about 200 lines.

@@ -112,6 +112,16 @@ the other rules here apply regardless.
   problems and fallbacks at warning, start, stop, and state changes at info,
   and diagnostic values at debug. Never log secrets, credentials, or personal
   data.
+* Give every atomic operation an explicit memory order: acquire for loads,
+  release for stores, and acquire-release for read-modify-write operations
+  such as exchange, fetch-and-add, and compare-and-exchange, whose failure
+  order is acquire. Apply this to every atomic operation you write, and to a
+  sequentially consistent one, written or by default, on a line you change.
+  Use relaxed only for a counter or statistic that no other memory access
+  depends on, and sequential consistency only where a store must stay
+  ordered before a later load of another atomic or all threads must agree on
+  one order of operations, as in Dekker's algorithm. Explain either
+  exception in a comment.
 
 ## Commits
 

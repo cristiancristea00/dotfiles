@@ -35,6 +35,16 @@ rule if `trigger` is missing or invalid. Quote every glob that starts with
 * Refer to every instance member with `self.` and every type member with
   `Self.`, in classes, structs, enums, actors, and their extensions:
   `self.path`, `self.reload()`, `Self.defaultPath`.
+* Give every Swift `throws` its error type, which needs the Swift 6.0
+  compiler in any language mode: `func run() throws(ProcessExecutionError)`,
+  `{ () throws(ParseError) in … }`, and `do throws(ParseError) { … }`. This
+  applies to public APIs too, although SE-0413 recommends untyped `throws`
+  for most of them. Apply it to every declaration you write and to an untyped
+  `throws` on a line you change. Where the code calls an API that throws
+  `any Error` or another error type, catch the error and throw a case of the
+  function's own error enum that keeps it as an associated value:
+  `throw .launchFailed(error)`. A function that only passes on a closure's
+  errors keeps `rethrows`.
 * Objective-C follows the
   [Google Objective-C Style Guide](https://google.github.io/styleguide/objcguide.html).
 * Write Objective-C and Objective-C++ with ARC, properties and dot syntax,

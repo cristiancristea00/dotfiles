@@ -19,3 +19,7 @@ Quote every glob that starts with `*`. Keep the frontmatter free of comments.
 * Follow the [Rust Style Guide](https://doc.rust-lang.org/style-guide/).
 * Write an absent value as `None`, a null raw pointer as `std::ptr::null()`
   or `std::ptr::null_mut()`, and test a raw pointer with `.is_null()`.
+* Give every item the most restrictive visibility its uses allow: none,
+  `pub(super)`, `pub(crate)`, then `pub`. Write a private item without a
+  modifier, because Clippy's default `needless_pub_self` lint warns on
+  `pub(self)`.

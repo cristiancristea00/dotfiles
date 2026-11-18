@@ -30,3 +30,6 @@ Quote every glob that starts with `*`. Keep the frontmatter free of comments.
   asks for as a `@dataclasses.dataclass` or a `typing.NamedTuple`.
 * Write an absent value as `None`, and test for it with `is None` and
   `is not None`, never `==` or `!=`.
+* Prefix with `_` every module-level name, attribute, and method that is not
+  used outside its module or class, and list a module's public names in
+  `__all__` when other modules import it.

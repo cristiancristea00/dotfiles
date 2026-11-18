@@ -93,3 +93,12 @@ Quote every glob that starts with `*`. Keep the frontmatter free of comments.
 * Write every overriding function with `override` and never with `virtual`.
   Add `final` after `override` when the function must not be overridden
   again: `auto draw() -> void override final;`.
+* Write an access specifier at the start of every C++ class, struct, and
+  union body and before every base class, even where it matches the
+  default: `struct Point { public: … };`, `class Reader : public Source`.
+  Give each member and base the most restrictive access its uses allow:
+  `private`, then `protected`, then `public`.
+* Put every C++ function, variable, and type that no other translation unit
+  uses in an unnamed namespace in the source file, never in a header; in C,
+  make such a function or variable `static`. In a C++ module, export only
+  the declarations that importers use.

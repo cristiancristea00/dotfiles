@@ -23,7 +23,7 @@ rule if `trigger` is missing or invalid. Quote every glob that starts with
 * Swift follows the
   [Swift API Design Guidelines](https://www.swift.org/documentation/api-design-guidelines/)
   and the [Google Swift Style Guide](https://google.github.io/swift/).
-  The `.init(…)` and `self.` rules below replace that guide's.
+  The `.init(…)`, `self.`, and access-level rules below replace that guide's.
 * Write Swift initialisers, enum cases, and static members without the type
   name: `.init(path: path)`, `.timeout`, and `case .timeout:`, not
   `FileMonitor(path: path)` or `DispatchTimeoutResult.timeout`. Where the
@@ -45,6 +45,13 @@ rule if `trigger` is missing or invalid. Quote every glob that starts with
   function's own error enum that keeps it as an associated value:
   `throw .launchFailed(error)`. A function that only passes on a closure's
   errors keeps `rethrows`.
+* Write an access level on every Swift declaration and import that accepts
+  one, `internal` included, and choose the most restrictive one its uses
+  allow: `private`, `fileprivate`, `internal`, `package`, `public`, then
+  `open`. Give a setter its own narrower level when its uses allow one:
+  `public private(set) var count`. Put the level on each member of an
+  extension, never on the extension. Imports take a level from the Swift
+  6.0 compiler (SE-0409): `private import Foundation`.
 * Objective-C follows the
   [Google Objective-C Style Guide](https://google.github.io/styleguide/objcguide.html).
 * Write Objective-C and Objective-C++ with ARC, properties and dot syntax,
@@ -56,6 +63,12 @@ rule if `trigger` is missing or invalid. Quote every glob that starts with
   collection, and for any other pointer `NULL` before C23 and `nullptr` from
   C23 and in Objective-C++. Write a `BOOL` as `YES` or `NO`, and a C or C++
   `bool` as `true` or `false`.
+* In an Objective-C header, declare only the methods, properties, and
+  protocol conformances that other files use, and declare the rest in the
+  class extension in the `.m` file. Make a header property `readonly`, and
+  redeclare it `readwrite` in the class extension, when only the class
+  writes it. Write `@private`, `@protected`, `@package`, or `@public` before
+  the instance variables of every block, choosing the most restrictive.
 * Where an implementation uses a property's instance variable directly,
   write `@synthesize lastChangeTimes;`, never
   `@synthesize lastChangeTimes = _lastChangeTimes;`.

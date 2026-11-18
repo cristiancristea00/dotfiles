@@ -28,3 +28,5 @@ Quote every glob that starts with `*`. Keep the frontmatter free of comments.
   and methods. Parameters cannot be `Final`.
 * Write the named struct that the Code section of the global instructions
   asks for as a `@dataclasses.dataclass` or a `typing.NamedTuple`.
+* Write an absent value as `None`, and test for it with `is None` and
+  `is not None`, never `==` or `!=`.

@@ -17,3 +17,5 @@ Quote every glob that starts with `*`. Keep the frontmatter free of comments.
 # Rust
 
 * Follow the [Rust Style Guide](https://doc.rust-lang.org/style-guide/).
+* Write an absent value as `None`, a null raw pointer as `std::ptr::null()`
+  or `std::ptr::null_mut()`, and test a raw pointer with `.is_null()`.

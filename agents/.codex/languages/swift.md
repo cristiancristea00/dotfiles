@@ -51,6 +51,11 @@ rule if `trigger` is missing or invalid. Quote every glob that starts with
   literals and subscripting (`@[]`, `@{}`, `@()`, `array[0]`), lightweight
   generics (`NSArray<NSString *> *`), nullability annotations,
   `instancetype`, `NS_ENUM`, `NS_OPTIONS`, and `@import` modules.
+* In Objective-C and Objective-C++, write `nil` for an object or block
+  pointer, `Nil` for a `Class`, `[NSNull null]` for a null element in a
+  collection, and for any other pointer `NULL` before C23 and `nullptr` from
+  C23 and in Objective-C++. Write a `BOOL` as `YES` or `NO`, and a C or C++
+  `bool` as `true` or `false`.
 * Where an implementation uses a property's instance variable directly,
   write `@synthesize lastChangeTimes;`, never
   `@synthesize lastChangeTimes = _lastChangeTimes;`.

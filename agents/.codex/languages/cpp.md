@@ -70,6 +70,11 @@ Quote every glob that starts with `*`. Keep the frontmatter free of comments.
   type: `0U`, `0L`, `0UL`, `0ULL`, `1.0F`, and `0UZ` from C++23. A literal of
   type `int` or `double` has none. In C++, use the standard-library literals
   where a library type is meant: `"text"s`, `"text"sv`, `100ms`.
+* Write a null pointer as `nullptr` in C++ and in C from C23, and as `NULL`
+  in earlier C, never as `0`. Write an empty `std::optional` as
+  `std::nullopt`. Write a boolean as `true` or `false`, never as `1`, `0`,
+  `TRUE`, or `FALSE`; C before C23 takes `true` and `false` from
+  `<stdbool.h>`.
 * Make a function `consteval` when its result is only ever needed at compile
   time, and `constexpr` when it can also run at run time. Make every variable
   whose value is known at compile time `constexpr`. In C, `constexpr` applies
